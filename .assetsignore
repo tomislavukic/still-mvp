@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.git
+**/.git
+.wrangler
+**/.wrangler
+.github
+package-lock.json
+smoke-test.js
+build-public.js
+public
