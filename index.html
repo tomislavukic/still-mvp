@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Still? helps you quickly estimate whether a purchase is still inside a store's standard return window." />
+  <title>Still? — Can I still return this?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Still home">Still<span>?</span></a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#checker">Check return</a>
+        <a href="#how">How it works</a>
+        <a href="#about">About</a>
+      </nav>
+      <button class="button button-primary small" data-scroll="#checker">Check a purchase</button>
+    </header>
+
+    <main>
+      <section class="hero" id="checker">
+        <div class="hero-copy">
+          <div class="eyebrow">One boring question. One useful answer.</div>
+          <h1>Can I <span>still</span><br>return this?</h1>
+          <p class="lead">Pick the store and purchase date. Still? estimates your standard return deadline in seconds.</p>
+
+          <div class="hero-actions">
+            <label class="button button-primary upload-button">
+              <input id="receiptInput" type="file" accept="image/*,.pdf" hidden />
+              <span class="icon">↑</span>
+              Add receipt
+            </label>
+            <button class="button button-secondary" id="focusForm">Enter details</button>
+          </div>
+          <div class="privacy-note">🔒 Receipt files stay on your device in this MVP. Nothing is uploaded.</div>
+          <div class="receipt-pill hidden" id="receiptPill" role="status"></div>
+        </div>
+
+        <div class="checker-card" aria-live="polite">
+          <form id="returnForm">
+            <div class="card-kicker">Return checker</div>
+            <h2>Check your purchase</h2>
+            <p class="muted">Uses the store's standard policy. Special categories may differ.</p>
+
+            <label class="field">
+              <span>Store</span>
+              <select id="store" required>
+                <option value="">Choose a store</option>
+                <option value="apple">Apple</option>
+                <option value="bestbuy">Best Buy</option>
+                <option value="target">Target</option>
+                <option value="custom">Other / custom window</option>
+              </select>
+            </label>
+
+            <div class="two-col">
+              <label class="field">
+                <span>Purchase / received date</span>
+                <input id="purchaseDate" type="date" required />
+              </label>
+              <label class="field hidden" id="customDaysWrap">
+                <span>Return window (days)</span>
+                <input id="customDays" type="number" min="1" max="3650" value="30" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Item <em>optional</em></span>
+              <input id="itemName" type="text" placeholder="e.g. AirPods Pro" maxlength="80" />
+            </label>
+
+            <button class="button button-primary full" type="submit">Check return window</button>
+          </form>
+
+          <section class="result hidden" id="result">
+            <div class="status-badge" id="statusBadge">Result</div>
+            <h2 id="resultTitle">You have time left</h2>
+            <p class="deadline" id="deadlineText"></p>
+            <div class="progress"><div id="progressFill"></div></div>
+            <dl class="result-grid">
+              <div><dt>Store</dt><dd id="resultStore"></dd></div>
+              <div><dt>Item</dt><dd id="resultItem"></dd></div>
+              <div><dt>Started</dt><dd id="resultDate"></dd></div>
+              <div><dt>Standard window</dt><dd id="resultWindow"></dd></div>
+            </dl>
+            <div class="policy-note" id="policyNote"></div>
+            <div class="result-actions">
+              <a class="button button-secondary full" id="policyLink" href="#" target="_blank" rel="noopener">View official policy ↗</a>
+              <button class="text-button" id="checkAnother" type="button">Check another purchase</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Product qualities">
+        <span>Fast</span><span>•</span><span>Private by default</span><span>•</span><span>No account</span><span>•</span><span>No clutter</span>
+      </section>
+
+      <section class="section" id="how">
+        <div class="section-heading">
+          <div class="eyebrow">How it works</div>
+          <h2>Three taps. Done.</h2>
+          <p>No dashboards, no onboarding maze, no subscription ambush.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><span>1</span><h3>Choose the store</h3><p>Start with a supported retailer or enter a custom return window.</p></article>
+          <article class="step"><span>2</span><h3>Add the date</h3><p>Use the purchase or received date required by that retailer's policy.</p></article>
+          <article class="step"><span>3</span><h3>See the deadline</h3><p>Get the estimated last return date and a direct link to the official policy.</p></article>
+        </div>
+      </section>
+
+      <section class="section slim" id="about">
+        <div class="about-card">
+          <div>
+            <div class="eyebrow">Built to stay boring</div>
+            <h2>Still? does one thing first.</h2>
+          </div>
+          <p>This MVP deliberately avoids pretending to read receipts with AI. It calculates from transparent rules and points you back to the retailer for final eligibility. Receipt OCR, accounts, reminders and warranty tracking can be added later without changing the core experience.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>Still? <span>Simple. Private. Useful.</span></footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
