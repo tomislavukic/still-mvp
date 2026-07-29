@@ -9,6 +9,9 @@ const files = [
   'enhancements.js',
   'v10.js',
   'theme.js',
+  'privacy.html',
+  'terms.html',
+  'methodology.html',
   'robots.txt',
   'sitemap.xml'
 ];
