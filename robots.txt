@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://still-mvp.tomislav-ukic-tu.workers.dev/sitemap.xml
