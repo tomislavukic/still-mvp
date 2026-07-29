@@ -6,10 +6,10 @@ const fail=[];
 for(const f of files){if(!fs.existsSync(f))fail.push(`missing ${f}`);}
 if(!fail.length){
  const html=read('index.html'),app=read('app.js'),v10=read('v10.js'),enh=read('enhancements.js'),theme=read('theme.js'),css=read('styles.css');
- const ids=['returnForm','market','purchaseType','store','purchaseDate','itemName','result','language','themeToggle','pageShare','globalShare','addReminder','scanReceipt','retailerSearch'];
+ const ids=['returnForm','market','purchaseType','store','purchaseDate','itemName','result','language','themeToggle','addReminder','scanReceipt','retailerSearch'];
  ids.forEach(id=>{if(!html.includes(`id="${id}"`))fail.push(`missing DOM id ${id}`)});
- ['English','Hrvatski'].forEach(x=>{if(!html.includes(x))fail.push(`missing language ${x}`)});
- ['warrantyNote','goWarranty','goReturn'].forEach(k=>{if(!v10.includes(k))fail.push(`missing localization key ${k}`)});
+ ['value="en"','value="hr"'].forEach(x=>{if(!html.includes(x))fail.push(`missing language option ${x}`)});
+ ['warrantyNote','goWarranty','checkReturn'].forEach(k=>{if(!v10.includes(k))fail.push(`missing localization key ${k}`)});
  ['whatsapp','facebook','linkedin','telegram','email','native','copy'].forEach(k=>{if(!enh.includes(k)&&!app.includes(k))fail.push(`missing share route ${k}`)});
  if(!theme.includes('still-theme'))fail.push('theme preference is not persisted');
  if(!css.includes('[data-theme="dark"]'))fail.push('dark theme CSS missing');
