@@ -1,0 +1,1 @@
+{"name":"still-mvp","private":true,"version":"1.0.0","scripts":{"test":"node smoke-test.js","check":"node --check app.js && node --check enhancements.js && node --check v10.js && node --check theme.js && node smoke-test.js"}}
