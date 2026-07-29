@@ -5,6 +5,7 @@ const files = [
   'index.html',
   'styles.css',
   'share-icons.css',
+  'launch-ui.css',
   'app.js',
   'enhancements.js',
   'v10.js',
