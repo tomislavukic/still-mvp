@@ -1,9 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BUNDLE = 43;
-// Deterministic production architecture. Runtime dependencies are explicit and
-// are downloaded together as defer scripts, then executed in document order.
+const BUNDLE = 44;
 const runtime = [
   'theme.js',
   'translations-v40.js',
@@ -22,13 +20,13 @@ const runtime = [
   'saved-organize-v27.js',
   'case-v28.js',
   'backup-v29.js',
+  'warranty-recovery-v39.js',
   'merchant-v30.js',
   'merchant-intake-v31.js',
   'merchant-dashboard-v32.js',
   'merchant-handoff-v34.js',
   'merchant-response-v35.js',
   'merchant-entry-v37.js',
-  'warranty-recovery-v39.js',
   'purchase-action-v41.js',
   'resolution-v42.js'
 ];
@@ -50,6 +48,21 @@ if (inlineStyles.length) {
   const existing = fs.readFileSync(stylesPath, 'utf8');
   fs.writeFileSync(stylesPath, `${existing}\n\n/* Canonical shell styles migrated from index.html */\n${inlineStyles.join('\n')}\n`);
 }
+
+// Critical structure must exist before any runtime code executes.
+if (!html.includes('class="mode-tabs"')) {
+  html = html.replace('<div class="checker-card" aria-live="polite">', '<div class="checker-card" aria-live="polite"><div class="mode-tabs"><button type="button" class="active" data-mode="return">↩ <span>Povrat</span></button><button type="button" data-mode="warranty">◇ <span>Jamstvo</span></button></div>');
+}
+if (!html.includes('id="for-retailers"')) {
+  const hub = `<section id="for-retailers" class="section merchant-entry-static"><div class="section-heading"><span class="eyebrow">Kupac ↔ trgovac</span><h2>Uredniji način rješavanja povrata i jamstva.</h2><p>Still? pomaže kupcu pripremiti potpuni zahtjev, a trgovcu primiti strukturirane podatke umjesto nepotpunih poruka.</p></div><div class="steps"><article class="step"><span>01</span><h3>Za kupce</h3><p>Provjeri prava, pronađi trgovca, pripremi dokaz i pošalji uredan zahtjev.</p><a class="button button-secondary" href="#checker">Provjeri kupnju →</a></article><article class="step"><span>02</span><h3>Za trgovce</h3><p>Pregledaj strukturirane slučajeve, status, odgovor i predloženo rješenje.</p><a class="button button-secondary" href="#merchantDashboardV32">Otvori radni prostor →</a></article><article class="step"><span>03</span><h3>Zajednički ishod</h3><p>Kontakt, odgovor, popravak, zamjena, povrat novca ili obrazloženo odbijanje ostaju u jednom tijeku.</p></article></div></section>`;
+  html = html.includes('<section class="section slim" id="recent">')
+    ? html.replace('<section class="section slim" id="recent">', `${hub}<section class="section slim" id="recent">`)
+    : html.replace('</main>', `${hub}</main>`);
+}
+if (!html.includes('data-merchant-nav-static')) {
+  html = html.replace('</nav>', '<a href="#for-retailers" data-merchant-nav-static="1">Za trgovce</a></nav>');
+}
+
 for (const file of runtime) {
   const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(`<script[^>]+src=["'][^"']*${escaped}(?:\\?[^"']*)?["'][^>]*>\\s*<\\/script>`, 'gi');
@@ -58,17 +71,12 @@ for (const file of runtime) {
 html = html.replace(/<script[^>]+src=["'][^"']*runtime-recovery-v38\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>/gi, '');
 const tags = runtime.map(file => `  <script src="${file}?v=${BUNDLE}" defer></script>`).join('\n');
 html = html.includes('</body>') ? html.replace('</body>', `${tags}\n</body>`) : `${html}\n${tags}\n`;
-// Build identity is generated in the artifact itself. If this marker is not
-// visible, the requested URL is not serving this deployment.
 html = html.replace(/<meta name=["']still-build["'][^>]*>/gi, '');
 html = html.replace('</head>', `  <meta name="still-build" content="${BUNDLE}">\n</head>`);
 const marker = `<span id="stillBuildMarker" style="display:block;margin-top:8px;font-size:9px;font-weight:500;opacity:.55">Build ${BUNDLE}</span>`;
 if (/<footer[\s>]/i.test(html)) html = html.replace(/(<\/footer>)/i, `${marker}$1`); else html = html.replace('</body>', `${marker}\n</body>`);
 fs.writeFileSync(indexPath, html);
-
-// During stabilization, eliminate browser/CDN ambiguity entirely. Cloudflare
-// Workers Static Assets supports _headers in the asset directory.
 fs.writeFileSync(path.join(outDir, '_headers'), `/*\n  Cache-Control: no-store, no-cache, must-revalidate\n  X-Still-Build: ${BUNDLE}\n`);
-const manifest = {app:'Still?',productionBundle:BUNDLE,architecture:'deterministic-explicit-runtime',generatedAt:new Date().toISOString(),runtime,files};
+const manifest = {app:'Still?',productionBundle:BUNDLE,architecture:'static-critical-ui-plus-deterministic-runtime',generatedAt:new Date().toISOString(),runtime,files};
 fs.writeFileSync(path.join(outDir,'build.json'),JSON.stringify(manifest,null,2)+'\n');
-console.log(`Built V${BUNDLE}: ${runtime.length} explicit defer modules. Live artifact marker: Build ${BUNDLE}. Cache disabled for verification.`);
+console.log(`Built V${BUNDLE}: critical warranty + merchant UI exists in HTML before runtime.`);
