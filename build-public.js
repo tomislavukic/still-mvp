@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const BUNDLE = 43;
 // Deterministic production architecture. Runtime dependencies are explicit and
 // are downloaded together as defer scripts, then executed in document order.
 const runtime = [
@@ -31,11 +32,7 @@ const runtime = [
   'purchase-action-v41.js',
   'resolution-v42.js'
 ];
-
-const files = [
-  'index.html','styles.css','share-icons.css',...runtime,
-  'privacy.html','terms.html','methodology.html','legal-i18n.js','robots.txt','sitemap.xml'
-];
+const files = ['index.html','styles.css','share-icons.css',...runtime,'privacy.html','terms.html','methodology.html','legal-i18n.js','robots.txt','sitemap.xml'];
 const outDir = path.join(__dirname, 'public');
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
@@ -47,10 +44,7 @@ for (const file of files) {
 const indexPath = path.join(outDir, 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
 const inlineStyles = [];
-html = html.replace(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi, (_, css) => {
-  if (css.trim()) inlineStyles.push(css.trim());
-  return '';
-});
+html = html.replace(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi, (_, css) => { if (css.trim()) inlineStyles.push(css.trim()); return ''; });
 if (inlineStyles.length) {
   const stylesPath = path.join(outDir, 'styles.css');
   const existing = fs.readFileSync(stylesPath, 'utf8');
@@ -62,9 +56,19 @@ for (const file of runtime) {
   html = html.replace(re, '');
 }
 html = html.replace(/<script[^>]+src=["'][^"']*runtime-recovery-v38\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>/gi, '');
-const tags = runtime.map(file => `  <script src="${file}?v=42" defer></script>`).join('\n');
+const tags = runtime.map(file => `  <script src="${file}?v=${BUNDLE}" defer></script>`).join('\n');
 html = html.includes('</body>') ? html.replace('</body>', `${tags}\n</body>`) : `${html}\n${tags}\n`;
+// Build identity is generated in the artifact itself. If this marker is not
+// visible, the requested URL is not serving this deployment.
+html = html.replace(/<meta name=["']still-build["'][^>]*>/gi, '');
+html = html.replace('</head>', `  <meta name="still-build" content="${BUNDLE}">\n</head>`);
+const marker = `<span id="stillBuildMarker" style="display:block;margin-top:8px;font-size:9px;font-weight:500;opacity:.55">Build ${BUNDLE}</span>`;
+if (/<footer[\s>]/i.test(html)) html = html.replace(/(<\/footer>)/i, `${marker}$1`); else html = html.replace('</body>', `${marker}\n</body>`);
 fs.writeFileSync(indexPath, html);
-const manifest = {app:'Still?',productionBundle:42,architecture:'deterministic-explicit-runtime',generatedAt:new Date().toISOString(),runtime,files};
+
+// During stabilization, eliminate browser/CDN ambiguity entirely. Cloudflare
+// Workers Static Assets supports _headers in the asset directory.
+fs.writeFileSync(path.join(outDir, '_headers'), `/*\n  Cache-Control: no-store, no-cache, must-revalidate\n  X-Still-Build: ${BUNDLE}\n`);
+const manifest = {app:'Still?',productionBundle:BUNDLE,architecture:'deterministic-explicit-runtime',generatedAt:new Date().toISOString(),runtime,files};
 fs.writeFileSync(path.join(outDir,'build.json'),JSON.stringify(manifest,null,2)+'\n');
-console.log(`Built V42: ${runtime.length} explicit defer modules with purchase cases and resolution handshake.`);
+console.log(`Built V${BUNDLE}: ${runtime.length} explicit defer modules. Live artifact marker: Build ${BUNDLE}. Cache disabled for verification.`);
