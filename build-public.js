@@ -28,7 +28,8 @@ const runtime = [
   'merchant-response-v35.js',
   'merchant-entry-v37.js',
   'warranty-recovery-v39.js',
-  'purchase-action-v41.js'
+  'purchase-action-v41.js',
+  'resolution-v42.js'
 ];
 
 const files = [
@@ -61,9 +62,9 @@ for (const file of runtime) {
   html = html.replace(re, '');
 }
 html = html.replace(/<script[^>]+src=["'][^"']*runtime-recovery-v38\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>/gi, '');
-const tags = runtime.map(file => `  <script src="${file}?v=41" defer></script>`).join('\n');
+const tags = runtime.map(file => `  <script src="${file}?v=42" defer></script>`).join('\n');
 html = html.includes('</body>') ? html.replace('</body>', `${tags}\n</body>`) : `${html}\n${tags}\n`;
 fs.writeFileSync(indexPath, html);
-const manifest = {app:'Still?',productionBundle:41,architecture:'deterministic-explicit-runtime',generatedAt:new Date().toISOString(),runtime,files};
+const manifest = {app:'Still?',productionBundle:42,architecture:'deterministic-explicit-runtime',generatedAt:new Date().toISOString(),runtime,files};
 fs.writeFileSync(path.join(outDir,'build.json'),JSON.stringify(manifest,null,2)+'\n');
-console.log(`Built V41: ${runtime.length} explicit defer modules with actionable purchase cases.`);
+console.log(`Built V42: ${runtime.length} explicit defer modules with purchase cases and resolution handshake.`);
