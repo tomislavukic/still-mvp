@@ -34,6 +34,7 @@ const files = [
   'merchant-dashboard-v32.js',
   'merchant-handoff-v34.js',
   'merchant-response-v35.js',
+  'merchant-entry-v37.js',
 
   // Public/legal assets
   'privacy.html',
@@ -61,7 +62,7 @@ for (const file of files) {
 
 const manifest = {
   app: 'Still?',
-  productionBundle: 36,
+  productionBundle: 37,
   generatedAt: new Date().toISOString(),
   files
 };
