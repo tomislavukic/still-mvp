@@ -12,6 +12,7 @@ const files = [
   'enhancements.js',
   'v10.js',
   'theme.js',
+  'runtime-recovery-v38.js',
 
   // Current consumer-rights runtime
   'visible-v20.js',
@@ -60,9 +61,21 @@ for (const file of files) {
   fs.copyFileSync(src, path.join(outDir, file));
 }
 
+// Production must not depend on a historical loader chain. Inject one tiny,
+// versioned recovery bootstrap directly into the generated HTML artifact.
+const indexPath = path.join(outDir, 'index.html');
+let html = fs.readFileSync(indexPath, 'utf8');
+const recoveryTag = '<script src="runtime-recovery-v38.js?v=38" defer></script>';
+if (!html.includes('runtime-recovery-v38.js')) {
+  html = html.includes('</body>')
+    ? html.replace('</body>', `  ${recoveryTag}\n</body>`)
+    : `${html}\n${recoveryTag}\n`;
+  fs.writeFileSync(indexPath, html);
+}
+
 const manifest = {
   app: 'Still?',
-  productionBundle: 37,
+  productionBundle: 38,
   generatedAt: new Date().toISOString(),
   files
 };
@@ -71,4 +84,4 @@ fs.writeFileSync(
   JSON.stringify(manifest, null, 2) + '\n'
 );
 
-console.log(`Built clean public/ with ${files.length} canonical production assets + build.json.`);
+console.log(`Built clean public/ with ${files.length} canonical production assets + build.json (V38 recovery enabled).`);
