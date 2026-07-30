@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BUNDLE = 44;
+const BUNDLE = 45;
 const runtime = [
   'theme.js',
   'translations-v40.js',
@@ -49,19 +49,20 @@ if (inlineStyles.length) {
   fs.writeFileSync(stylesPath, `${existing}\n\n/* Canonical shell styles migrated from index.html */\n${inlineStyles.join('\n')}\n`);
 }
 
-// Critical structure must exist before any runtime code executes.
+// Critical structure and baseline data must exist before app.js executes.
+// app.js reads #market synchronously during startup, so an empty select causes
+// the initial Croatia store population to fall back to generic EU options.
+const marketOptions = '<select id="market"><option value="us">United States</option><option value="eu">European Union</option><option value="hr">Croatia</option><option value="de">Germany</option><option value="at">Austria</option><option value="si">Slovenia</option><option value="it">Italy</option></select>';
+html = html.replace(/<select id=["']market["']>\s*<\/select>/i, marketOptions);
+
 if (!html.includes('class="mode-tabs"')) {
   html = html.replace('<div class="checker-card" aria-live="polite">', '<div class="checker-card" aria-live="polite"><div class="mode-tabs"><button type="button" class="active" data-mode="return">↩ <span>Povrat</span></button><button type="button" data-mode="warranty">◇ <span>Jamstvo</span></button></div>');
 }
 if (!html.includes('id="for-retailers"')) {
   const hub = `<section id="for-retailers" class="section merchant-entry-static"><div class="section-heading"><span class="eyebrow">Kupac ↔ trgovac</span><h2>Uredniji način rješavanja povrata i jamstva.</h2><p>Still? pomaže kupcu pripremiti potpuni zahtjev, a trgovcu primiti strukturirane podatke umjesto nepotpunih poruka.</p></div><div class="steps"><article class="step"><span>01</span><h3>Za kupce</h3><p>Provjeri prava, pronađi trgovca, pripremi dokaz i pošalji uredan zahtjev.</p><a class="button button-secondary" href="#checker">Provjeri kupnju →</a></article><article class="step"><span>02</span><h3>Za trgovce</h3><p>Pregledaj strukturirane slučajeve, status, odgovor i predloženo rješenje.</p><a class="button button-secondary" href="#merchantDashboardV32">Otvori radni prostor →</a></article><article class="step"><span>03</span><h3>Zajednički ishod</h3><p>Kontakt, odgovor, popravak, zamjena, povrat novca ili obrazloženo odbijanje ostaju u jednom tijeku.</p></article></div></section>`;
-  html = html.includes('<section class="section slim" id="recent">')
-    ? html.replace('<section class="section slim" id="recent">', `${hub}<section class="section slim" id="recent">`)
-    : html.replace('</main>', `${hub}</main>`);
+  html = html.includes('<section class="section slim" id="recent">') ? html.replace('<section class="section slim" id="recent">', `${hub}<section class="section slim" id="recent">`) : html.replace('</main>', `${hub}</main>`);
 }
-if (!html.includes('data-merchant-nav-static')) {
-  html = html.replace('</nav>', '<a href="#for-retailers" data-merchant-nav-static="1">Za trgovce</a></nav>');
-}
+if (!html.includes('data-merchant-nav-static')) html = html.replace('</nav>', '<a href="#for-retailers" data-merchant-nav-static="1">Za trgovce</a></nav>');
 
 for (const file of runtime) {
   const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -79,4 +80,4 @@ fs.writeFileSync(indexPath, html);
 fs.writeFileSync(path.join(outDir, '_headers'), `/*\n  Cache-Control: no-store, no-cache, must-revalidate\n  X-Still-Build: ${BUNDLE}\n`);
 const manifest = {app:'Still?',productionBundle:BUNDLE,architecture:'static-critical-ui-plus-deterministic-runtime',generatedAt:new Date().toISOString(),runtime,files};
 fs.writeFileSync(path.join(outDir,'build.json'),JSON.stringify(manifest,null,2)+'\n');
-console.log(`Built V${BUNDLE}: critical warranty + merchant UI exists in HTML before runtime.`);
+console.log(`Built V${BUNDLE}: markets exist before app startup, so initial retailer population is deterministic.`);
