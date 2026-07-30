@@ -6,13 +6,17 @@ const files = [
   'styles.css',
   'share-icons.css',
   'launch-ui.css',
+  'safe-improvements.css',
   'app.js',
   'enhancements.js',
   'v10.js',
   'theme.js',
+  'retailer-reliability.js',
+  'safe-improvements.js',
   'privacy.html',
   'terms.html',
   'methodology.html',
+  'legal-i18n.js',
   'robots.txt',
   'sitemap.xml'
 ];
