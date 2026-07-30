@@ -1,1 +1,1 @@
-(()=>{const s=document.createElement('script');s.src='v10-core.js?v=20260730-1801';s.defer=false;document.head.appendChild(s)})();
+(()=>{const $=s=>document.querySelector(s);const dict={en:{navCheck:'Check',navRecent:'Recent',navHow:'How it works',heroEyebrow:'Check',heroTitle:'Can I <span>still</span><br>do something?',heroLead:'Returns and warranty rights, without the policy maze.',shareStill:'Share Still?',privacy:'🔒 No account. Checks stay in this browser.',check:'Check',purchase:'Check your purchase',scan:'📷 Scan / import receipt',
