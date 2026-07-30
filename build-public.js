@@ -22,6 +22,10 @@ const files = [
 ];
 
 const outDir = path.join(__dirname, 'public');
+
+// Production is generated from scratch on every build. Never allow stale,
+// experimental, or legacy MVP assets to survive into a Cloudflare deploy.
+fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
 for (const file of files) {
@@ -32,4 +36,4 @@ for (const file of files) {
   fs.copyFileSync(src, path.join(outDir, file));
 }
 
-console.log(`Built public/ with ${files.length} production assets.`);
+console.log(`Built clean public/ with ${files.length} canonical production assets.`);
