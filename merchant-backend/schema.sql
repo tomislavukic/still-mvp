@@ -16,13 +16,25 @@ CREATE TABLE IF NOT EXISTS merchant_organizations (
 CREATE TABLE IF NOT EXISTS merchant_members (
   id TEXT PRIMARY KEY,
   organization_id TEXT NOT NULL REFERENCES merchant_organizations(id) ON DELETE CASCADE,
-  email TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  password_salt TEXT NOT NULL,
+  password_iterations INTEGER NOT NULL DEFAULT 210000,
   role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('owner','admin','agent','viewer')),
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  UNIQUE(organization_id,email)
+  updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS merchant_sessions (
+  id TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL REFERENCES merchant_members(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  last_seen_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_merchant_sessions_member ON merchant_sessions(member_id,expires_at);
 
 CREATE TABLE IF NOT EXISTS merchant_api_tokens (
   id TEXT PRIMARY KEY,
@@ -62,7 +74,6 @@ CREATE TABLE IF NOT EXISTS consumer_cases (
   updated_at TEXT NOT NULL,
   resolved_at TEXT
 );
-
 CREATE INDEX IF NOT EXISTS idx_cases_org_status ON consumer_cases(organization_id,status,updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_cases_retailer_status ON consumer_cases(retailer_key,status,updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_cases_consumer_email ON consumer_cases(consumer_email,updated_at DESC);
