@@ -17,6 +17,7 @@ const files = [
   'visible-v20.js',
   'core-search-v33.js',
   'modern-bootstrap-v33.js',
+  'market-catalog-v36.js',
   'decision-v21.js',
   'proof-v22.js',
   'support-v23.js',
@@ -60,7 +61,7 @@ for (const file of files) {
 
 const manifest = {
   app: 'Still?',
-  productionBundle: 35,
+  productionBundle: 36,
   generatedAt: new Date().toISOString(),
   files
 };
