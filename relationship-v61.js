@@ -1,0 +1,21 @@
+(()=>{
+  if(window.__stillRelationshipV61)return;
+  window.__stillRelationshipV61=true;
+  const KEY='still-connected-cases-v60';
+  const $=s=>document.querySelector(s);
+  const hr=()=>$('#language')?.value==='hr';
+  const tx=(en,hrText)=>hr()?hrText:en;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function rows(){try{const v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch{return[]}}
+  async function api(path,row,opt={}){const r=await fetch(path,{...opt,headers:{'content-type':'application/json','x-still-case-token':row.accessToken,...(opt.headers||{})}});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);return j}
+  function latestOpenDecision(data){const resolved=new Set((data.resolutions||[]).filter(x=>['accepted','declined'].includes(x.consumer_status)).map(x=>x.decision_id).filter(Boolean));return (data.decisions||[]).find(d=>!resolved.has(d.id)&&['accepted','repair','replacement','refund','other'].includes(d.decision_type))||null}
+  function decisionTitle(d){return({accepted:tx('Request accepted','Zahtjev prihvaćen'),repair:tx('Repair offered','Ponuđen popravak'),replacement:tx('Replacement offered','Ponuđena zamjena'),refund:tx('Refund offered','Ponuđen povrat novca'),other:tx('Company proposal','Prijedlog tvrtke')})[d.decision_type]||tx('Company proposal','Prijedlog tvrtke')}
+  async function renderInto(host,row){if(!host||host.dataset.v61==='1')return;let data;try{data=await api(`/api/v1/cases/${encodeURIComponent(row.publicId)}`,row)}catch{return}const d=latestOpenDecision(data);if(!d)return;host.dataset.v61='1';const card=document.createElement('section');card.className='v61-proposal';card.innerHTML=`<div class="v61-proposal-copy"><span>${tx('COMPANY PROPOSAL','PRIJEDLOG TVRTKE')}</span><h4>${esc(decisionTitle(d))}</h4><p>${esc(d.proposed_resolution||d.reason||tx('The company has proposed a resolution for this case.','Tvrtka je predložila rješenje za ovaj slučaj.'))}</p>${d.service_reference?`<small>${tx('Reference','Referenca')}: ${esc(d.service_reference)}</small>`:''}</div><div class="v61-proposal-actions"><button data-v61="accept">${tx('Accept proposal','Prihvati prijedlog')}</button><button data-v61="decline" class="secondary">${tx('Decline','Odbij')}</button></div><textarea class="v61-note" maxlength="2000" placeholder="${tx('Optional note to the company…','Neobavezna napomena tvrtki…')}"></textarea><div class="v61-feedback" aria-live="polite"></div>`;
+    host.appendChild(card);
+    card.querySelectorAll('[data-v61]').forEach(btn=>btn.onclick=async()=>{const feedback=card.querySelector('.v61-feedback'),status=btn.dataset.v61==='accept'?'accepted':'declined';card.querySelectorAll('button').forEach(x=>x.disabled=true);feedback.textContent=tx('Sending your decision…','Slanje tvoje odluke…');try{await api(`/api/v1/cases/${encodeURIComponent(row.publicId)}/resolution`,row,{method:'POST',body:JSON.stringify({status,decisionId:d.id,note:card.querySelector('.v61-note').value.trim()})});feedback.textContent=status==='accepted'?tx('Accepted. The company can now see your decision.','Prihvaćeno. Tvrtka sada vidi tvoju odluku.'):tx('Declined. The company can now see your decision.','Odbijeno. Tvrtka sada vidi tvoju odluku.');setTimeout(()=>location.reload(),650)}catch(e){feedback.textContent=tx('Could not send your decision.','Nije moguće poslati odluku.');card.querySelectorAll('button').forEach(x=>x.disabled=false)}})
+  }
+  function scan(){const rs=rows();document.querySelectorAll('#bc60Timeline,#ba60Detail').forEach(host=>{const text=host.textContent||'';const row=rs.find(r=>text.includes(r.publicId));if(row)renderInto(host,row)})}
+  const obs=new MutationObserver(()=>setTimeout(scan,80));obs.observe(document.documentElement,{subtree:true,childList:true});
+  document.addEventListener('change',e=>{if(e.target?.id==='language')setTimeout(()=>{document.querySelectorAll('[data-v61]').forEach(x=>x.closest('.v61-proposal')?.remove());scan()},120)});
+  setTimeout(scan,900);
+})();
