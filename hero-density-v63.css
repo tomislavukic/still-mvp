@@ -1,25 +1,28 @@
-/* Build 63: use the hero viewport instead of vertically parking the buyer message in empty space. */
+/* Build 64: fix the real source of the empty hero space.
+   The left hero column was being stretched to the height of the much taller checker form,
+   then its contents were centered inside that stretched column. Keep the copy intrinsically
+   sized and pinned near the top while preserving the two-column desktop layout. */
 @media(min-width:901px){
-  .hero{min-height:0!important;padding-top:44px!important;padding-bottom:44px!important;align-items:start!important;gap:clamp(34px,5vw,72px)!important}
-  .hero-copy{align-self:center;padding-block:12px}
-  .hero h1{margin:16px 0 14px!important;font-size:clamp(48px,4.7vw,70px)!important;line-height:.94!important}
+  .hero{min-height:0!important;padding-top:34px!important;padding-bottom:34px!important;align-items:start!important;gap:clamp(34px,5vw,72px)!important}
+  .hero-copy{align-self:start!important;height:auto!important;min-height:0!important;padding:22px 0 0!important;margin:0!important;display:block!important}
+  .hero h1{margin:14px 0 12px!important;font-size:clamp(48px,4.7vw,70px)!important;line-height:.94!important}
   .lead{margin:0!important;line-height:1.55!important}
-  .hero-share-row{margin-top:18px!important}
-  .privacy-note{margin-top:13px!important}
-  .checker-card{min-height:0!important}
+  .hero-share-row{margin-top:17px!important}
+  .privacy-note{margin-top:12px!important;margin-bottom:0!important}
+  .checker-card{align-self:start!important;min-height:0!important;height:auto!important}
 }
 @media(max-width:900px){
-  .hero{min-height:0!important;padding-top:24px!important;padding-bottom:28px!important;gap:22px!important}
-  .hero-copy{padding:0!important}
-  .hero h1{margin:14px 0 12px!important}
-  .hero-share-row{margin-top:16px!important}
-  .privacy-note{margin-top:12px!important}
-  .checker-card{min-height:0!important}
+  .hero{min-height:0!important;padding-top:22px!important;padding-bottom:24px!important;gap:20px!important;align-items:start!important}
+  .hero-copy{align-self:start!important;height:auto!important;min-height:0!important;padding:0!important;margin:0!important}
+  .hero h1{margin:12px 0 10px!important}
+  .hero-share-row{margin-top:14px!important}
+  .privacy-note{margin-top:10px!important;margin-bottom:0!important}
+  .checker-card{min-height:0!important;height:auto!important}
 }
 @media(max-width:560px){
-  .hero{padding-top:20px!important;padding-bottom:22px!important;gap:18px!important}
-  .hero h1{font-size:clamp(40px,12vw,54px)!important;line-height:.96!important;margin:12px 0 10px!important}
-  .hero-share-row{gap:8px!important;margin-top:14px!important}
+  .hero{padding-top:18px!important;padding-bottom:20px!important;gap:16px!important}
+  .hero h1{font-size:clamp(40px,12vw,54px)!important;line-height:.96!important;margin:10px 0 9px!important}
+  .hero-share-row{gap:8px!important;margin-top:13px!important}
   .social-icons{gap:6px!important}
   .social-icon{width:38px!important;height:38px!important;border-radius:11px!important}
 }
