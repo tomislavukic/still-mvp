@@ -7,21 +7,30 @@ function rewrite(req, pathname) {
   return new Request(u.toString(), req);
 }
 
+function isCompanyRoute(pathname) {
+  return (
+    pathname === '/api/v1/auth/login' ||
+    pathname === '/api/v1/auth/register' ||
+    pathname === '/api/v1/auth/me' ||
+    pathname === '/api/v1/auth/logout' ||
+    pathname.startsWith('/api/v1/merchant/') ||
+    pathname.startsWith('/api/v1/business/') ||
+    pathname.startsWith('/api/v1/services/') ||
+    pathname.startsWith('/api/v1/ops/') ||
+    pathname.startsWith('/api/v1/rewards/business/')
+  );
+}
+
 export default {
   async fetch(req, env) {
     const { pathname: p } = new URL(req.url);
 
-    // Existing company portal owns these routes and the still_company cookie.
-    if (
-      p === '/api/v1/auth/login' ||
-      p === '/api/v1/auth/register' ||
-      p === '/api/v1/auth/me' ||
-      p === '/api/v1/auth/logout'
-    ) {
+    // All company authentication and company operational APIs stay together.
+    if (isCompanyRoute(p)) {
       return companyApp.fetch(req, env);
     }
 
-    // Buyer account routes use the still_buyer cookie and an isolated namespace.
+    // Buyer account routes use an isolated namespace and the buyer session cookie.
     if (p === '/api/v1/buyer-auth/google/config') {
       return buyerApp.fetch(rewrite(req, '/api/v1/auth/google/config'), env);
     }
@@ -39,7 +48,7 @@ export default {
       return buyerApp.fetch(rewrite(req, `/api/v1/auth/cases/${link[1]}/link`), env);
     }
 
-    // Keep Google endpoints temporarily compatible with Build 77 clients.
+    // Temporary compatibility for clients cached before Build 79.
     if (p === '/api/v1/auth/google' || p === '/api/v1/auth/google/config') {
       return buyerApp.fetch(req, env);
     }
