@@ -3,6 +3,7 @@
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v79.js",
+  "keep_vars": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
