@@ -9,8 +9,41 @@ function rewrite(req, pathname) {
 
 export default {
   async fetch(req, env) {
-    const u = new URL(req.url);
-    const p = u.pathname;
+    const { pathname: p } = new URL(req.url);
 
-    // Company authentication owns the original auth session routes.
-    if
+    // Existing company portal owns these routes and the still_company cookie.
+    if (
+      p === '/api/v1/auth/login' ||
+      p === '/api/v1/auth/register' ||
+      p === '/api/v1/auth/me' ||
+      p === '/api/v1/auth/logout'
+    ) {
+      return companyApp.fetch(req, env);
+    }
+
+    // Buyer account routes use the still_buyer cookie and an isolated namespace.
+    if (p === '/api/v1/buyer-auth/google/config') {
+      return buyerApp.fetch(rewrite(req, '/api/v1/auth/google/config'), env);
+    }
+    if (p === '/api/v1/buyer-auth/google') {
+      return buyerApp.fetch(rewrite(req, '/api/v1/auth/google'), env);
+    }
+    if (p === '/api/v1/buyer-auth/me') {
+      return buyerApp.fetch(rewrite(req, '/api/v1/auth/me'), env);
+    }
+    if (p === '/api/v1/buyer-auth/logout') {
+      return buyerApp.fetch(rewrite(req, '/api/v1/auth/logout'), env);
+    }
+    const link = p.match(/^\/api\/v1\/buyer-auth\/cases\/([^/]+)\/link$/);
+    if (link) {
+      return buyerApp.fetch(rewrite(req, `/api/v1/auth/cases/${link[1]}/link`), env);
+    }
+
+    // Keep Google endpoints temporarily compatible with Build 77 clients.
+    if (p === '/api/v1/auth/google' || p === '/api/v1/auth/google/config') {
+      return buyerApp.fetch(req, env);
+    }
+
+    return buyerApp.fetch(req, env);
+  }
+};
