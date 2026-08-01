@@ -25,6 +25,16 @@ export default {
   async fetch(req, env) {
     const { pathname: p } = new URL(req.url);
 
+    // Never let application routing swallow public pages or static assets.
+    if (!p.startsWith('/api/') && !p.startsWith('/admin')) {
+      return env.ASSETS.fetch(req);
+    }
+
+    // Admin pages and admin APIs continue through the existing application stack.
+    if (p === '/admin' || p.startsWith('/admin/')) {
+      return buyerApp.fetch(req, env);
+    }
+
     // All company authentication and company operational APIs stay together.
     if (isCompanyRoute(p)) {
       return companyApp.fetch(req, env);
