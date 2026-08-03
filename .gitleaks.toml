@@ -1,0 +1,11 @@
+title = "Still production secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documentation intentionally excluded from secret scanning"
+paths = [
+  '''^README\.md$''',
+  '''^docs/''',
+]

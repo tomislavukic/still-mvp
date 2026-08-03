@@ -1,18 +1,8 @@
 /* Run with: node smoke-test.js */
 const fs=require('fs');
-const path=require('path');
-const {spawnSync}=require('child_process');
 const files=['index.html','app.js','enhancements.js','v10.js','theme.js','styles.css','privacy.html','terms.html','methodology.html'];
 const read=f=>fs.readFileSync(f,'utf8');
 const fail=[];
-const scriptFiles=[
- ...fs.readdirSync('.').filter(file=>file.endsWith('.js')),
- ...fs.readdirSync('merchant-backend').filter(file=>file.endsWith('.js')).map(file=>path.join('merchant-backend',file))
-];
-for(const script of scriptFiles){
- const check=spawnSync(process.execPath,['--check',script],{encoding:'utf8'});
- if(check.status!==0)fail.push(`invalid JavaScript in ${script}: ${(check.stderr||check.stdout).split('\n')[0]}`);
-}
 for(const f of files){if(!fs.existsSync(f))fail.push(`missing ${f}`);}
 if(!fail.length){
  const html=read('index.html'),app=read('app.js'),v10=read('v10.js'),enh=read('enhancements.js'),theme=read('theme.js'),css=read('styles.css');

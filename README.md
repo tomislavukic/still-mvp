@@ -80,6 +80,21 @@ npm run deploy
 
 Before deploying, authenticate Wrangler with the Cloudflare account that owns the Worker and confirm `GOOGLE_CLIENT_ID` is configured. The deploy script runs syntax checks, the smoke test, and a clean production build first.
 
+## Production Validation
+
+Repository validation is intentionally separate from production deployment. Run the complete local gate with:
+
+```bash
+npm run validate
+```
+
+- **Build validation:** `npm run validate:app` checks every tracked JavaScript source file, creates a clean production bundle, and runs the repository smoke tests. The same deterministic application checks run for pushes and pull requests.
+- **Secret scanning:** Gitleaks scans the complete Git history with its default detection rules and fails when a secret is found. Only the root `README.md` and files under `docs/` are excluded as documentation.
+- **CodeQL:** GitHub's official CodeQL Action analyzes JavaScript on pushes, pull requests, manual runs, and a weekly schedule. Results appear in GitHub code scanning.
+- **Dependabot:** GitHub Actions and npm dependencies are checked weekly, with no more than five open update pull requests for each ecosystem.
+
+`npm run validate:deploy` performs the complete validation gate followed by a pinned Wrangler dry run. It creates deployment output locally but does not publish or modify the Cloudflare Worker.
+
 ## Product and legal limitations
 
 Retail return rules vary by country, seller, product category, membership, condition, and seasonal exceptions. Results are guidance based on standard windows, not a guarantee or legal advice. Policy links and dates should be reviewed regularly.
