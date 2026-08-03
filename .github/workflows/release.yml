@@ -1,0 +1,124 @@
+name: Production release package
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  package:
+    name: Validate and package Build 106
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CI: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+
+      - name: Validate application and production build
+        run: npm run validate:app
+
+      - name: Validate CodeQL configuration
+        run: npm run validate:codeql
+
+      - name: Verify Build 106 configuration
+        run: |
+          set -euo pipefail
+
+          test -f merchant-backend/worker-v106.js
+          test -f wrangler.jsonc
+          test -f public/build.json
+
+          node <<'NODE'
+          const fs = require('fs');
+
+          const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
+
+          if (!wrangler.includes('"main": "merchant-backend/worker-v106.js"')) {
+            throw new Error('Wrangler no longer targets the Build 106 Worker');
+          }
+
+          const build = require('./public/build.json');
+
+          if (!Number.isInteger(build.productionBundle)) {
+            throw new Error('Invalid productionBundle metadata');
+          }
+
+          if (build.productionBundle < 106) {
+            throw new Error(
+              `Production bundle regressed below Build 106: ${build.productionBundle}`
+            );
+          }
+
+          console.log(`Validated production Build ${build.productionBundle}`);
+          NODE
+
+      - name: Prepare Cloudflare package without deploying
+        run: |
+          npx --yes wrangler@4.118.0 deploy \
+            --dry-run \
+            --outdir .wrangler/release-package
+
+      - name: Create release archive
+        run: |
+          set -euo pipefail
+
+          mkdir -p release
+
+          archive="release/still-mvp-${GITHUB_SHA}.tar.gz"
+          checksum="${archive}.sha256"
+
+          tar \
+            --create \
+            --gzip \
+            --file "$archive" \
+            public \
+            merchant-backend/worker-v106.js \
+            wrangler.jsonc \
+            package.json
+
+          shasum -a 256 "$archive" > "$checksum"
+
+      - name: Upload validated release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: still-mvp-${{ github.sha }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Attach package to published GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="release/still-mvp-${GITHUB_SHA}.tar.gz"
+          checksum="${archive}.sha256"
+
+          gh release upload "${GITHUB_REF_NAME}" \
+            "$archive" \
+            "$checksum" \
+            --clobber

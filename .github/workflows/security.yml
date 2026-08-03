@@ -2,8 +2,15 @@ name: Secret scanning
 
 on:
   push:
+    branches:
+      - main
+      - infrastructure/production-ci
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 1"
 
 permissions:
   contents: read
@@ -11,6 +18,10 @@ permissions:
 concurrency:
   group: security-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   gitleaks:
@@ -20,22 +31,34 @@ jobs:
     env:
       GITLEAKS_VERSION: 8.30.1
       GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+
     steps:
-      - name: Checkout repository
+      - name: Checkout complete Git history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Install pinned Gitleaks
-        shell: bash
+      - name: Install verified Gitleaks binary
         run: |
           set -euo pipefail
           archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
-          curl --fail --silent --show-error --location "$url" --output "$RUNNER_TEMP/$archive"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --location \
+            --retry 3 \
+            --retry-all-errors \
+            "$url" \
+            --output "$RUNNER_TEMP/$archive"
+
           echo "$GITLEAKS_ARCHIVE_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
           tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" gitleaks
           chmod 0755 "$RUNNER_TEMP/gitleaks"
+          "$RUNNER_TEMP/gitleaks" version
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Scan Git history for secrets
