@@ -1,0 +1,229 @@
+/* Build 91: visible, understandable and usable rewards for both audiences. */
+body:not(.v84-show-advanced) #buyerRewardsV76 { display: block !important; }
+
+.v91-reward-teaser {
+  max-width: 650px;
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 38px auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 15px 11px 11px;
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--green2) 9%, var(--surface));
+  color: var(--ink);
+  text-decoration: none;
+}
+.v91-reward-teaser > span {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green2);
+  color: #ffffff;
+}
+.v91-reward-teaser b { font-size: 15px; }
+.v91-reward-teaser small { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.v91-reward-teaser i { color: var(--green2); font-size: 19px; font-style: normal; }
+.v91-reward-teaser:hover { background: color-mix(in srgb, var(--green2) 14%, var(--surface)); }
+
+.buyer-rewards-v76 {
+  width: 100%;
+  margin: 0;
+  padding: clamp(56px, 6vw, 80px) clamp(32px, 5vw, 68px);
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--green2) 5%, var(--surface));
+}
+.br76-head { grid-template-columns: minmax(0, 1fr) minmax(240px, 310px); gap: 44px; }
+.br76-head > div:first-child > span {
+  color: var(--green2);
+  font-size: 13px;
+  letter-spacing: .08em;
+}
+.br76-head h2 {
+  max-width: 760px;
+  margin: 10px 0 12px;
+  font-size: clamp(36px, 4vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+.br76-head p,
+.br76-rules p,
+.br76-live p { color: var(--muted); font-size: 16px; line-height: 1.65; }
+.br76-balance {
+  padding: 24px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 12px 30px rgba(25, 49, 76, .08);
+}
+.br76-balance small { color: var(--green2); font-size: 12px; }
+.br76-balance b { margin: 6px 0; font-size: 48px; color: var(--ink); }
+.br76-balance span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+.br76-grid { gap: 12px; margin-top: 28px; }
+.br76-grid article,
+.br76-rules > div,
+.br76-live > div {
+  padding: 20px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface);
+}
+.br76-grid article > b { margin-bottom: 10px; color: var(--green2); font-size: 25px; }
+.br76-grid strong,
+.br76-rules strong { font-size: 16px; }
+.br76-grid p,
+.br76-rules p { margin-top: 7px; font-size: 14px; line-height: 1.55; }
+.br76-rules { gap: 12px; margin-top: 12px; }
+.br76-rules > div:first-child { background: color-mix(in srgb, var(--green) 6%, var(--surface)); }
+.br76-rules > div:last-child { background: color-mix(in srgb, var(--green2) 7%, var(--surface)); }
+
+.br76-live { gap: 12px; margin-top: 12px; }
+.br76-live h3 { margin: 0 0 12px; font-size: 18px; }
+.br76-live article {
+  grid-template-columns: minmax(55px, auto) 1fr;
+  padding: 13px 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 16%, transparent);
+}
+.br76-live article strong { font-size: 14px; }
+.br76-live article span { font-size: 14px; }
+.br76-live article small { color: var(--muted); font-size: 12px; }
+.br76-live .br76-offer { grid-template-columns: 1fr auto; }
+.br76-offer small { grid-column: 1 / -1; }
+.br76-offer button {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--green2);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.br76-offer button:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+.br76-subhead { margin-top: 24px !important; }
+.br76-redemption code { grid-column: 2; color: var(--green); font-weight: 800; }
+.br76-claim-result {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 18px;
+  border-radius: 15px;
+  background: var(--green2);
+  color: #ffffff;
+}
+.br76-claim-result b { grid-row: 1 / 4; align-self: center; }
+.br76-claim-result strong,
+.br76-claim-result code,
+.br76-claim-result small { color: #ffffff; }
+.br76-claim-result code { font-size: 16px; font-weight: 900; }
+
+.business-rewards-promise-v91 {
+  margin: 24px clamp(22px, 6vw, 82px) 34px;
+  padding: clamp(30px, 4vw, 48px);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--green2) 7%, var(--surface));
+}
+.v91-company-rewards-head { max-width: 780px; }
+.v91-company-rewards-head > span { color: var(--green2); font-size: 13px; font-weight: 900; letter-spacing: .08em; }
+.v91-company-rewards-head h2 { margin: 9px 0 10px; font-size: clamp(32px, 4vw, 48px); }
+.v91-company-rewards-head p { margin: 0; color: var(--muted); font-size: 16px !important; line-height: 1.65 !important; }
+.v91-company-rewards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 26px; }
+.v91-company-rewards-grid article { padding: 22px; border-radius: 16px; background: var(--surface); }
+.v91-company-rewards-grid article > span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green2);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+.v91-company-rewards-grid b { display: block; margin-top: 15px; font-size: 18px; }
+.v91-company-rewards-grid p { margin-bottom: 0; color: var(--muted); font-size: 15px !important; line-height: 1.6 !important; }
+.v91-company-rewards-note {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 17px 20px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+.v91-company-rewards-note b { color: var(--green2); }
+.v91-company-rewards-note span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.v91-company-rewards-note a { color: var(--green); font-weight: 800; text-decoration: none; white-space: nowrap; }
+
+/* Authenticated company Rewards workspace follows the same readable system. */
+.rw75 { padding: 26px; border: 0; background: var(--surface2); }
+.rw75-head > div > span { color: var(--green2); font-size: 13px; }
+.rw75-head h2 { font-size: 30px; }
+.rw75-head p { color: var(--muted); font-size: 15px !important; line-height: 1.6 !important; }
+.rw75 button { min-height: 44px; border: 0; background: var(--surface); font-size: 14px !important; }
+.rw75-metrics article,
+.rw75-grid > article,
+.rw75-ledger,
+.rw75-row { border: 0; background: var(--surface); }
+.rw75-metrics span { font-size: 13px; }
+.rw75-metrics b { font-size: 30px; }
+.rw75-metrics em,
+.rw75-row em { font-size: 13px; }
+.rw75 h3 { font-size: 16px; }
+.rw75-row { background: var(--surface2); }
+.rw75-row b { font-size: 14px; }
+.rw75-row small,
+.rw75-credit p { font-size: 13px !important; line-height: 1.5 !important; }
+.rw75-redeem input { min-height: 46px; border: 0; background: var(--field); font-size: 16px; }
+.rw75-empty,
+.rw75-loading { font-size: 14px; }
+
+html[data-theme="dark"] .v91-reward-teaser { background: #29443f; }
+html[data-theme="dark"] .buyer-rewards-v76,
+html[data-theme="dark"] .business-rewards-promise-v91 { background: #1d2d34; }
+html[data-theme="dark"] .br76-grid article,
+html[data-theme="dark"] .br76-balance,
+html[data-theme="dark"] .br76-live > div,
+html[data-theme="dark"] .v91-company-rewards-grid article,
+html[data-theme="dark"] .v91-company-rewards-note { background: #2a394b; }
+html[data-theme="dark"] .br76-rules > div:first-child { background: #273a4b; }
+html[data-theme="dark"] .br76-rules > div:last-child { background: #29433f; }
+html[data-theme="dark"] .br76-offer button:disabled { background: #35445a; }
+html[data-theme="dark"] .rw75 { background: #202b3c; }
+html[data-theme="dark"] .rw75-metrics article,
+html[data-theme="dark"] .rw75-grid > article,
+html[data-theme="dark"] .rw75-ledger { background: #2a394b; }
+html[data-theme="dark"] .rw75-row { background: #33445a; }
+
+@media (max-width: 900px) {
+  .br76-head,
+  .br76-rules,
+  .br76-live { grid-template-columns: 1fr; }
+  .br76-balance { order: -1; }
+  .v91-company-rewards-grid { grid-template-columns: 1fr; }
+  .v91-company-rewards-note { grid-template-columns: 1fr; }
+  .v91-company-rewards-note a { white-space: normal; }
+}
+
+@media (max-width: 767px) {
+  .v91-reward-teaser { grid-template-columns: 38px 1fr auto; }
+  .v91-reward-teaser small { grid-column: 1 / -1; padding-left: 48px; }
+  .buyer-rewards-v76 { padding: 44px 20px; }
+  .br76-grid { grid-template-columns: 1fr 1fr; }
+  .business-rewards-promise-v91 { margin: 18px 12px 28px; padding: 24px 18px; }
+}
+
+@media (max-width: 460px) {
+  .br76-grid { grid-template-columns: 1fr; }
+  .v91-reward-teaser { padding-right: 12px; }
+}

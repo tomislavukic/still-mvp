@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS lifecycle_preferences(id TEXT PRIMARY KEY,buyer_account_id TEXT NOT NULL,event_key TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'open',snoozed_until TEXT,updated_at TEXT NOT NULL,UNIQUE(buyer_account_id,event_key));
+CREATE TABLE IF NOT EXISTS promise_templates(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,name TEXT NOT NULL,commitment_type TEXT NOT NULL,title TEXT NOT NULL,default_days INTEGER NOT NULL DEFAULT 7,is_public INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS passport_service_events(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,passport_id TEXT NOT NULL,organization_id TEXT,buyer_account_id TEXT,event_type TEXT NOT NULL,title TEXT NOT NULL,provider_name TEXT,occurred_on TEXT NOT NULL,cost_cents INTEGER NOT NULL DEFAULT 0,notes TEXT,is_public INTEGER NOT NULL DEFAULT 0,created_by TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS passport_alerts(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,passport_id TEXT NOT NULL,organization_id TEXT NOT NULL,severity TEXT NOT NULL DEFAULT 'notice',title TEXT NOT NULL,detail TEXT NOT NULL,action_url TEXT,expires_at TEXT,created_by_member_id TEXT,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS passport_threads(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,passport_id TEXT NOT NULL UNIQUE,buyer_account_id TEXT NOT NULL,organization_id TEXT NOT NULL,subject TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'open',created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS passport_messages(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,thread_id TEXT NOT NULL,author_type TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS business_assets(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,category TEXT NOT NULL,title TEXT NOT NULL,supplier TEXT,reference TEXT,renewal_at TEXT,maintenance_at TEXT,seats INTEGER,cost_cents INTEGER NOT NULL DEFAULT 0,currency TEXT NOT NULL DEFAULT 'EUR',status TEXT NOT NULL DEFAULT 'active',notes TEXT,created_by_member_id TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_buyer_status ON lifecycle_preferences(buyer_account_id,status,updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_templates_org ON promise_templates(organization_id,updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_service_passport ON passport_service_events(passport_id,occurred_on DESC);
+CREATE INDEX IF NOT EXISTS idx_alert_passport ON passport_alerts(passport_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_threads_buyer ON passport_threads(buyer_account_id,updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_threads_org ON passport_threads(organization_id,updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_thread ON passport_messages(thread_id,created_at);
+CREATE INDEX IF NOT EXISTS idx_assets_org_status ON business_assets(organization_id,status,updated_at DESC);
+PRAGMA optimize;

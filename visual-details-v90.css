@@ -1,0 +1,155 @@
+/* Build 90: visual navigation, section identity and richer states. */
+.feature-nav-v82 a[data-feature-label] {
+  gap: 8px;
+}
+.feature-nav-v82 a[data-feature-label] > span {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+  color: var(--green);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+.feature-nav-v82 a[data-feature-label] > b {
+  font: inherit;
+  font-weight: 750;
+}
+.feature-nav-v82 a[data-feature-label].active > span,
+.feature-nav-v82 a[data-feature-label][aria-current="page"] > span {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.op83-party:first-child {
+  background: color-mix(in srgb, var(--green) 7%, var(--surface));
+}
+.op83-party:last-child {
+  background: color-mix(in srgb, var(--green2) 8%, var(--surface));
+}
+.op83-party > span {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: #ffffff;
+}
+.op83-party:last-child > span { background: var(--green2); }
+.op83-bridge strong { color: var(--green); }
+
+.op83-result.ready {
+  background: color-mix(in srgb, var(--green2) 7%, var(--surface));
+}
+.op83-result.verify {
+  background: color-mix(in srgb, #e2a21a 8%, var(--surface));
+}
+.op83-result.pause {
+  background: color-mix(in srgb, var(--urgent) 7%, var(--surface));
+}
+.op83-result.ready .op83-score { color: var(--green2); }
+.op83-result.verify .op83-score { color: #ad7100; }
+.op83-result.pause .op83-score { color: var(--urgent); }
+
+.op83-event {
+  position: relative;
+  padding-left: 56px;
+  box-shadow: 0 5px 16px rgba(25, 49, 76, .045);
+}
+.op83-event::before {
+  content: "";
+  position: absolute;
+  left: 21px;
+  top: 24px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 11%, transparent);
+}
+.op83-event.soon::before {
+  background: var(--urgent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--urgent) 12%, transparent);
+}
+.op83-event.past::before {
+  background: var(--muted);
+  box-shadow: none;
+}
+
+.op83-empty > span {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  margin: 0 auto 12px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+  color: var(--green);
+}
+
+footer {
+  background: var(--surface2);
+  color: var(--ink);
+}
+.footer-links-v82 a {
+  position: relative;
+  padding: 4px 2px;
+}
+.footer-links-v82 a::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform .16s ease;
+}
+.footer-links-v82 a:hover { text-decoration: none; }
+.footer-links-v82 a:hover::after { transform: scaleX(1); }
+
+html[data-theme="dark"] .feature-nav-v82 a[data-feature-label] > span {
+  background: #2d4358;
+  color: #6cc9fa;
+}
+html[data-theme="dark"] .feature-nav-v82 a[data-feature-label].active > span,
+html[data-theme="dark"] .feature-nav-v82 a[data-feature-label][aria-current="page"] > span {
+  background: #0878b8;
+  color: #ffffff;
+}
+html[data-theme="dark"] .op83-party:first-child { background: #2a3b50; }
+html[data-theme="dark"] .op83-party:last-child { background: #29433f; }
+html[data-theme="dark"] .op83-result.ready { background: #24423f; }
+html[data-theme="dark"] .op83-result.verify { background: #403a2c; }
+html[data-theme="dark"] .op83-result.pause { background: #44322f; }
+html[data-theme="dark"] .op83-result.verify .op83-score { color: #f2bd51; }
+html[data-theme="dark"] .op83-event { box-shadow: 0 5px 16px rgba(3, 9, 18, .12); }
+html[data-theme="dark"] .op83-empty > span { background: #2c4358; }
+
+@media (max-width: 767px) {
+  .feature-nav-v82 a[data-feature-label] {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .feature-nav-v82 a[data-feature-label] > span {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+  .feature-nav-v82 a[data-feature-label] > b {
+    font-size: 12px;
+    line-height: 1.1;
+  }
+  .op83-event { padding-left: 48px; }
+  .op83-event::before { left: 18px; top: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-links-v82 a::after { transition: none; }
+}

@@ -1,0 +1,187 @@
+/* Build 82: visible feature navigation, durable auth states, and responsive reading polish. */
+html { scroll-padding-top: 96px; overflow-x: clip; }
+body { overflow-wrap: break-word; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button, [role="button"], .button { touch-action: manipulation; }
+p { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+.topbar > .nav { display: none !important; }
+
+.feature-nav-v82 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px clamp(18px, 5vw, 76px);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+.feature-nav-v82::-webkit-scrollbar { display: none; }
+.feature-nav-v82 a,
+.feature-nav-v82 button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+.feature-nav-v82 a:hover,
+.feature-nav-v82 button:hover { border-color: var(--green); }
+.feature-nav-v82 .feature-nav-business {
+  margin-left: auto;
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+.footer-links-v82 {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.footer-links-v82 a { color: var(--muted); text-decoration: none; }
+.footer-links-v82 a:hover { color: var(--ink); text-decoration: underline; }
+
+.ba77-audience {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .1em;
+}
+.ba77-business-link {
+  display: block;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.ba77-retry-notice { display: grid; gap: 6px; margin-bottom: 12px; }
+.ba77-retry-notice b { color: var(--ink); font-size: 12px; }
+.ba77-retry-notice span { font-size: 12px; }
+.ba77-retry-notice button,
+#googleSignInV77 .ba77-config button {
+  justify-self: start;
+  min-height: 38px;
+  margin-top: 3px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+.ba77-login:disabled { opacity: 1; cursor: default; }
+.ba77-panel.login h3 { font-size: 21px; line-height: 1.2; }
+.ba77-panel.login > p { font-size: 13px; line-height: 1.55; }
+
+.business-access-v82 {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 14px 0 0 14px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* Company tools are real authenticated workspaces, not guest-page decoration. */
+.business-page:not(.company-authenticated) #businessWorkbenchV72,
+.business-page:not(.company-authenticated) #companyServicesV73,
+.business-page:not(.company-authenticated) #companyOpsV74,
+.business-page:not(.company-authenticated) #companyRewardsV75,
+.business-page:not(.company-authenticated) #branchCenterV68,
+.business-page:not(.company-authenticated) #companyCapabilitiesV80 { display: none !important; }
+
+/* The company portal previously used 8–11px text in key forms and status rows. */
+.company-portal-v46 .cp46-head > span,
+.company-portal-v46 .cp46-verify-title span,
+.company-portal-v46 .cp46-inbox-head span,
+.company-portal-v46 .cp46-status,
+.company-portal-v46 .cp46-stats span,
+.company-portal-v46 .cp46-list small,
+.company-portal-v46 .cp46-list em,
+.company-portal-v46 .cp46-meta { font-size: 12px !important; line-height: 1.45 !important; }
+.company-portal-v46 .cp46-auth label,
+.company-portal-v46 .cp46-verify label { font-size: 13px !important; line-height: 1.45 !important; }
+.company-portal-v46 .cp46-head p,
+.company-portal-v46 .cp46-verify p,
+.company-portal-v46 .cp46-empty p,
+.company-portal-v46 .cp46-error p { font-size: 14px !important; line-height: 1.6 !important; }
+.company-portal-v46 input,
+.company-portal-v46 select,
+.company-portal-v46 textarea { min-height: 48px; font-size: 16px !important; }
+.company-portal-v46 button { min-height: 44px; font-size: 14px !important; }
+.bw72-card small,
+.bw72-case small,
+.bw72-empty,
+.bw72-error { font-size: 13px !important; line-height: 1.5 !important; }
+
+@media (min-width: 901px) {
+  .hero { min-height: 0; padding-top: 56px; }
+  .hero-copy { align-self: start; padding-top: 28px; }
+  .ba77.ba78-embedded { max-width: 460px; }
+  .checker-card { align-self: start; }
+  .company-portal-v46 { scroll-margin-top: 92px; }
+}
+
+@media (max-width: 900px) {
+  .feature-nav-v82 { padding-inline: 14px; }
+  .feature-nav-v82 .feature-nav-business { margin-left: 0; }
+  .hero-copy { text-align: left; }
+  .hero-share-row { justify-content: flex-start; }
+  .ba77.ba78-embedded { max-width: 680px; }
+  .business-access-v82 { margin-left: 10px; margin-right: 10px; }
+}
+
+@media (max-width: 560px) {
+  html { scroll-padding-top: 74px; }
+  .topbar { position: sticky; top: 0; }
+  .feature-nav-v82 { padding-block: 8px; }
+  .feature-nav-v82 a,
+  .feature-nav-v82 button { min-height: 42px; padding-inline: 13px; font-size: 13px; }
+  .hero { gap: 24px; }
+  .hero h1 { font-size: clamp(39px, 11vw, 50px) !important; letter-spacing: -2.3px !important; }
+  .lead { max-width: 38ch; }
+  .privacy-note { font-size: 13px !important; }
+  .social-icon { min-width: 42px; min-height: 42px; }
+  .ba78-embedded .ba77-panel { top: calc(env(safe-area-inset-top) + 68px); bottom: 10px; max-height: none; }
+  .ba77-panel.login h3 { font-size: 22px; }
+  .ba77-panel.login > p,
+  .ba77-config,
+  .ba77-trust,
+  .ba77-business-link { font-size: 13px; }
+  .section-heading { text-align: left; }
+  .company-portal-v46 { padding-inline: 12px !important; }
+  .cp46-shell { padding: 17px !important; border-radius: 18px !important; }
+  .business-access-v82 { width: calc(100% - 20px); justify-content: center; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

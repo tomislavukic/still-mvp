@@ -1,0 +1,67 @@
+/* Build 89: visible completion feedback and useful empty states. */
+.op83-empty { align-content: center; }
+.op83-empty p { max-width: 48ch; margin-inline: auto; }
+.op83-empty-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 14px;
+  color: var(--green);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.op83-empty-action:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.v89-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 120;
+  max-width: min(390px, calc(100% - 32px));
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 18px 12px 12px;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 18px 48px rgba(25, 49, 76, .20);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px) scale(.98);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.v89-toast.visible { opacity: 1; transform: translateY(0) scale(1); }
+.v89-toast span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green2);
+  color: #ffffff;
+  font-weight: 900;
+}
+.v89-toast b { font-size: 15px; line-height: 1.4; }
+
+html[data-theme="dark"] .v89-toast {
+  background: #34445d;
+  box-shadow: 0 18px 48px rgba(3, 9, 18, .32);
+}
+
+@media (max-width: 767px) {
+  .v89-toast {
+    left: 12px;
+    right: 12px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v89-toast { transition: none; }
+}

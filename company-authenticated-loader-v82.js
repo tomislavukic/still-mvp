@@ -1,0 +1,47 @@
+(() => {
+  const featureScripts = [
+    'company-commerce-v92.js',
+    'company-passport-studio-v83.js',
+    'company-lifecycle-v95.js',
+    'company-operations-v96.js',
+    'retailer-claim-v48.js',
+    'company-inbox-v60.js',
+    'company-relationship-v61.js',
+    'company-branches-v68.js',
+    'company-notifications-v69.js',
+    'company-workbench-v72.js',
+    'company-services-mount-v79.js',
+    'company-services-v73.js',
+    'company-ops-v74.js',
+    'company-rewards-v75.js',
+    'company-control-center-v101.js'
+  ];
+  let loading;
+
+  function loadScript(file) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[data-company-feature="${file}"]`)) return resolve();
+      const script = document.createElement('script');
+      script.src = `${file}?v=106`;
+      script.dataset.companyFeature = file;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Could not load ${file}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadAuthenticatedFeatures(event) {
+    if (event?.detail?.organization?.status !== 'verified') return Promise.resolve();
+    if (loading) return loading;
+    loading = featureScripts.reduce(
+      (chain, file) => chain.then(() => loadScript(file)),
+      Promise.resolve()
+    ).catch(error => {
+      loading = undefined;
+      console.error('[Still?] Company feature loading failed.', error);
+    });
+    return loading;
+  }
+
+  window.addEventListener('still:company-authenticated', loadAuthenticatedFeatures);
+})();

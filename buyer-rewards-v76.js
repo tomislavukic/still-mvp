@@ -1,1 +1,171 @@
-(()=>{const $=(s,r=document)=>r.querySelector(s),hr=()=>$('#language')?.value==='hr',t=(a,b)=>hr()?b:a,esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function cases(){try{const x=JSON.parse(localStorage.getItem('still-connected-cases-v60')||'[]');return Array.isArray(x)?x:[]}catch{return[]}}async function getReward(row){const r=await fetch(`/api/v1/cases/${encodeURIComponent(row.publicId)}/rewards`,{headers:{'x-still-case-token':row.accessToken}});if(!r.ok)throw Error();return r.json()}function mount(){if($('#buyerRewardsV76'))return;const anchor=$('#relationshipV54')||$('#how')||$('main section:nth-last-of-type(2)')||$('main');if(!anchor)return;const s=document.createElement('section');s.id='buyerRewardsV76';s.className='buyer-rewards-v76 section';s.innerHTML=`<div class="br76-head"><div><span>${t('STILL? REWARDS','STILL? NAGRADE')}</span><h2>${t('Reliable participation should be worth something.','Pouzdano sudjelovanje treba nešto vrijediti.')}</h2><p>${t('Earn points from real, verifiable activity in Still?. Use them for benefits created by verified companies.','Skupljaj bodove kroz stvarnu i provjerljivu aktivnost na Still?. Iskoristi ih za pogodnosti koje nude verificirane tvrtke.')}</p></div><div class="br76-balance" data-balance><small>${t('YOUR POINTS','TVOJI BODOVI')}</small><b>—</b><span>${t('Connect a real case to show your balance.','Poveži stvarni slučaj za prikaz stanja.')}</span></div></div><div class="br76-grid"><article><b>+10</b><strong>${t('Structured case','Strukturirani slučaj')}</strong><p>${t('When a real case is created with your verified transaction details.','Kada se otvori stvarni slučaj povezan s tvojim podacima kupnje ili usluge.')}</p></article><article><b>+5</b><strong>${t('Verified company connection','Povezivanje s verificiranom tvrtkom')}</strong><p>${t('When Still? routes your case to a verified business.','Kada Still? usmjeri tvoj slučaj verificiranoj tvrtki.')}</p></article><article><b>+3</b><strong>${t('Useful response','Korisna komunikacija')}</strong><p>${t('When you respond inside the structured case workflow.','Kada odgovoriš unutar strukturiranog tijeka slučaja.')}</p></article><article><b>+20</b><strong>${t('Completed resolution','Dovršeno rješenje')}</strong><p>${t('When a recorded resolution is completed or accepted.','Kada se evidentirano rješenje dovrši ili prihvati.')}</p></article></div><div class="br76-rules"><div><strong>${t('Your reputation is not a complaint score.','Tvoja reputacija nije ocjena koliko se žališ.')}</strong><p>${t('Opening legitimate returns, warranty claims or complaints does not lower reputation. Reputation reflects reliable participation: truthful information, responses and completed outcomes.','Otvaranje legitimnog povrata, jamstva ili prigovora ne smanjuje reputaciju. Reputacija odražava pouzdano sudjelovanje: točne podatke, odgovore i dovršene ishode.')}</p></div><div><strong>${t('Benefits come from businesses.','Pogodnosti nude tvrtke.')}</strong><p>${t('A verified company may offer discounts, free services, priority support or extended return benefits. Still? never invents an offer.','Verificirana tvrtka može ponuditi popust, besplatnu uslugu, prioritetnu podršku ili dulji rok povrata. Still? nikada ne izmišlja pogodnost.')}</p></div></div><div class="br76-live" data-live hidden></div>`;anchor.insertAdjacentElement('afterend',s);load()}async function load(){const rows=cases().filter(x=>x?.publicId&&x?.accessToken);if(!rows.length)return;let data=null;for(const row of rows.slice(0,10)){try{const d=await getReward(row);if(d?.available){data=d;break}}catch{}}if(!data)return;const bal=$('[data-balance]');if(bal)bal.innerHTML=`<small>${t('YOUR POINTS','TVOJI BODOVI')}</small><b>${Number(data.account.points||0).toLocaleString(hr()?'hr-HR':'en-US')}</b><span>${t('Reputation','Reputacija')}: ${esc(data.account.reputationLevel)} · ${data.account.reputationScore}/100</span>`;const live=$('[data-live]');if(!live)return;const offers=data.offers||[];const activity=data.ledger||[];live.hidden=false;live.innerHTML=`<div><h3>${t('Available benefits','Dostupne pogodnosti')}</h3>${offers.length?offers.slice(0,6).map(o=>`<article><strong>${esc(o.title)}</strong><span>${o.point_cost} ${t('points','bodova')}</span><small>${esc(o.description||o.terms||'')}</small></article>`).join(''):`<p>${t('This company has not published a Still? Rewards benefit yet.','Ova tvrtka još nije objavila Still? Rewards pogodnost.')}</p>`}</div><div><h3>${t('Recent point activity','Nedavna aktivnost bodova')}</h3>${activity.length?activity.slice(0,6).map(x=>`<article><strong>${x.points_delta>0?'+':''}${x.points_delta}</strong><span>${esc(x.description||x.event_type)}</span><small>${new Date(x.created_at).toLocaleString(hr()?'hr-HR':'en-US')}</small></article>`).join(''):`<p>${t('No point activity yet.','Još nema aktivnosti bodova.')}</p>`}</div>`}document.readyState==='loading'?document.addEventListener('DOMContentLoaded',()=>setTimeout(mount,700)):setTimeout(mount,700);$('#language')?.addEventListener('change',()=>setTimeout(()=>{const old=$('#buyerRewardsV76');old?.remove();mount()},50));window.addEventListener('storage',e=>{if(e.key==='still-connected-cases-v60')setTimeout(load,100)})})();
+(() => {
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const isHr = () => $('#language')?.value === 'hr';
+  const t = (en, hr) => isHr() ? hr : en;
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  let root;
+  let activeRow;
+  let currentData;
+
+  function connectedCases() {
+    try {
+      const value = JSON.parse(localStorage.getItem('still-connected-cases-v60') || '[]');
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async function requestReward(row) {
+    const response = await fetch(`/api/v1/cases/${encodeURIComponent(row.publicId)}/rewards`, {
+      headers: { 'x-still-case-token': row.accessToken }
+    });
+    if (!response.ok) throw new Error('reward_unavailable');
+    return response.json();
+  }
+
+  async function claimReward(row, offerId) {
+    const response = await fetch(`/api/v1/cases/${encodeURIComponent(row.publicId)}/rewards/offers/${encodeURIComponent(offerId)}/claim`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-still-case-token': row.accessToken }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw Object.assign(new Error(data.error || 'claim_failed'), { data });
+    return data;
+  }
+
+  function mountTeaser() {
+    if ($('#buyerRewardsTeaserV91')) return;
+    const positioning = $('.op83-positioning');
+    if (!positioning) return;
+    const teaser = document.createElement('a');
+    teaser.id = 'buyerRewardsTeaserV91';
+    teaser.className = 'v91-reward-teaser';
+    teaser.href = '#buyerRewardsV76';
+    teaser.innerHTML = `<span aria-hidden="true">★</span><b>${t('Still? Rewards', 'Still? Nagrade')}</b><small>${t('Earn points for reliable participation and use them for benefits from verified companies.', 'Zaradi bodove pouzdanim sudjelovanjem i koristi ih za pogodnosti verificiranih tvrtki.')}</small><i>↓</i>`;
+    positioning.insertAdjacentElement('afterend', teaser);
+  }
+
+  function mount() {
+    mountTeaser();
+    if ($('#buyerRewardsV76')) return;
+    const anchor = $('#howConnectsV83') || $('#timelineV83') || $('#relationshipV54') || $('#how') || $('main');
+    if (!anchor) return;
+    root = document.createElement('section');
+    root.id = 'buyerRewardsV76';
+    root.className = 'buyer-rewards-v76 section';
+    root.innerHTML = `
+      <div class="br76-head">
+        <div>
+          <span>${t('STILL? REWARDS', 'STILL? NAGRADE')}</span>
+          <h2>${t('Reliable participation should be worth something.', 'Pouzdano sudjelovanje treba nešto vrijediti.')}</h2>
+          <p>${t('Earn points from real, verifiable activity in Still?. Exchange them for benefits published by verified companies.', 'Skupljaj bodove kroz stvarnu i provjerljivu aktivnost na Still?. Zamijeni ih za pogodnosti koje objavljuju verificirane tvrtke.')}</p>
+        </div>
+        <div class="br76-balance" data-balance>
+          <small>${t('YOUR POINTS', 'TVOJI BODOVI')}</small><b>—</b>
+          <span>${t('Connect a real case to show your balance.', 'Poveži stvarni slučaj za prikaz stanja.')}</span>
+        </div>
+      </div>
+      <div class="br76-grid">
+        ${earningCard('+10', t('Structured case', 'Strukturirani slučaj'), t('Create a real case with verified transaction details.', 'Otvori stvarni slučaj s provjerenim podacima transakcije.'))}
+        ${earningCard('+5', t('Verified connection', 'Provjereno povezivanje'), t('Route the case to a verified company.', 'Usmjeri slučaj verificiranoj tvrtki.'))}
+        ${earningCard('+3', t('Useful response', 'Korisna komunikacija'), t('Respond inside the structured workflow.', 'Odgovori unutar strukturiranog tijeka.'))}
+        ${earningCard('+20', t('Completed resolution', 'Dovršeno rješenje'), t('Complete or accept a recorded resolution.', 'Dovrši ili prihvati evidentirano rješenje.'))}
+      </div>
+      <div class="br76-rules">
+        <div><strong>${t('Legitimate claims never reduce reputation.', 'Legitimni zahtjevi ne smanjuju reputaciju.')}</strong><p>${t('Reputation reflects truthful information, useful responses and completed outcomes—not how rarely you complain.', 'Reputacija odražava točne podatke, korisne odgovore i dovršene ishode—ne koliko se rijetko žališ.')}</p></div>
+        <div><strong>${t('Benefits come from verified companies.', 'Pogodnosti nude verificirane tvrtke.')}</strong><p>${t('Offers may include discounts, free services, priority support or extended return benefits. Published terms always apply.', 'Ponude mogu uključivati popuste, besplatne usluge, prioritetnu podršku ili dulji rok povrata. Uvijek vrijede objavljeni uvjeti.')}</p></div>
+      </div>
+      <div class="br76-live" data-live hidden></div>`;
+    anchor.insertAdjacentElement('afterend', root);
+    root.addEventListener('click', handleClick);
+    load();
+  }
+
+  function earningCard(points, title, description) {
+    return `<article><b>${points}</b><strong>${title}</strong><p>${description}</p></article>`;
+  }
+
+  async function load() {
+    const rows = connectedCases().filter(row => row?.publicId && row?.accessToken);
+    if (!rows.length || !root) return;
+    activeRow = undefined;
+    currentData = undefined;
+    for (const row of rows.slice(0, 10)) {
+      try {
+        const data = await requestReward(row);
+        if (data?.available) {
+          activeRow = row;
+          currentData = data;
+          break;
+        }
+      } catch {}
+    }
+    if (!currentData) return;
+    renderLive();
+  }
+
+  function renderLive() {
+    const balance = $('[data-balance]', root);
+    const account = currentData.account || {};
+    if (balance) balance.innerHTML = `<small>${t('YOUR POINTS', 'TVOJI BODOVI')}</small><b>${Number(account.points || 0).toLocaleString(isHr() ? 'hr-HR' : 'en-US')}</b><span>${t('Reputation', 'Reputacija')}: ${esc(account.reputationLevel)} · ${account.reputationScore}/100</span>`;
+    const live = $('[data-live]', root);
+    if (!live) return;
+    const offers = currentData.offers || [];
+    const activity = currentData.ledger || [];
+    const redemptions = currentData.redemptions || [];
+    live.hidden = false;
+    live.innerHTML = `
+      <div>
+        <h3>${t('Benefits you can claim', 'Pogodnosti koje možeš preuzeti')}</h3>
+        ${offers.length ? offers.slice(0, 8).map(offer => offerCard(offer, account.points || 0)).join('') : `<p>${t('The connected company has not published a benefit yet.', 'Povezana tvrtka još nije objavila pogodnost.')}</p>`}
+        ${redemptions.length ? `<h3 class="br76-subhead">${t('Your claimed benefits', 'Tvoje preuzete pogodnosti')}</h3>${redemptions.slice(0, 5).map(redemption => `<article class="br76-redemption"><strong>${esc(redemption.title)}</strong><span>${esc(redemption.status)}</span><small>${esc(redemption.code || '')}</small></article>`).join('')}` : ''}
+      </div>
+      <div>
+        <h3>${t('Recent point activity', 'Nedavna aktivnost bodova')}</h3>
+        ${activity.length ? activity.slice(0, 8).map(item => `<article><strong>${item.points_delta > 0 ? '+' : ''}${item.points_delta}</strong><span>${esc(item.description || item.event_type)}</span><small>${new Date(item.created_at).toLocaleString(isHr() ? 'hr-HR' : 'en-US')}</small></article>`).join('') : `<p>${t('No point activity yet.', 'Još nema aktivnosti bodova.')}</p>`}
+      </div>`;
+  }
+
+  function offerCard(offer, balance) {
+    const disabled = Number(balance) < Number(offer.point_cost);
+    return `<article class="br76-offer"><strong>${esc(offer.title)}</strong><span>${offer.point_cost} ${t('points', 'bodova')}</span><small>${esc(offer.description || offer.terms || '')}</small><button type="button" data-claim-offer="${esc(offer.id)}" ${disabled ? 'disabled' : ''}>${disabled ? t('More points needed', 'Treba još bodova') : t('Claim benefit', 'Preuzmi pogodnost')}</button></article>`;
+  }
+
+  async function handleClick(event) {
+    const button = event.target.closest('[data-claim-offer]');
+    if (!button || !activeRow) return;
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = t('Claiming…', 'Preuzimanje…');
+    try {
+      const result = await claimReward(activeRow, button.dataset.claimOffer);
+      await load();
+      const live = $('[data-live]', root);
+      live?.insertAdjacentHTML('afterbegin', `<div class="br76-claim-result"><b>${t('Benefit claimed', 'Pogodnost je preuzeta')}</b><strong>${esc(result.redemption.title)}</strong><code>${esc(result.redemption.code)}</code><small>${esc(result.redemption.terms || t('Show this code to the verified company.', 'Pokaži ovaj kod verificiranoj tvrtki.'))}</small></div>`);
+    } catch (error) {
+      const messages = {
+        insufficient_points: t('You do not have enough points yet.', 'Još nemaš dovoljno bodova.'),
+        already_claimed: t('You already claimed this benefit.', 'Već si preuzeo ovu pogodnost.'),
+        offer_limit_reached: t('This benefit has reached its claim limit.', 'Ova je pogodnost dosegla ograničenje preuzimanja.')
+      };
+      button.textContent = messages[error.message] || t('Claim unavailable', 'Preuzimanje nije dostupno');
+      setTimeout(() => { button.textContent = original; button.disabled = false; }, 2600);
+    }
+  }
+
+  function remount() {
+    $('#buyerRewardsV76')?.remove();
+    $('#buyerRewardsTeaserV91')?.remove();
+    root = undefined;
+    activeRow = undefined;
+    currentData = undefined;
+    mount();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(mount, 700), { once: true });
+  else setTimeout(mount, 700);
+  $('#language')?.addEventListener('change', () => setTimeout(remount, 90));
+  window.addEventListener('still:language', () => setTimeout(remount, 90));
+  window.addEventListener('storage', event => { if (event.key === 'still-connected-cases-v60') setTimeout(load, 100); });
+})();

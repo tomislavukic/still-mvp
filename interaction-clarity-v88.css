@@ -1,0 +1,92 @@
+/* Build 88: progressive forms and calmer information density. */
+.op83-form > h3 { margin-bottom: 0; }
+
+.v88-form-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 48ch;
+  margin: -6px 0 2px;
+  color: var(--muted);
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+.v88-form-note span {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green2) 16%, var(--surface));
+  color: var(--green2);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.v88-form-details {
+  padding: 0 16px 1px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface2);
+}
+
+.v88-form-details summary {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--ink);
+}
+
+.v88-form-details summary::-webkit-details-marker { display: none; }
+.v88-form-details summary span,
+.v88-form-details summary b,
+.v88-form-details summary small { display: block; }
+.v88-form-details summary b { font-size: 15px; line-height: 1.3; }
+.v88-form-details summary small { margin-top: 3px; color: var(--muted); font-size: 13px; }
+
+.v88-form-details summary::after {
+  content: "+";
+  width: 30px;
+  height: 30px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--green);
+  font-size: 21px;
+  font-weight: 500;
+  transition: transform .18s ease, background .18s ease;
+}
+
+.v88-form-details[open] { padding-bottom: 16px; }
+.v88-form-details[open] summary::after { transform: rotate(45deg); }
+.v88-form-details > label { margin: 14px 0; }
+.v88-form-details > .op83-form-grid { margin: 14px 0; }
+
+.v88-form-details summary:hover::after,
+.v88-form-details summary:focus-visible::after {
+  background: color-mix(in srgb, var(--green) 13%, var(--surface));
+}
+
+html[data-theme="dark"] .v88-form-note span {
+  background: #214b4a;
+}
+html[data-theme="dark"] .v88-form-details { background: #2b3b50; }
+html[data-theme="dark"] .v88-form-details summary::after { background: #34465e; }
+
+@media (max-width: 767px) {
+  .v88-form-details { padding-inline: 14px; }
+  .v88-form-details summary { min-height: 72px; }
+  .v88-form-details summary small { max-width: 27ch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v88-form-details summary::after { transition: none; }
+}
