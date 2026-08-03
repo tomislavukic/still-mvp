@@ -2,7 +2,12 @@ name: Application validation
 
 on:
   push:
+    branches:
+      - main
+      - infrastructure/production-ci
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     - cron: "23 2 * * *"
@@ -14,11 +19,17 @@ concurrency:
   group: validation-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   validate:
     name: Application and Worker dry run
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      CI: "true"
 
     steps:
       - name: Checkout repository
@@ -40,14 +51,23 @@ jobs:
       - name: Prepare Cloudflare Worker deployment package
         run: npx --yes wrangler@4.118.0 deploy --dry-run --outdir .wrangler/validate-deploy
 
-      - name: Verify generated production metadata
-        shell: bash
+      - name: Verify Build 106 production metadata
         run: |
           set -euo pipefail
           test -f public/index.html
           test -f public/company.html
           test -f public/build.json
-          node -e "const b=require('./public/build.json'); if(!Number.isInteger(b.productionBundle)) throw new Error('Missing productionBundle in public/build.json'); console.log('Validated production bundle', b.productionBundle)"
+          test -f merchant-backend/worker-v106.js
+          node <<'NODE'
+          const build = require('./public/build.json');
+          if (!Number.isInteger(build.productionBundle)) {
+            throw new Error('Missing productionBundle in public/build.json');
+          }
+          if (build.productionBundle < 106) {
+            throw new Error(`Production bundle regressed below Build 106: ${build.productionBundle}`);
+          }
+          console.log('Validated production bundle', build.productionBundle);
+          NODE
 
       - name: Upload validation artifacts
         if: always()
@@ -57,5 +77,5 @@ jobs:
           path: |
             public/build.json
             .wrangler/validate-deploy
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
