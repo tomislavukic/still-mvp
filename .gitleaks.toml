@@ -1,0 +1,11 @@
+title = "Still? Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore known cp46-auth UI class false positives only"
+regexTarget = "match"
+regexes = [
+  '''\.cp46-auth(?:\s+(?:label|button|small))?'''
+]
