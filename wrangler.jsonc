@@ -4,6 +4,10 @@
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v106.js",
   "keep_vars": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
