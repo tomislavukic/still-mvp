@@ -108,6 +108,58 @@ async function auditList(request,env,role,id){
   return json({events:(result.results||[]).map(row=>({...row,metadata:JSON.parse(row.metadata_json||'{}'),metadata_json:undefined}))},200,{'x-request-id':id});
 }
 
+
+function classifyOperationsIncidents(metrics){
+  const incidents=[];
+
+  if(!metrics.databaseHealthy){
+    incidents.push({
+      severity:'critical',
+      code:'database_unavailable',
+      title:'D1 database health check failed',
+      detail:'The production Worker could not confirm database connectivity.'
+    });
+  }
+
+  if(metrics.errors24h>0){
+    incidents.push({
+      severity:metrics.errors24h>=5?'critical':'warning',
+      code:'server_errors',
+      title:`${metrics.errors24h} server ${metrics.errors24h===1?'error':'errors'} recorded`,
+      detail:'One or more protected admin requests returned HTTP 500 or higher.'
+    });
+  }
+
+  if(metrics.averageLatencyMs>=500){
+    incidents.push({
+      severity:metrics.averageLatencyMs>=1000?'critical':'warning',
+      code:'high_average_latency',
+      title:'Average admin API latency is elevated',
+      detail:`Average recorded latency is ${metrics.averageLatencyMs} ms.`
+    });
+  }
+
+  if(metrics.maximumLatencyMs>=2000){
+    incidents.push({
+      severity:'warning',
+      code:'latency_spike',
+      title:'A slow protected request was detected',
+      detail:`Maximum recorded latency reached ${metrics.maximumLatencyMs} ms.`
+    });
+  }
+
+  if(metrics.denied24h>=20){
+    incidents.push({
+      severity:'warning',
+      code:'authentication_denials',
+      title:'Unusual authentication denial volume',
+      detail:`${metrics.denied24h} security-relevant denied requests were recorded.`
+    });
+  }
+
+  return incidents;
+}
+
 async function operationsHealth(request,env,role,id){
   if(!READ_ROLES.has(role)){
     return json({error:'forbidden'},403,{'x-request-id':id});
@@ -122,10 +174,26 @@ async function operationsHealth(request,env,role,id){
     SELECT
       COUNT(*) AS requests_24h,
       SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS errors_24h,
-      SUM(CASE WHEN status IN (401,403) THEN 1 ELSE 0 END) AS denied_24h,
+
+      SUM(CASE
+        WHEN status IN (401,403)
+         AND path != '/api/v1/admin/notifications'
+        THEN 1 ELSE 0
+      END) AS security_denied_24h,
+
+      SUM(CASE
+        WHEN status IN (401,403)
+         AND path = '/api/v1/admin/notifications'
+        THEN 1 ELSE 0
+      END) AS notification_poll_denied_24h,
+
       ROUND(AVG(
         CAST(json_extract(metadata_json,'$.durationMs') AS REAL)
       ),1) AS average_latency_ms,
+
+      MAX(CAST(json_extract(metadata_json,'$.durationMs') AS REAL))
+        AS maximum_latency_ms,
+
       MAX(created_at) AS latest_activity_at
     FROM platform_audit_events
     WHERE created_at >= datetime('now','-24 hours')
@@ -159,10 +227,21 @@ async function operationsHealth(request,env,role,id){
     metrics:{
       requests24h:Number(metrics?.requests_24h||0),
       errors24h:Number(metrics?.errors_24h||0),
-      denied24h:Number(metrics?.denied_24h||0),
+      denied24h:Number(metrics?.security_denied_24h||0),
+      notificationPollDenied24h:
+        Number(metrics?.notification_poll_denied_24h||0),
       averageLatencyMs:Number(metrics?.average_latency_ms||0),
+      maximumLatencyMs:Number(metrics?.maximum_latency_ms||0),
       latestActivityAt:metrics?.latest_activity_at||null
     },
+    incidents:classifyOperationsIncidents({
+      requests24h:Number(metrics?.requests_24h||0),
+      errors24h:Number(metrics?.errors_24h||0),
+      denied24h:Number(metrics?.security_denied_24h||0),
+      averageLatencyMs:Number(metrics?.average_latency_ms||0),
+      maximumLatencyMs:Number(metrics?.maximum_latency_ms||0),
+      databaseHealthy:databaseCheck?.healthy===1
+    }),
     recentActivity:recent.results||[],
     checkedAt:now()
   },200,{'x-request-id':id});
