@@ -24,16 +24,17 @@ jobs:
 
     steps:
       - name: Check out feature branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: feature/organization-access-controls
           fetch-depth: 0
           persist-credentials: true
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -56,7 +57,12 @@ jobs:
         run: npm run validate:codeql
 
       - name: Scan repository for secrets
-        run: npm run security
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 
       - name: Build production assets
         run: npm run build
