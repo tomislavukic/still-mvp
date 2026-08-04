@@ -1,0 +1,98 @@
+name: Apply Organization Access Controls
+
+on:
+  push:
+    branches:
+      - feature/organization-access-controls
+    paths:
+      - scripts/apply-organization-access-controls.js
+      - .github/workflows/apply-organization-access-controls.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: organization-access-controls-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/organization-access-controls
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply access-control implementation
+        run: node scripts/apply-organization-access-controls.js
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check admin.js
+          node --check merchant-backend/worker-v107.js
+
+      - name: Run application validation
+        run: npm run validate:app
+
+      - name: Run tests
+        run: npm test
+
+      - name: Validate CodeQL configuration
+        run: npm run validate:codeql
+
+      - name: Scan repository for secrets
+        run: npm run security
+
+      - name: Build production assets
+        run: npm run build
+
+      - name: Verify production bundle
+        run: |
+          test -f public/admin.js
+          test -f public/admin.html
+          grep -q "accessControlDialog" public/admin.js
+          grep -q "access-control-dialog" public/admin.html
+          grep -q "changeMemberStatus" merchant-backend/worker-v107.js
+
+      - name: Wrangler deployment dry-run
+        run: |
+          rm -rf .wrangler/organization-access-controls-check
+          npx --yes wrangler@4.118.0 deploy \
+            --dry-run \
+            --outdir .wrangler/organization-access-controls-check
+
+      - name: Commit validated implementation
+        run: |
+          if git diff --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            admin.js \
+            admin.html \
+            merchant-backend/worker-v107.js \
+            public/admin.js \
+            public/admin.html
+
+          git commit -m "Implement Organization Access Controls"
+          git push origin HEAD:feature/organization-access-controls
