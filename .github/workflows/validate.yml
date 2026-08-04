@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - infrastructure/production-ci
+      - infrastructure/operations-hardening
   pull_request:
     branches:
       - main
@@ -48,25 +49,47 @@ jobs:
       - name: Validate CodeQL workflow configuration
         run: npm run validate:codeql
 
+      - name: Verify Build 107 wrapper architecture
+        run: |
+          set -euo pipefail
+          test -f merchant-backend/worker-v106.js
+          test -f merchant-backend/worker-v107.js
+          test -f wrangler.jsonc
+
+          node <<'NODE'
+          const fs = require('fs');
+          const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
+          const wrapper = fs.readFileSync('merchant-backend/worker-v107.js', 'utf8');
+
+          if (!wrangler.includes('"main": "merchant-backend/worker-v107.js"')) {
+            throw new Error('Wrangler does not target the Build 107 operations wrapper');
+          }
+          if (!wrapper.includes("import app from './worker-v106.js'")) {
+            throw new Error('Build 107 no longer delegates to the validated Build 106 base');
+          }
+          for (const capability of ['platform_audit_events','OPERATIONS_REVIEWER_TOKEN','OPERATIONS_SUPPORT_TOKEN','OPERATIONS_READONLY_TOKEN','/api/v1/admin/audit','request.complete']) {
+            if (!wrapper.includes(capability)) throw new Error(`Build 107 capability missing: ${capability}`);
+          }
+          NODE
+
       - name: Prepare Cloudflare Worker deployment package
         run: npx --yes wrangler@4.118.0 deploy --dry-run --outdir .wrangler/validate-deploy
 
-      - name: Verify Build 106 production metadata
+      - name: Verify production metadata
         run: |
           set -euo pipefail
           test -f public/index.html
           test -f public/company.html
           test -f public/build.json
-          test -f merchant-backend/worker-v106.js
           node <<'NODE'
           const build = require('./public/build.json');
           if (!Number.isInteger(build.productionBundle)) {
             throw new Error('Missing productionBundle in public/build.json');
           }
           if (build.productionBundle < 106) {
-            throw new Error(`Production bundle regressed below Build 106: ${build.productionBundle}`);
+            throw new Error(`Production web bundle regressed below Build 106: ${build.productionBundle}`);
           }
-          console.log('Validated production bundle', build.productionBundle);
+          console.log('Validated production web bundle', build.productionBundle, 'with Worker Build 107');
           NODE
 
       - name: Upload validation artifacts
