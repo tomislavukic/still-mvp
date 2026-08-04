@@ -2,7 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v106.js",
+  "main": "merchant-backend/worker-v107.js",
+  // Build 107 is an operations hardening wrapper around merchant-backend/worker-v106.js.
   "keep_vars": true,
   "observability": {
     "enabled": true,
