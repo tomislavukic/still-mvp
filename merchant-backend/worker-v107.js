@@ -68,6 +68,9 @@ function actionFor(method,path){
   if(path==='/api/v1/admin/session')return 'session.inspect';
   if(method==='GET'&&path==='/api/v1/admin/overview')return 'merchant.overview.read';
   if(method==='GET'&&/\/organizations\/[^/]+\/identity$/.test(path))return 'merchant.identity.read';
+  if(method==='POST'&&/\/organizations\/[^/]+\/members\/[^/]+\/status$/.test(path))return 'merchant.member.status';
+  if(method==='POST'&&/\/organizations\/[^/]+\/sessions\/[^/]+\/revoke$/.test(path))return 'merchant.session.revoke';
+  if(method==='POST'&&/\/organizations\/[^/]+\/api-tokens\/[^/]+\/revoke$/.test(path))return 'merchant.api_token.revoke';
   if(method==='GET'&&/\/organizations\/[^/]+\/events$/.test(path))return 'merchant.audit.read';
   if(method==='POST'&&/\/verifications\/[^/]+\/review$/.test(path))return 'verification.review';
   if(method==='POST'&&/\/retailer-claims\/[^/]+\/review$/.test(path))return 'retailer_claim.review';
@@ -76,6 +79,7 @@ function actionFor(method,path){
 function allowed(role,method,path){
   if(!role)return false;
   if(method==='GET')return READ_ROLES.has(role);
+  if(method==='POST'&&(/\/organizations\/[^/]+\/(members|sessions|api-tokens)\/[^/]+\/(status|revoke)$/.test(path)))return role==='owner';
   if(method==='POST'&&(/\/verifications\/[^/]+\/review$/.test(path)||/\/retailer-claims\/[^/]+\/review$/.test(path)))return REVIEW_ROLES.has(role);
   return role==='owner'||role==='admin';
 }
@@ -256,6 +260,143 @@ async function operationsHealth(request,env,role,id){
 }
 
 
+
+async function readJsonBody(request){
+  try{return await request.json()}catch{return{}}
+}
+
+function validReason(value){
+  const reason=String(value||'').trim();
+  return reason.length>=8&&reason.length<=500?reason:null;
+}
+
+async function writeOrganizationControlAudit(env,{organizationId,memberId,action,entityType,entityId,details}){
+  await env.DB.prepare(`
+    INSERT INTO ops_audit_log(
+      id,organization_id,member_id,action,entity_type,entity_id,details_json,created_at
+    ) VALUES(?,?,?,?,?,?,?,?)
+  `).bind(
+    `oal_${crypto.randomUUID().replaceAll('-','')}`,
+    organizationId,
+    memberId,
+    action,
+    entityType,
+    entityId,
+    JSON.stringify(details||{}),
+    now()
+  ).run();
+}
+
+async function changeMemberStatus(request,env,role,id,organizationId,memberId){
+  if(role!=='owner')return json({error:'forbidden'},403,{'x-request-id':id});
+  const body=await readJsonBody(request);
+  if(body.confirm!=='CONFIRM')return json({error:'confirmation_required'},400,{'x-request-id':id});
+  const reason=validReason(body.reason);
+  if(!reason)return json({error:'reason_required'},400,{'x-request-id':id});
+  const nextStatus=body.status;
+  if(!['active','disabled'].includes(nextStatus))return json({error:'invalid_status'},400,{'x-request-id':id});
+
+  const member=await env.DB.prepare(`
+    SELECT id,email,role,status FROM merchant_members
+    WHERE id=? AND organization_id=? LIMIT 1
+  `).bind(memberId,organizationId).first();
+  if(!member)return json({error:'member_not_found'},404,{'x-request-id':id});
+  if(member.status===nextStatus)return json({member,changed:false},200,{'x-request-id':id});
+
+  if(member.role==='owner'&&nextStatus==='disabled'){
+    const owners=await env.DB.prepare(`
+      SELECT COUNT(*) AS count FROM merchant_members
+      WHERE organization_id=? AND role='owner' AND status='active'
+    `).bind(organizationId).first();
+    if(Number(owners?.count||0)<=1)return json({error:'last_owner_protected'},409,{'x-request-id':id});
+  }
+
+  await env.DB.prepare(`
+    UPDATE merchant_members SET status=?,updated_at=?
+    WHERE id=? AND organization_id=?
+  `).bind(nextStatus,now(),memberId,organizationId).run();
+
+  if(nextStatus==='disabled'){
+    await env.DB.prepare(`
+      DELETE FROM merchant_sessions
+      WHERE member_id=?
+    `).bind(memberId).run();
+  }
+
+  await writeOrganizationControlAudit(env,{
+    organizationId,
+    memberId,
+    action:nextStatus==='disabled'?'member.disabled':'member.reactivated',
+    entityType:'merchant_member',
+    entityId:memberId,
+    details:{reason,previousStatus:member.status,newStatus:nextStatus,platformRole:role}
+  });
+
+  return json({
+    member:{...member,status:nextStatus},
+    changed:true,
+    sessionsTerminated:nextStatus==='disabled'
+  },200,{'x-request-id':id});
+}
+
+async function revokeOrganizationSession(request,env,role,id,organizationId,sessionId){
+  if(role!=='owner')return json({error:'forbidden'},403,{'x-request-id':id});
+  const body=await readJsonBody(request);
+  if(body.confirm!=='CONFIRM')return json({error:'confirmation_required'},400,{'x-request-id':id});
+  const reason=validReason(body.reason);
+  if(!reason)return json({error:'reason_required'},400,{'x-request-id':id});
+
+  const session=await env.DB.prepare(`
+    SELECT s.id,s.member_id,m.email
+    FROM merchant_sessions s
+    JOIN merchant_members m ON m.id=s.member_id
+    WHERE s.id=? AND m.organization_id=? LIMIT 1
+  `).bind(sessionId,organizationId).first();
+  if(!session)return json({error:'session_not_found'},404,{'x-request-id':id});
+
+  await env.DB.prepare('DELETE FROM merchant_sessions WHERE id=?').bind(sessionId).run();
+  await writeOrganizationControlAudit(env,{
+    organizationId,
+    memberId:session.member_id,
+    action:'session.revoked',
+    entityType:'merchant_session',
+    entityId:sessionId,
+    details:{reason,memberEmail:session.email,platformRole:role}
+  });
+  return json({revoked:true,sessionId},200,{'x-request-id':id});
+}
+
+async function revokeOrganizationApiToken(request,env,role,id,organizationId,tokenId){
+  if(role!=='owner')return json({error:'forbidden'},403,{'x-request-id':id});
+  const body=await readJsonBody(request);
+  if(body.confirm!=='CONFIRM')return json({error:'confirmation_required'},400,{'x-request-id':id});
+  const reason=validReason(body.reason);
+  if(!reason)return json({error:'reason_required'},400,{'x-request-id':id});
+
+  const apiToken=await env.DB.prepare(`
+    SELECT id,member_id,label,revoked_at
+    FROM merchant_api_tokens
+    WHERE id=? AND organization_id=? LIMIT 1
+  `).bind(tokenId,organizationId).first();
+  if(!apiToken)return json({error:'api_token_not_found'},404,{'x-request-id':id});
+  if(apiToken.revoked_at)return json({revoked:true,tokenId,changed:false},200,{'x-request-id':id});
+
+  const revokedAt=now();
+  await env.DB.prepare(`
+    UPDATE merchant_api_tokens SET revoked_at=?
+    WHERE id=? AND organization_id=?
+  `).bind(revokedAt,tokenId,organizationId).run();
+  await writeOrganizationControlAudit(env,{
+    organizationId,
+    memberId:apiToken.member_id,
+    action:'api_token.revoked',
+    entityType:'merchant_api_token',
+    entityId:tokenId,
+    details:{reason,label:apiToken.label,platformRole:role}
+  });
+  return json({revoked:true,tokenId,changed:true,revokedAt},200,{'x-request-id':id});
+}
+
 async function organizationIdentity(request,env,role,id,organizationId){
   if(!READ_ROLES.has(role))return json({error:'forbidden'},403,{'x-request-id':id});
 
@@ -388,6 +529,18 @@ export default{
         else if(request.method==='GET'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/identity$/.test(path)){
           const organizationId=decodeURIComponent(path.split('/')[5]||'');
           response=await organizationIdentity(request,env,role,id,organizationId);
+        }
+        else if(request.method==='POST'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/members\/[^/]+\/status$/.test(path)){
+          const parts=path.split('/');
+          response=await changeMemberStatus(request,env,role,id,decodeURIComponent(parts[5]||''),decodeURIComponent(parts[7]||''));
+        }
+        else if(request.method==='POST'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/sessions\/[^/]+\/revoke$/.test(path)){
+          const parts=path.split('/');
+          response=await revokeOrganizationSession(request,env,role,id,decodeURIComponent(parts[5]||''),decodeURIComponent(parts[7]||''));
+        }
+        else if(request.method==='POST'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/api-tokens\/[^/]+\/revoke$/.test(path)){
+          const parts=path.split('/');
+          response=await revokeOrganizationApiToken(request,env,role,id,decodeURIComponent(parts[5]||''),decodeURIComponent(parts[7]||''));
         }
         else response=withRequestId(await app.fetch(delegatedRequest(request,env,role),env,ctx),id);
       }else response=withRequestId(await app.fetch(request,env,ctx),id);

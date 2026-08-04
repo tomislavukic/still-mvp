@@ -823,6 +823,71 @@ function organizationPlatformTab(org){
 }
 
 
+
+function accessControlDialog({title,detail,confirmLabel='Apply action'}){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='access-control-overlay';
+    overlay.innerHTML=`<div class="access-control-dialog" role="dialog" aria-modal="true">
+      <div class="eyebrow">PLATFORM OWNER ACTION</div>
+      <h3>${esc(title)}</h3>
+      <p>${esc(detail)}</p>
+      <label>Reason<textarea id="access-control-reason" maxlength="500" placeholder="Explain why this intervention is necessary (minimum 8 characters)"></textarea></label>
+      <label>Type CONFIRM<input id="access-control-confirm" autocomplete="off" placeholder="CONFIRM"></label>
+      <div class="access-control-actions"><button class="secondary" id="access-control-cancel">Cancel</button><button id="access-control-submit">${esc(confirmLabel)}</button></div>
+      <p class="small">Every successful action is recorded in platform and organization audit history.</p>
+    </div>`;
+    document.body.appendChild(overlay);
+    const close=value=>{overlay.remove();resolve(value)};
+    overlay.querySelector('#access-control-cancel').onclick=()=>close(null);
+    overlay.onclick=event=>{if(event.target===overlay)close(null)};
+    overlay.querySelector('#access-control-submit').onclick=()=>{
+      const reason=overlay.querySelector('#access-control-reason').value.trim();
+      const confirm=overlay.querySelector('#access-control-confirm').value.trim();
+      if(reason.length<8)return alert('Enter a reason of at least 8 characters.');
+      if(confirm!=='CONFIRM')return alert('Type CONFIRM exactly.');
+      close({reason,confirm});
+    };
+  });
+}
+
+async function runOrganizationControl(org,path,payload){
+  try{
+    await api(path,{method:'POST',body:JSON.stringify(payload)});
+    organizationIdentityCache.delete(org.id);
+    await loadOrganizationIdentity(org,true);
+  }catch(error){
+    const messages={last_owner_protected:'The final active organization owner cannot be disabled.',confirmation_required:'Confirmation was rejected.',reason_required:'A valid reason is required.'};
+    alert(messages[error.data?.error]||error.message);
+  }
+}
+
+function bindOrganizationAccessControls(org){
+  document.querySelectorAll('[data-member-control]').forEach(button=>{
+    button.onclick=async()=>{
+      const current=button.dataset.memberStatus;
+      const next=current==='active'?'disabled':'active';
+      const values=await accessControlDialog({title:next==='disabled'?'Disable organization member':'Reactivate organization member',detail:next==='disabled'?'This immediately terminates the member’s active sessions.':'This restores the member’s ability to authenticate.',confirmLabel:next==='disabled'?'Disable member':'Reactivate member'});
+      if(!values)return;
+      await runOrganizationControl(org,`/api/v1/admin/organizations/${encodeURIComponent(org.id)}/members/${encodeURIComponent(button.dataset.memberControl)}/status`,{...values,status:next});
+    };
+  });
+  document.querySelectorAll('[data-session-revoke]').forEach(button=>{
+    button.onclick=async()=>{
+      const values=await accessControlDialog({title:'Revoke merchant session',detail:'The selected session will be terminated immediately.',confirmLabel:'Revoke session'});
+      if(!values)return;
+      await runOrganizationControl(org,`/api/v1/admin/organizations/${encodeURIComponent(org.id)}/sessions/${encodeURIComponent(button.dataset.sessionRevoke)}/revoke`,values);
+    };
+  });
+  document.querySelectorAll('[data-token-revoke]').forEach(button=>{
+    button.onclick=async()=>{
+      const values=await accessControlDialog({title:'Revoke API token',detail:'Requests using this token will stop working immediately. The token secret cannot be recovered.',confirmLabel:'Revoke token'});
+      if(!values)return;
+      await runOrganizationControl(org,`/api/v1/admin/organizations/${encodeURIComponent(org.id)}/api-tokens/${encodeURIComponent(button.dataset.tokenRevoke)}/revoke`,values);
+    };
+  });
+}
+
 function identityDate(value){
   if(!value)return 'Never';
   const date=new Date(value);
@@ -876,17 +941,18 @@ function organizationTeamTab(org){
           <div class="identity-main"><strong>${esc(member.email)}</strong><span>Created ${esc(identityDate(member.created_at))}</span></div>
           <span class="identity-role">${esc(member.role)}</span>
           <span class="identity-state ${esc(member.status)}">${esc(member.status)}</span>
+          <button class="identity-control compact" data-member-control="${esc(member.id)}" data-member-status="${esc(member.status)}">${member.status==='active'?'Disable':'Reactivate'}</button>
         </article>`).join(''):'<p class="small">No organization members are recorded.</p>'}</div>
     </section>
 
     <section class="organization-workspace-section">
       <div class="organization-section-heading"><div><div class="eyebrow">SESSIONS</div><h3>Recent merchant sessions</h3></div><span class="organization-section-count">${sessions.length}</span></div>
-      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Member</th><th>State</th><th>Last seen</th><th>Expires</th></tr></thead><tbody>${sessions.length?sessions.map(session=>`<tr><td>${esc(session.member_email||session.member_id)}</td><td><span class="identity-state ${esc(session.state)}">${esc(session.state)}</span></td><td>${esc(identityDate(session.last_seen_at))}</td><td>${esc(identityDate(session.expires_at))}</td></tr>`).join(''):'<tr><td colspan="4">No sessions recorded.</td></tr>'}</tbody></table></div>
+      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Member</th><th>State</th><th>Last seen</th><th>Expires</th><th>Action</th></tr></thead><tbody>${sessions.length?sessions.map(session=>`<tr><td>${esc(session.member_email||session.member_id)}</td><td><span class="identity-state ${esc(session.state)}">${esc(session.state)}</span></td><td>${esc(identityDate(session.last_seen_at))}</td><td>${esc(identityDate(session.expires_at))}</td><td><button class="identity-control compact" data-session-revoke="${esc(session.id)}" ${session.state!=='active'?'disabled':''}>Revoke</button></td></tr>`).join(''):'<tr><td colspan="5">No sessions recorded.</td></tr>'}</tbody></table></div>
     </section>
 
     <section class="organization-workspace-section">
       <div class="organization-section-heading"><div><div class="eyebrow">API ACCESS</div><h3>Organization API tokens</h3></div><span class="organization-section-count">${tokens.length}</span></div>
-      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Label</th><th>Member</th><th>State</th><th>Last used</th></tr></thead><tbody>${tokens.length?tokens.map(apiToken=>`<tr><td>${esc(apiToken.label||'default')}</td><td>${esc(apiToken.member_email||'Organization token')}</td><td><span class="identity-state ${esc(apiToken.state)}">${esc(apiToken.state)}</span></td><td>${esc(identityDate(apiToken.last_used_at))}</td></tr>`).join(''):'<tr><td colspan="4">No API tokens recorded.</td></tr>'}</tbody></table></div>
+      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Label</th><th>Member</th><th>State</th><th>Last used</th><th>Action</th></tr></thead><tbody>${tokens.length?tokens.map(apiToken=>`<tr><td>${esc(apiToken.label||'default')}</td><td>${esc(apiToken.member_email||'Organization token')}</td><td><span class="identity-state ${esc(apiToken.state)}">${esc(apiToken.state)}</span></td><td>${esc(identityDate(apiToken.last_used_at))}</td><td><button class="identity-control compact" data-token-revoke="${esc(apiToken.id)}" ${apiToken.state!=='active'?'disabled':''}>Revoke</button></td></tr>`).join(''):'<tr><td colspan="5">No API tokens recorded.</td></tr>'}</tbody></table></div>
     </section>
 
     <section class="organization-workspace-section">
@@ -1015,6 +1081,8 @@ function bindOrganizationWorkspace(org){
 }
 
 function bindOrganizationTabActions(org){
+  bindOrganizationAccessControls(org);
+
   const retryButton=$('#retry-organization-identity');
   if(retryButton)retryButton.onclick=()=>loadOrganizationIdentity(org,true);
 
