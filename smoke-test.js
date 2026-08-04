@@ -87,7 +87,22 @@ if(!fail.length){
  if(!commerceWorker.includes('activateOrder'))fail.push('payment-to-passport activation is missing');
  if(!commerceWorker.includes('demo_confirmation_required'))fail.push('honest demo checkout guard is missing');
  if(!read('legal-i18n.js').includes('Payment and demonstration mode'))fail.push('commerce payment disclosure is missing');
- if(!read('_headers').split(/\s+/).includes('https://js.stripe.com'))fail.push('payment provider CSP is missing');
+ const cspHeader=read('_headers')
+   .split(/\r?\n/)
+   .find(line=>line.trimStart().startsWith('Content-Security-Policy:'));
+ const stripeOrigin=cspHeader
+   ?.slice(cspHeader.indexOf(':')+1)
+   .trim()
+   .split(/\s+/)
+   .some(source=>{
+     try{
+       const url=new URL(source);
+       return url.protocol==='https:'&&url.hostname==='js.stripe.com'&&url.port==='';
+     }catch{
+       return false;
+     }
+   });
+ if(!stripeOrigin)fail.push('payment provider CSP is missing');
  if(!build.includes('qrcode-generator-v94.js')||!build.includes('BUNDLE=106'))fail.push('Passport QR generator is missing from Build 106');
  const ownership=read('ownership-platform-v83.js');
  if(!ownership.includes('Passport QR')||!ownership.includes('passportSnapshot'))fail.push('Passport QR buyer interface is missing');
