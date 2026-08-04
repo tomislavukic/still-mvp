@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,selectedOrganizationId='',activeOrganizationTab='overview',sessionTimer=0;
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,selectedOrganizationId='',activeOrganizationTab='overview',organizationIdentityCache=new Map(),sessionTimer=0;
 const ADMIN_SESSION_MS=30*60*1000;async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'content-type':'application/json','authorization':'Bearer '+token,...(opt.headers||{})}}),j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||'Request failed'),{data:j,status:r.status});return j}const labels={awaiting_submission:'Waiting for merchant',submitted:'Submitted',under_review:'Ready for review',needs_changes:'Changes requested',approved:'Verified',rejected:'Rejected'};const pill=s=>`<span class="pill ${esc(s||'')}">${esc(labels[s]||s||'Waiting for merchant')}</span>`;function stage(o){if(o.claim_status==='approved')return 4;if(o.organization_status==='verified')return 3;if(o.verification_status==='approved')return 3;if(['submitted','under_review','needs_changes','rejected'].includes(o.verification_status))return 2;return 1}function stageBar(o){const n=stage(o),items=[['1','Registered'],['2','Company verification'],['3','Retailer profile'],['4','Buyer routing']];return `<div class="progress">${items.map((x,i)=>`<div class="${i+1<n?'done':i+1===n?'current':''}"><b>${x[1]}</b><span>${i+1<n?'Complete':i+1===n?'Current step':'Next'}</span></div>`).join('')}</div>`}function nextAction(o){if(!o.verification_id)return ['Waiting for merchant','The company account exists, but no verification details have been submitted yet. No admin action is required.'];if(o.verification_status==='under_review'||o.verification_status==='submitted')return ['Review company identity','Check legal identity, VAT/registration details, website and company email before deciding.'];if(o.verification_status==='needs_changes')return ['Waiting for corrections','The merchant must update and resubmit the verification details.'];if(o.verification_status==='rejected')return ['Verification rejected','No routing will activate unless the merchant submits a new acceptable verification request.'];if(o.organization_status==='verified'&&!o.claim_id)return ['Company verified','Next, the merchant must claim the retailer profile buyers actually select.'];if(o.claim_status==='under_review')return ['Review retailer ownership','Confirm this verified company controls the selected retailer identity before approving.'];if(o.claim_status==='approved')return ['Routing ready','Company and retailer identity are approved. Buyer cases can be routed to this merchant.'];return ['Verification complete','Continue with retailer identity claiming.']}function stats(s){const cards=[['',s.organizations||0,'Companies'],['pending',s.verification_pending||0,'Ready for review'],['needs_changes',s.needs_changes||0,'Needs changes'],['claim_review',s.claim_pending||0,'Retailer claims'],['verified',s.verified||0,'Verified']];return `<div class="stats">${cards.map(c=>`<div class="stat" data-filter="${c[0]}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`}
 function organizationStage(org){
   if(org.claim_status==='approved')return{
@@ -460,6 +460,7 @@ function organizationTimeline(org){
 function organizationWorkspaceNavigation(){
   const tabs=[
     ['overview','Overview'],
+    ['team','Team & Access'],
     ['identity','Identity'],
     ['verification','Verification'],
     ['retailer','Retailer'],
@@ -821,8 +822,104 @@ function organizationPlatformTab(org){
   </div>`;
 }
 
+
+function identityDate(value){
+  if(!value)return 'Never';
+  const date=new Date(value);
+  return Number.isNaN(date.getTime())?'Unavailable':date.toLocaleString();
+}
+
+function organizationTeamTab(org){
+  const cached=organizationIdentityCache.get(org.id);
+  if(!cached)return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
+      <div class="eyebrow">TEAM & ACCESS</div>
+      <h3>Loading organization access…</h3>
+      <p>Reading sanitized members, sessions, API tokens and organization audit activity.</p>
+    </section>
+  </div>`;
+
+  if(cached.error)return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first identity-error">
+      <div class="eyebrow">TEAM & ACCESS</div>
+      <h3>Identity data could not be loaded</h3>
+      <p>${esc(cached.error)}</p>
+      <button class="secondary" id="retry-organization-identity">Retry</button>
+    </section>
+  </div>`;
+
+  const summary=cached.summary||{};
+  const members=cached.members||[];
+  const sessions=cached.sessions||[];
+  const tokens=cached.apiTokens||[];
+  const audit=cached.audit||[];
+
+  return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
+      <div class="eyebrow">TEAM & ACCESS</div>
+      <h3>Read-only platform visibility</h3>
+      <p>Password material, salts, session token hashes and API token hashes are never returned.</p>
+
+      <div class="identity-summary">
+        <div><b>${summary.members||0}</b><span>Members</span></div>
+        <div><b>${summary.activeMembers||0}</b><span>Active members</span></div>
+        <div><b>${summary.activeSessions||0}</b><span>Active sessions</span></div>
+        <div><b>${summary.activeApiTokens||0}</b><span>Active API tokens</span></div>
+      </div>
+    </section>
+
+    <section class="organization-workspace-section">
+      <div class="organization-section-heading"><div><div class="eyebrow">MEMBERS</div><h3>Organization team</h3></div><span class="organization-section-count">${members.length}</span></div>
+      <div class="identity-list">${members.length?members.map(member=>`
+        <article class="identity-row">
+          <div class="identity-avatar">${esc((member.email||'?')[0].toUpperCase())}</div>
+          <div class="identity-main"><strong>${esc(member.email)}</strong><span>Created ${esc(identityDate(member.created_at))}</span></div>
+          <span class="identity-role">${esc(member.role)}</span>
+          <span class="identity-state ${esc(member.status)}">${esc(member.status)}</span>
+        </article>`).join(''):'<p class="small">No organization members are recorded.</p>'}</div>
+    </section>
+
+    <section class="organization-workspace-section">
+      <div class="organization-section-heading"><div><div class="eyebrow">SESSIONS</div><h3>Recent merchant sessions</h3></div><span class="organization-section-count">${sessions.length}</span></div>
+      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Member</th><th>State</th><th>Last seen</th><th>Expires</th></tr></thead><tbody>${sessions.length?sessions.map(session=>`<tr><td>${esc(session.member_email||session.member_id)}</td><td><span class="identity-state ${esc(session.state)}">${esc(session.state)}</span></td><td>${esc(identityDate(session.last_seen_at))}</td><td>${esc(identityDate(session.expires_at))}</td></tr>`).join(''):'<tr><td colspan="4">No sessions recorded.</td></tr>'}</tbody></table></div>
+    </section>
+
+    <section class="organization-workspace-section">
+      <div class="organization-section-heading"><div><div class="eyebrow">API ACCESS</div><h3>Organization API tokens</h3></div><span class="organization-section-count">${tokens.length}</span></div>
+      <div class="identity-table-wrap"><table class="identity-table"><thead><tr><th>Label</th><th>Member</th><th>State</th><th>Last used</th></tr></thead><tbody>${tokens.length?tokens.map(apiToken=>`<tr><td>${esc(apiToken.label||'default')}</td><td>${esc(apiToken.member_email||'Organization token')}</td><td><span class="identity-state ${esc(apiToken.state)}">${esc(apiToken.state)}</span></td><td>${esc(identityDate(apiToken.last_used_at))}</td></tr>`).join(''):'<tr><td colspan="4">No API tokens recorded.</td></tr>'}</tbody></table></div>
+    </section>
+
+    <section class="organization-workspace-section">
+      <div class="organization-section-heading"><div><div class="eyebrow">ORGANIZATION AUDIT</div><h3>Recent member activity</h3></div><span class="organization-section-count">${audit.length}</span></div>
+      <div class="identity-audit">${audit.length?audit.slice(0,25).map(event=>`<div><strong>${esc(event.action)}</strong><span>${esc(event.member_email||event.member_id||'Unknown member')} · ${esc(event.entity_type)} · ${esc(identityDate(event.created_at))}</span></div>`).join(''):'<p class="small">No organization audit activity recorded.</p>'}</div>
+    </section>
+  </div>`;
+}
+
+async function loadOrganizationIdentity(org,force=false){
+  if(!force&&organizationIdentityCache.has(org.id)){
+    const content=$('#organization-workspace-content');
+    if(content&&activeOrganizationTab==='team')content.innerHTML=organizationTeamTab(org);
+    bindOrganizationTabActions(org);
+    return;
+  }
+
+  try{
+    const result=await api(`/api/v1/admin/organizations/${encodeURIComponent(org.id)}/identity`);
+    organizationIdentityCache.set(org.id,result);
+  }catch(error){
+    organizationIdentityCache.set(org.id,{error:error.status===403?'Your platform role cannot inspect organization identity.':error.message});
+  }
+
+  const content=$('#organization-workspace-content');
+  if(content&&activeOrganizationTab==='team')content.innerHTML=organizationTeamTab(org);
+  bindOrganizationTabActions(org);
+}
+
 function organizationActiveTab(org){
   switch(activeOrganizationTab){
+    case'team':
+      return organizationTeamTab(org);
     case'identity':
       return organizationIdentityTab(org);
     case'verification':
@@ -909,6 +1006,7 @@ function bindOrganizationWorkspace(org){
       if(content){
         content.innerHTML=organizationActiveTab(org);
         bindOrganizationTabActions(org);
+        if(activeOrganizationTab==='team')loadOrganizationIdentity(org);
       }
     };
   });
@@ -917,6 +1015,9 @@ function bindOrganizationWorkspace(org){
 }
 
 function bindOrganizationTabActions(org){
+  const retryButton=$('#retry-organization-identity');
+  if(retryButton)retryButton.onclick=()=>loadOrganizationIdentity(org,true);
+
   const copyButton=$('#copy-organization-id');
 
   if(copyButton){
@@ -1393,6 +1494,7 @@ function lockAdmin(
   auditData=[];
   auditAction='';
   operationsData=null;
+  organizationIdentityCache.clear();
   selectedOrganizationId='';
   document.body.classList.remove('drawer-open');
 

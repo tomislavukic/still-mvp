@@ -67,6 +67,7 @@ function actionFor(method,path){
   if(path==='/api/v1/admin/health')return method==='GET'?'operations.health.read':'operations.health.unsupported';
   if(path==='/api/v1/admin/session')return 'session.inspect';
   if(method==='GET'&&path==='/api/v1/admin/overview')return 'merchant.overview.read';
+  if(method==='GET'&&/\/organizations\/[^/]+\/identity$/.test(path))return 'merchant.identity.read';
   if(method==='GET'&&/\/organizations\/[^/]+\/events$/.test(path))return 'merchant.audit.read';
   if(method==='POST'&&/\/verifications\/[^/]+\/review$/.test(path))return 'verification.review';
   if(method==='POST'&&/\/retailer-claims\/[^/]+\/review$/.test(path))return 'retailer_claim.review';
@@ -254,6 +255,112 @@ async function operationsHealth(request,env,role,id){
   },200,{'x-request-id':id});
 }
 
+
+async function organizationIdentity(request,env,role,id,organizationId){
+  if(!READ_ROLES.has(role))return json({error:'forbidden'},403,{'x-request-id':id});
+
+  const organization=await env.DB.prepare(
+    'SELECT id,name,status,created_at,updated_at FROM merchant_organizations WHERE id=? LIMIT 1'
+  ).bind(organizationId).first();
+
+  if(!organization)return json({error:'organization_not_found'},404,{'x-request-id':id});
+
+  const [membersResult,sessionsResult,tokensResult,auditResult]=await Promise.all([
+    env.DB.prepare(`
+      SELECT id,email,role,status,created_at,updated_at
+      FROM merchant_members
+      WHERE organization_id=?
+      ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 WHEN 'agent' THEN 2 ELSE 3 END,email
+    `).bind(organizationId).all(),
+
+    env.DB.prepare(`
+      SELECT
+        s.id,
+        s.member_id,
+        m.email AS member_email,
+        m.role AS member_role,
+        s.created_at,
+        s.last_seen_at,
+        s.expires_at
+      FROM merchant_sessions s
+      JOIN merchant_members m ON m.id=s.member_id
+      WHERE m.organization_id=?
+      ORDER BY s.last_seen_at DESC
+      LIMIT 100
+    `).bind(organizationId).all(),
+
+    env.DB.prepare(`
+      SELECT
+        t.id,
+        t.member_id,
+        m.email AS member_email,
+        t.label,
+        t.created_at,
+        t.last_used_at,
+        t.expires_at,
+        t.revoked_at
+      FROM merchant_api_tokens t
+      LEFT JOIN merchant_members m ON m.id=t.member_id
+      WHERE t.organization_id=?
+      ORDER BY t.created_at DESC
+      LIMIT 100
+    `).bind(organizationId).all(),
+
+    env.DB.prepare(`
+      SELECT
+        a.id,
+        a.member_id,
+        m.email AS member_email,
+        a.action,
+        a.entity_type,
+        a.entity_id,
+        a.details_json,
+        a.created_at
+      FROM ops_audit_log a
+      LEFT JOIN merchant_members m ON m.id=a.member_id
+      WHERE a.organization_id=?
+      ORDER BY a.created_at DESC
+      LIMIT 100
+    `).bind(organizationId).all()
+  ]);
+
+  const currentMs=Date.now();
+  const members=membersResult.results||[];
+  const sessions=(sessionsResult.results||[]).map(session=>({
+    ...session,
+    state:Date.parse(session.expires_at)>currentMs?'active':'expired'
+  }));
+  const apiTokens=(tokensResult.results||[]).map(token=>({
+    ...token,
+    state:token.revoked_at
+      ?'revoked'
+      :token.expires_at&&Date.parse(token.expires_at)<=currentMs
+        ?'expired'
+        :'active'
+  }));
+  const audit=(auditResult.results||[]).map(event=>{
+    let details={};
+    try{details=JSON.parse(event.details_json||'{}')}catch{}
+    return {...event,details,details_json:undefined};
+  });
+
+  return json({
+    organization,
+    summary:{
+      members:members.length,
+      activeMembers:members.filter(member=>member.status==='active').length,
+      activeSessions:sessions.filter(session=>session.state==='active').length,
+      activeApiTokens:apiTokens.filter(token=>token.state==='active').length
+    },
+    members,
+    sessions,
+    apiTokens,
+    audit,
+    readOnly:true,
+    checkedAt:now()
+  },200,{'x-request-id':id});
+}
+
 function withRequestId(response,id){
   const headers=new Headers(response.headers);
   headers.set('x-request-id',id);
@@ -278,6 +385,10 @@ export default{
         else if(path==='/api/v1/admin/session'&&request.method==='GET')response=json({authenticated:true,role,permissions:{read:READ_ROLES.has(role),review:REVIEW_ROLES.has(role),admin:role==='owner'||role==='admin'}},200,{'x-request-id':id});
         else if(path==='/api/v1/admin/audit'&&request.method==='GET')response=await auditList(request,env,role,id);
         else if(path==='/api/v1/admin/health'&&request.method==='GET')response=await operationsHealth(request,env,role,id);
+        else if(request.method==='GET'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/identity$/.test(path)){
+          const organizationId=decodeURIComponent(path.split('/')[5]||'');
+          response=await organizationIdentity(request,env,role,id,organizationId);
+        }
         else response=withRequestId(await app.fetch(delegatedRequest(request,env,role),env,ctx),id);
       }else response=withRequestId(await app.fetch(request,env,ctx),id);
     }catch(error){
