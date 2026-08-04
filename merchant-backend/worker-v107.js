@@ -205,10 +205,17 @@ async function operationsHealth(request,env,role,id){
       status,
       outcome,
       actor_role,
+      method,
+      path,
       created_at
     FROM platform_audit_events
+    WHERE NOT (
+      actor_role = 'anonymous'
+      AND status = 401
+      AND path = '/api/v1/admin/notifications'
+    )
     ORDER BY created_at DESC
-    LIMIT 5
+    LIMIT 10
   `).all();
 
   return json({

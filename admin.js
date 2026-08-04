@@ -598,6 +598,83 @@ function incidentCenter(health){
   </div>`;
 }
 
+
+function operationCategory(item){
+  const action=item.action||'';
+
+  if(
+    action.startsWith('merchant.')||
+    action.startsWith('verification.')||
+    action.startsWith('claim.')||
+    action.startsWith('routing.')
+  )return'business';
+
+  return'platform';
+}
+
+function recentOperationsSection(items){
+  const platform=items.filter(item=>
+    operationCategory(item)==='platform'
+  );
+
+  const business=items.filter(item=>
+    operationCategory(item)==='business'
+  );
+
+  const renderGroup=(title,description,group)=>`
+    <div class="activity-group">
+      <div class="activity-group-head">
+        <div>
+          <h4>${esc(title)}</h4>
+          <p>${esc(description)}</p>
+        </div>
+        <span>${group.length}</span>
+      </div>
+
+      ${
+        group.length
+          ?group.map(item=>`
+            <div class="health-event">
+              <div>
+                <strong>${esc(item.action||'Unknown action')}</strong>
+                <span>
+                  ${esc(item.actor_role||'anonymous')} ·
+                  ${esc(String(item.status||'—'))} ·
+                  ${esc(item.method||'')}
+                  ${esc(item.path||'')}
+                </span>
+              </div>
+              <time>
+                ${esc(new Date(item.created_at).toLocaleTimeString())}
+              </time>
+            </div>
+          `).join('')
+          :'<p class="small">No recent activity in this category.</p>'
+      }
+    </div>
+  `;
+
+  return `
+    <div class="health-events">
+      <h3>Recent protected activity</h3>
+
+      <div class="activity-groups">
+        ${renderGroup(
+          'Platform operations',
+          'Health, audit, sessions and protected administration.',
+          platform
+        )}
+
+        ${renderGroup(
+          'Business operations',
+          'Organization, verification, claim and routing actions.',
+          business
+        )}
+      </div>
+    </div>
+  `;
+}
+
 function operationsCards(health){
   const metrics=health.metrics||{};
   const worker=health.worker||{};
@@ -642,15 +719,7 @@ function operationsCards(health){
     ]
   ];
 
-  const recent=(health.recentActivity||[]).map(item=>`
-    <div class="health-event">
-      <div>
-        <strong>${esc(item.action||'Unknown action')}</strong>
-        <span>${esc(item.actor_role||'anonymous')} · ${esc(String(item.status||'—'))}</span>
-      </div>
-      <time>${esc(new Date(item.created_at).toLocaleTimeString())}</time>
-    </div>
-  `).join('');
+  const recent=health.recentActivity||[];
 
   return `
     ${incidentCenter(health)}
@@ -688,10 +757,7 @@ function operationsCards(health){
       </div>
     </div>
 
-    <div class="health-events">
-      <h3>Recent protected requests</h3>
-      ${recent||'<p class="small">No protected requests recorded.</p>'}
-    </div>
+    ${recentOperationsSection(recent)}
   `;
 }
 
