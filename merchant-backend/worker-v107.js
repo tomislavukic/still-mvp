@@ -65,6 +65,7 @@ function resolveRole(request,env){
 function actionFor(method,path){
   if(path==='/api/v1/admin/audit')return method==='GET'?'audit.read':'audit.unsupported';
   if(path==='/api/v1/admin/health')return method==='GET'?'operations.health.read':'operations.health.unsupported';
+  if(path==='/api/v1/admin/intelligence')return method==='GET'?'platform.intelligence.read':'platform.intelligence.unsupported';
   if(path==='/api/v1/admin/session')return 'session.inspect';
   if(method==='GET'&&path==='/api/v1/admin/overview')return 'merchant.overview.read';
   if(method==='GET'&&/\/organizations\/[^/]+\/identity$/.test(path))return 'merchant.identity.read';
@@ -163,6 +164,158 @@ function classifyOperationsIncidents(metrics){
   }
 
   return incidents;
+}
+
+
+function clampScore(value){return Math.max(0,Math.min(100,Math.round(value)))}
+function intelligenceBand(risk){
+  if(risk>=70)return'critical';
+  if(risk>=40)return'elevated';
+  if(risk>=20)return'watch';
+  return'low';
+}
+function addSignal(signals,{code,label,detail,weight,severity='info'}){
+  signals.push({code,label,detail,weight,severity});
+}
+function scoreOrganizationIntelligence(org,counts){
+  const signals=[];
+  let risk=0;
+  let trust=35;
+  let readiness=10;
+  let security=100;
+  let engagement=0;
+
+  const verified=org.organization_status==='verified'||org.verification_status==='approved';
+  const routing=org.claim_status==='approved';
+
+  if(!org.owner_email){
+    risk+=15;trust-=15;
+    addSignal(signals,{code:'owner_missing',label:'Owner contact missing',detail:'The organization has no recorded owner email.',weight:15,severity:'warning'});
+  }else{trust+=10;readiness+=10}
+
+  if(!org.verification_id){
+    risk+=18;trust-=10;
+    addSignal(signals,{code:'verification_missing',label:'Verification not submitted',detail:'Legal identity evidence has not been submitted.',weight:18,severity:'warning'});
+  }else{readiness+=15}
+
+  if(org.verification_status==='needs_changes'){
+    risk+=18;trust-=12;
+    addSignal(signals,{code:'verification_changes',label:'Verification needs changes',detail:'The merchant must correct submitted verification information.',weight:18,severity:'warning'});
+  }
+  if(org.verification_status==='rejected'){
+    risk+=35;trust-=30;security-=10;
+    addSignal(signals,{code:'verification_rejected',label:'Verification rejected',detail:'The current legal identity submission was rejected.',weight:35,severity:'critical'});
+  }
+  if(verified){trust+=25;readiness+=25}
+
+  if(verified&&!org.claim_id){
+    risk+=8;
+    addSignal(signals,{code:'retailer_unclaimed',label:'Retailer identity not claimed',detail:'The verified company is not yet connected to a retailer identity.',weight:8,severity:'info'});
+  }
+  if(org.claim_status==='under_review'){
+    risk+=10;
+    addSignal(signals,{code:'claim_review',label:'Retailer claim awaiting review',detail:'Retailer ownership still requires a platform decision.',weight:10,severity:'warning'});
+  }
+  if(routing){readiness+=40;trust+=15}
+
+  if(counts.activeOwners===0){
+    risk+=35;security-=30;
+    addSignal(signals,{code:'no_active_owner',label:'No active organization owner',detail:'No active owner account was found for this tenant.',weight:35,severity:'critical'});
+  }else{security+=5}
+  if(counts.disabledMembers>0){
+    risk+=Math.min(12,counts.disabledMembers*4);
+    addSignal(signals,{code:'disabled_members',label:'Disabled members present',detail:`${counts.disabledMembers} member account(s) are disabled.`,weight:Math.min(12,counts.disabledMembers*4),severity:'info'});
+  }
+  if(counts.recentDenied>0){
+    const weight=Math.min(25,counts.recentDenied*3);
+    risk+=weight;security-=weight;
+    addSignal(signals,{code:'recent_denials',label:'Recent denied requests',detail:`${counts.recentDenied} security-relevant denied request(s) were recorded in the last 24 hours.`,weight,severity:counts.recentDenied>=5?'critical':'warning'});
+  }
+  if(counts.recentErrors>0){
+    const weight=Math.min(20,counts.recentErrors*5);
+    risk+=weight;
+    addSignal(signals,{code:'recent_errors',label:'Recent server errors',detail:`${counts.recentErrors} protected request(s) returned HTTP 500 or higher.`,weight,severity:'warning'});
+  }
+
+  engagement+=Math.min(40,counts.activeMembers*12);
+  engagement+=Math.min(30,counts.activeSessions*10);
+  engagement+=Math.min(20,counts.activeTokens*5);
+  if(counts.recentActivity>0)engagement+=10;
+  if(counts.activeMembers===0){
+    risk+=15;
+    addSignal(signals,{code:'no_active_members',label:'No active members',detail:'The tenant currently has no active team members.',weight:15,severity:'critical'});
+  }
+
+  risk=clampScore(risk);
+  trust=clampScore(trust);
+  readiness=clampScore(readiness);
+  security=clampScore(security);
+  engagement=clampScore(engagement);
+  const health=clampScore((trust+readiness+security+engagement+(100-risk))/5);
+
+  const recommendations=[];
+  if(!org.verification_id)recommendations.push({priority:1,action:'Request verification',reason:'Legal identity evidence is missing.'});
+  if(org.verification_status==='needs_changes')recommendations.push({priority:1,action:'Follow up on corrections',reason:'Verification cannot progress until the merchant resubmits.'});
+  if(org.verification_status==='rejected')recommendations.push({priority:1,action:'Keep routing disabled',reason:'The current identity submission is rejected.'});
+  if(counts.activeOwners===0)recommendations.push({priority:1,action:'Restore an active owner',reason:'The tenant has no active owner account.'});
+  if(counts.recentDenied>=5)recommendations.push({priority:1,action:'Review access activity',reason:'Denied request volume is elevated.'});
+  if(verified&&!org.claim_id)recommendations.push({priority:2,action:'Complete retailer connection',reason:'The company is verified but cannot receive buyer routing yet.'});
+  if(!recommendations.length)recommendations.push({priority:3,action:'Continue monitoring',reason:'No immediate intervention is indicated by current platform signals.'});
+
+  return{health,risk,trust,readiness,security,engagement,band:intelligenceBand(risk),signals:signals.sort((a,b)=>b.weight-a.weight),recommendations:recommendations.sort((a,b)=>a.priority-b.priority)};
+}
+
+async function platformIntelligence(request,env,role,id){
+  if(!READ_ROLES.has(role))return json({error:'forbidden'},403,{'x-request-id':id});
+  await ensureSchema(env);
+
+  const organizationsResult=await env.DB.prepare('SELECT * FROM merchant_organizations ORDER BY created_at DESC').all();
+  const organizations=[];
+
+  for(const org of organizationsResult.results||[]){
+    const [members,sessions,tokens,audit]=await Promise.all([
+      env.DB.prepare(`SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) AS active,
+        SUM(CASE WHEN status='disabled' THEN 1 ELSE 0 END) AS disabled,
+        SUM(CASE WHEN role='owner' AND status='active' THEN 1 ELSE 0 END) AS active_owners
+        FROM merchant_members WHERE organization_id=?`).bind(org.id).first(),
+      env.DB.prepare(`SELECT COUNT(*) AS active FROM merchant_sessions s JOIN merchant_members m ON m.id=s.member_id WHERE m.organization_id=? AND s.expires_at>datetime('now')`).bind(org.id).first(),
+      env.DB.prepare(`SELECT COUNT(*) AS active FROM merchant_api_tokens WHERE organization_id=? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>datetime('now'))`).bind(org.id).first(),
+      env.DB.prepare(`SELECT
+        SUM(CASE WHEN status IN(401,403) AND path!='/api/v1/admin/notifications' THEN 1 ELSE 0 END) AS denied,
+        SUM(CASE WHEN status>=500 THEN 1 ELSE 0 END) AS errors,
+        COUNT(*) AS activity
+        FROM platform_audit_events WHERE created_at>=datetime('now','-24 hours') AND path LIKE ?`).bind(`%${org.id}%`).first()
+    ]);
+
+    const counts={
+      totalMembers:Number(members?.total||0),
+      activeMembers:Number(members?.active||0),
+      disabledMembers:Number(members?.disabled||0),
+      activeOwners:Number(members?.active_owners||0),
+      activeSessions:Number(sessions?.active||0),
+      activeTokens:Number(tokens?.active||0),
+      recentDenied:Number(audit?.denied||0),
+      recentErrors:Number(audit?.errors||0),
+      recentActivity:Number(audit?.activity||0)
+    };
+    organizations.push({...org,counts,intelligence:scoreOrganizationIntelligence(org,counts)});
+  }
+
+  organizations.sort((a,b)=>b.intelligence.risk-a.intelligence.risk||a.intelligence.health-b.intelligence.health);
+  const total=organizations.length;
+  const critical=organizations.filter(item=>item.intelligence.band==='critical').length;
+  const elevated=organizations.filter(item=>item.intelligence.band==='elevated').length;
+  const averageHealth=total?Math.round(organizations.reduce((sum,item)=>sum+item.intelligence.health,0)/total):100;
+  const averageRisk=total?Math.round(organizations.reduce((sum,item)=>sum+item.intelligence.risk,0)/total):0;
+
+  return json({
+    methodology:'deterministic-v1',
+    generatedAt:now(),
+    summary:{total,critical,elevated,averageHealth,averageRisk},
+    organizations
+  },200,{'x-request-id':id});
 }
 
 async function operationsHealth(request,env,role,id){
@@ -526,6 +679,7 @@ export default{
         else if(path==='/api/v1/admin/session'&&request.method==='GET')response=json({authenticated:true,role,permissions:{read:READ_ROLES.has(role),review:REVIEW_ROLES.has(role),admin:role==='owner'||role==='admin'}},200,{'x-request-id':id});
         else if(path==='/api/v1/admin/audit'&&request.method==='GET')response=await auditList(request,env,role,id);
         else if(path==='/api/v1/admin/health'&&request.method==='GET')response=await operationsHealth(request,env,role,id);
+        else if(path==='/api/v1/admin/intelligence'&&request.method==='GET')response=await platformIntelligence(request,env,role,id);
         else if(request.method==='GET'&&/^\/api\/v1\/admin\/organizations\/[^/]+\/identity$/.test(path)){
           const organizationId=decodeURIComponent(path.split('/')[5]||'');
           response=await organizationIdentity(request,env,role,id,organizationId);

@@ -80,17 +80,17 @@ function scoreOrganizationIntelligence(org,counts){
   }else{security+=5}
   if(counts.disabledMembers>0){
     risk+=Math.min(12,counts.disabledMembers*4);
-    addSignal(signals,{code:'disabled_members',label:'Disabled members present',detail:`${counts.disabledMembers} member account(s) are disabled.`,weight:Math.min(12,counts.disabledMembers*4),severity:'info'});
+    addSignal(signals,{code:'disabled_members',label:'Disabled members present',detail:\`\${counts.disabledMembers} member account(s) are disabled.\`,weight:Math.min(12,counts.disabledMembers*4),severity:'info'});
   }
   if(counts.recentDenied>0){
     const weight=Math.min(25,counts.recentDenied*3);
     risk+=weight;security-=weight;
-    addSignal(signals,{code:'recent_denials',label:'Recent denied requests',detail:`${counts.recentDenied} security-relevant denied request(s) were recorded in the last 24 hours.`,weight,severity:counts.recentDenied>=5?'critical':'warning'});
+    addSignal(signals,{code:'recent_denials',label:'Recent denied requests',detail:\`\${counts.recentDenied} security-relevant denied request(s) were recorded in the last 24 hours.\`,weight,severity:counts.recentDenied>=5?'critical':'warning'});
   }
   if(counts.recentErrors>0){
     const weight=Math.min(20,counts.recentErrors*5);
     risk+=weight;
-    addSignal(signals,{code:'recent_errors',label:'Recent server errors',detail:`${counts.recentErrors} protected request(s) returned HTTP 500 or higher.`,weight,severity:'warning'});
+    addSignal(signals,{code:'recent_errors',label:'Recent server errors',detail:\`\${counts.recentErrors} protected request(s) returned HTTP 500 or higher.\`,weight,severity:'warning'});
   }
 
   engagement+=Math.min(40,counts.activeMembers*12);
@@ -130,19 +130,19 @@ async function platformIntelligence(request,env,role,id){
 
   for(const org of organizationsResult.results||[]){
     const [members,sessions,tokens,audit]=await Promise.all([
-      env.DB.prepare(`SELECT
+      env.DB.prepare(\`SELECT
         COUNT(*) AS total,
         SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) AS active,
         SUM(CASE WHEN status='disabled' THEN 1 ELSE 0 END) AS disabled,
         SUM(CASE WHEN role='owner' AND status='active' THEN 1 ELSE 0 END) AS active_owners
-        FROM merchant_members WHERE organization_id=?`).bind(org.id).first(),
-      env.DB.prepare(`SELECT COUNT(*) AS active FROM merchant_sessions s JOIN merchant_members m ON m.id=s.member_id WHERE m.organization_id=? AND s.expires_at>datetime('now')`).bind(org.id).first(),
-      env.DB.prepare(`SELECT COUNT(*) AS active FROM merchant_api_tokens WHERE organization_id=? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>datetime('now'))`).bind(org.id).first(),
-      env.DB.prepare(`SELECT
+        FROM merchant_members WHERE organization_id=?\`).bind(org.id).first(),
+      env.DB.prepare(\`SELECT COUNT(*) AS active FROM merchant_sessions s JOIN merchant_members m ON m.id=s.member_id WHERE m.organization_id=? AND s.expires_at>datetime('now')\`).bind(org.id).first(),
+      env.DB.prepare(\`SELECT COUNT(*) AS active FROM merchant_api_tokens WHERE organization_id=? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>datetime('now'))\`).bind(org.id).first(),
+      env.DB.prepare(\`SELECT
         SUM(CASE WHEN status IN(401,403) AND path!='/api/v1/admin/notifications' THEN 1 ELSE 0 END) AS denied,
         SUM(CASE WHEN status>=500 THEN 1 ELSE 0 END) AS errors,
         COUNT(*) AS activity
-        FROM platform_audit_events WHERE created_at>=datetime('now','-24 hours') AND path LIKE ?`).bind(`%${org.id}%`).first()
+        FROM platform_audit_events WHERE created_at>=datetime('now','-24 hours') AND path LIKE ?\`).bind(\`%\${org.id}%\`).first()
     ]);
 
     const counts={
@@ -188,31 +188,31 @@ admin=replaceOnce(admin,"operationsData=null,selectedOrganizationId='',","operat
 
 const intelligenceAdmin=`
 function intelligenceTone(band){return band==='critical'?'failure':band==='elevated'?'warning':band==='watch'?'neutral':'healthy'}
-function platformIntelligenceCenter(){
-  if(!intelligenceData)return `<section class="intelligence-center"><div class="intelligence-head"><div><div class="eyebrow">PLATFORM INTELLIGENCE</div><h2>Explainable risk and readiness</h2><p>Loading deterministic organization signals…</p></div><button id="refresh-intelligence" class="secondary">Refresh intelligence</button></div></section>`;
+function platformIntelligenceCenter(){setTimeout(bindPlatformIntelligence,0);setTimeout(()=>loadPlatformIntelligence().catch(()=>{}),0);
+  if(!intelligenceData)return \`<section class="intelligence-center"><div class="intelligence-head"><div><div class="eyebrow">PLATFORM INTELLIGENCE</div><h2>Explainable risk and readiness</h2><p>Loading deterministic organization signals…</p></div><button id="refresh-intelligence" class="secondary">Refresh intelligence</button></div></section>\`;
   const summary=intelligenceData.summary||{};
   const organizations=intelligenceData.organizations||[];
-  return `<section class="intelligence-center">
+  return \`<section class="intelligence-center">
     <div class="intelligence-head"><div><div class="eyebrow">PLATFORM INTELLIGENCE</div><h2>Explainable risk and readiness</h2><p>Scores are derived from current platform records. No opaque model or invented confidence values.</p></div><button id="refresh-intelligence" class="secondary">Refresh intelligence</button></div>
     <div class="intelligence-summary">
-      <div><b>${summary.averageHealth??100}</b><span>Average health</span></div>
-      <div><b>${summary.averageRisk??0}</b><span>Average risk</span></div>
-      <div class="${summary.critical?'failure':'healthy'}"><b>${summary.critical||0}</b><span>Critical</span></div>
-      <div class="${summary.elevated?'warning':'healthy'}"><b>${summary.elevated||0}</b><span>Elevated</span></div>
+      <div><b>\${summary.averageHealth??100}</b><span>Average health</span></div>
+      <div><b>\${summary.averageRisk??0}</b><span>Average risk</span></div>
+      <div class="\${summary.critical?'failure':'healthy'}"><b>\${summary.critical||0}</b><span>Critical</span></div>
+      <div class="\${summary.elevated?'warning':'healthy'}"><b>\${summary.elevated||0}</b><span>Elevated</span></div>
     </div>
-    <div class="intelligence-list">${organizations.length?organizations.map(item=>{
+    <div class="intelligence-list">\${organizations.length?organizations.map(item=>{
       const ai=item.intelligence;
       const top=ai.signals?.slice(0,3)||[];
-      return `<article class="intelligence-card ${intelligenceTone(ai.band)}">
-        <div class="intelligence-card-head"><div><h3>${esc(item.name||'Unnamed organization')}</h3><span>${esc(item.owner_email||'No owner email')}</span></div><div class="risk-orb"><b>${ai.risk}</b><span>risk</span></div></div>
-        <div class="intelligence-scores"><span>Health <b>${ai.health}</b></span><span>Trust <b>${ai.trust}</b></span><span>Security <b>${ai.security}</b></span><span>Readiness <b>${ai.readiness}</b></span><span>Engagement <b>${ai.engagement}</b></span></div>
-        <div class="intelligence-signals">${top.length?top.map(signal=>`<div class="${esc(signal.severity)}"><strong>${esc(signal.label)}</strong><span>${esc(signal.detail)}</span></div>`).join(''):'<div class="healthy"><strong>No material risk signals</strong><span>Current records do not indicate immediate intervention.</span></div>'}</div>
-        <div class="intelligence-recommendation"><span>Recommended next action</span><strong>${esc(ai.recommendations?.[0]?.action||'Continue monitoring')}</strong><small>${esc(ai.recommendations?.[0]?.reason||'')}</small></div>
-        <button class="secondary compact" data-open-organization="${esc(item.id)}">Open organization</button>
-      </article>`
+      return \`<article class="intelligence-card \${intelligenceTone(ai.band)}">
+        <div class="intelligence-card-head"><div><h3>\${esc(item.name||'Unnamed organization')}</h3><span>\${esc(item.owner_email||'No owner email')}</span></div><div class="risk-orb"><b>\${ai.risk}</b><span>risk</span></div></div>
+        <div class="intelligence-scores"><span>Health <b>\${ai.health}</b></span><span>Trust <b>\${ai.trust}</b></span><span>Security <b>\${ai.security}</b></span><span>Readiness <b>\${ai.readiness}</b></span><span>Engagement <b>\${ai.engagement}</b></span></div>
+        <div class="intelligence-signals">\${top.length?top.map(signal=>\`<div class="\${esc(signal.severity)}"><strong>\${esc(signal.label)}</strong><span>\${esc(signal.detail)}</span></div>\`).join(''):'<div class="healthy"><strong>No material risk signals</strong><span>Current records do not indicate immediate intervention.</span></div>'}</div>
+        <div class="intelligence-recommendation"><span>Recommended next action</span><strong>\${esc(ai.recommendations?.[0]?.action||'Continue monitoring')}</strong><small>\${esc(ai.recommendations?.[0]?.reason||'')}</small></div>
+        <button class="secondary compact" data-open-organization="\${esc(item.id)}">Open organization</button>
+      </article>\`
     }).join(''):'<div class="empty"><strong>No organizations available</strong>Platform Intelligence will populate after the first company registers.</div>'}</div>
-    <p class="intelligence-method">Methodology: ${esc(intelligenceData.methodology||'deterministic-v1')} · Generated ${esc(new Date(intelligenceData.generatedAt).toLocaleString())}</p>
-  </section>`;
+    <p class="intelligence-method">Methodology: \${esc(intelligenceData.methodology||'deterministic-v1')} · Generated \${esc(new Date(intelligenceData.generatedAt).toLocaleString())}</p>
+  </section>\`;
 }
 
 async function loadPlatformIntelligence(force=false){
@@ -233,12 +233,8 @@ admin=replaceOnce(admin,'function organizationCenter(){',intelligenceAdmin+'func
 if(!admin.includes('${organizationCenter()}'))throw new Error('Missing organization center render call');
 admin=admin.replace('${organizationCenter()}','${platformIntelligenceCenter()}\n${organizationCenter()}');
 
-if(!admin.includes('bindOrganizationCenter();'))throw new Error('Missing organization center bind call');
-admin=admin.replace('bindOrganizationCenter();','bindPlatformIntelligence();\nbindOrganizationCenter();');
-
-const loadNeedle="data=await api('/api/v1/admin/overview')";
-if(!admin.includes(loadNeedle))throw new Error('Missing overview load call');
-admin=admin.replace(loadNeedle,loadNeedle+";loadPlatformIntelligence().catch(()=>{})");
+// Platform Intelligence binds itself after the rendered DOM is installed.\n
+// Platform Intelligence loads itself after rendering, independent of the overview-fetch implementation.
 
 const css=`
 .intelligence-center{margin:0 0 22px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,rgba(99,230,155,.055),transparent 45%),var(--card)}.intelligence-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.intelligence-head h2{margin:4px 0 7px}.intelligence-head p{max-width:720px;color:var(--muted)}.intelligence-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.intelligence-summary>div{padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--card2)}.intelligence-summary b{display:block;font-size:26px}.intelligence-summary span{color:var(--muted);font-size:11px}.intelligence-summary .failure{border-color:rgba(255,145,138,.45)}.intelligence-summary .warning{border-color:rgba(255,205,116,.4)}.intelligence-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:14px}.intelligence-card{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--card2)}.intelligence-card.failure{border-color:rgba(255,145,138,.45)}.intelligence-card.warning{border-color:rgba(255,205,116,.38)}.intelligence-card-head{display:flex;justify-content:space-between;gap:12px}.intelligence-card-head h3{margin:0}.intelligence-card-head span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.risk-orb{display:grid;place-items:center;min-width:56px;height:56px;border:1px solid var(--line);border-radius:50%}.risk-orb b{font-size:19px}.risk-orb span{font-size:9px;margin:0;text-transform:uppercase}.intelligence-scores{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0}.intelligence-scores span{padding:5px 7px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)}.intelligence-scores b{color:var(--ink)}.intelligence-signals{display:grid;gap:6px}.intelligence-signals>div{padding:9px;border-radius:10px;background:var(--card)}.intelligence-signals strong,.intelligence-signals span{display:block}.intelligence-signals span{font-size:10px;color:var(--muted);margin-top:3px}.intelligence-recommendation{margin:10px 0;padding:11px;border-left:2px solid var(--green);background:rgba(99,230,155,.035)}.intelligence-recommendation span,.intelligence-recommendation strong,.intelligence-recommendation small{display:block}.intelligence-recommendation span,.intelligence-recommendation small{color:var(--muted);font-size:10px}.intelligence-recommendation strong{margin:3px 0}.intelligence-method{margin:12px 0 0;color:var(--muted);font-size:10px}@media(max-width:900px){.intelligence-list{grid-template-columns:1fr}}@media(max-width:720px){.intelligence-head{display:block}.intelligence-head button{width:100%;margin-top:12px}.intelligence-summary{grid-template-columns:1fr 1fr}}

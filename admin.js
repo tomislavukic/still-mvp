@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,selectedOrganizationId='',activeOrganizationTab='overview',organizationIdentityCache=new Map(),sessionTimer=0;
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,intelligenceData=null,selectedOrganizationId='',activeOrganizationTab='overview',organizationIdentityCache=new Map(),sessionTimer=0;
 const ADMIN_SESSION_MS=30*60*1000;async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'content-type':'application/json','authorization':'Bearer '+token,...(opt.headers||{})}}),j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||'Request failed'),{data:j,status:r.status});return j}const labels={awaiting_submission:'Waiting for merchant',submitted:'Submitted',under_review:'Ready for review',needs_changes:'Changes requested',approved:'Verified',rejected:'Rejected'};const pill=s=>`<span class="pill ${esc(s||'')}">${esc(labels[s]||s||'Waiting for merchant')}</span>`;function stage(o){if(o.claim_status==='approved')return 4;if(o.organization_status==='verified')return 3;if(o.verification_status==='approved')return 3;if(['submitted','under_review','needs_changes','rejected'].includes(o.verification_status))return 2;return 1}function stageBar(o){const n=stage(o),items=[['1','Registered'],['2','Company verification'],['3','Retailer profile'],['4','Buyer routing']];return `<div class="progress">${items.map((x,i)=>`<div class="${i+1<n?'done':i+1===n?'current':''}"><b>${x[1]}</b><span>${i+1<n?'Complete':i+1===n?'Current step':'Next'}</span></div>`).join('')}</div>`}function nextAction(o){if(!o.verification_id)return ['Waiting for merchant','The company account exists, but no verification details have been submitted yet. No admin action is required.'];if(o.verification_status==='under_review'||o.verification_status==='submitted')return ['Review company identity','Check legal identity, VAT/registration details, website and company email before deciding.'];if(o.verification_status==='needs_changes')return ['Waiting for corrections','The merchant must update and resubmit the verification details.'];if(o.verification_status==='rejected')return ['Verification rejected','No routing will activate unless the merchant submits a new acceptable verification request.'];if(o.organization_status==='verified'&&!o.claim_id)return ['Company verified','Next, the merchant must claim the retailer profile buyers actually select.'];if(o.claim_status==='under_review')return ['Review retailer ownership','Confirm this verified company controls the selected retailer identity before approving.'];if(o.claim_status==='approved')return ['Routing ready','Company and retailer identity are approved. Buyer cases can be routed to this merchant.'];return ['Verification complete','Continue with retailer identity claiming.']}function stats(s){const cards=[['',s.organizations||0,'Companies'],['pending',s.verification_pending||0,'Ready for review'],['needs_changes',s.needs_changes||0,'Needs changes'],['claim_review',s.claim_pending||0,'Retailer claims'],['verified',s.verified||0,'Verified']];return `<div class="stats">${cards.map(c=>`<div class="stat" data-filter="${c[0]}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`}
 function organizationStage(org){
   if(org.claim_status==='approved')return{
@@ -241,6 +241,46 @@ function organizationCard(org){
       </div>
     </button>
   </article>`;
+}
+
+
+function intelligenceTone(band){return band==='critical'?'failure':band==='elevated'?'warning':band==='watch'?'neutral':'healthy'}
+function platformIntelligenceCenter(){setTimeout(bindPlatformIntelligence,0);setTimeout(()=>loadPlatformIntelligence().catch(()=>{}),0);
+  if(!intelligenceData)return `<section class="intelligence-center"><div class="intelligence-head"><div><div class="eyebrow">PLATFORM INTELLIGENCE</div><h2>Explainable risk and readiness</h2><p>Loading deterministic organization signals…</p></div><button id="refresh-intelligence" class="secondary">Refresh intelligence</button></div></section>`;
+  const summary=intelligenceData.summary||{};
+  const organizations=intelligenceData.organizations||[];
+  return `<section class="intelligence-center">
+    <div class="intelligence-head"><div><div class="eyebrow">PLATFORM INTELLIGENCE</div><h2>Explainable risk and readiness</h2><p>Scores are derived from current platform records. No opaque model or invented confidence values.</p></div><button id="refresh-intelligence" class="secondary">Refresh intelligence</button></div>
+    <div class="intelligence-summary">
+      <div><b>${summary.averageHealth??100}</b><span>Average health</span></div>
+      <div><b>${summary.averageRisk??0}</b><span>Average risk</span></div>
+      <div class="${summary.critical?'failure':'healthy'}"><b>${summary.critical||0}</b><span>Critical</span></div>
+      <div class="${summary.elevated?'warning':'healthy'}"><b>${summary.elevated||0}</b><span>Elevated</span></div>
+    </div>
+    <div class="intelligence-list">${organizations.length?organizations.map(item=>{
+      const ai=item.intelligence;
+      const top=ai.signals?.slice(0,3)||[];
+      return `<article class="intelligence-card ${intelligenceTone(ai.band)}">
+        <div class="intelligence-card-head"><div><h3>${esc(item.name||'Unnamed organization')}</h3><span>${esc(item.owner_email||'No owner email')}</span></div><div class="risk-orb"><b>${ai.risk}</b><span>risk</span></div></div>
+        <div class="intelligence-scores"><span>Health <b>${ai.health}</b></span><span>Trust <b>${ai.trust}</b></span><span>Security <b>${ai.security}</b></span><span>Readiness <b>${ai.readiness}</b></span><span>Engagement <b>${ai.engagement}</b></span></div>
+        <div class="intelligence-signals">${top.length?top.map(signal=>`<div class="${esc(signal.severity)}"><strong>${esc(signal.label)}</strong><span>${esc(signal.detail)}</span></div>`).join(''):'<div class="healthy"><strong>No material risk signals</strong><span>Current records do not indicate immediate intervention.</span></div>'}</div>
+        <div class="intelligence-recommendation"><span>Recommended next action</span><strong>${esc(ai.recommendations?.[0]?.action||'Continue monitoring')}</strong><small>${esc(ai.recommendations?.[0]?.reason||'')}</small></div>
+        <button class="secondary compact" data-open-organization="${esc(item.id)}">Open organization</button>
+      </article>`
+    }).join(''):'<div class="empty"><strong>No organizations available</strong>Platform Intelligence will populate after the first company registers.</div>'}</div>
+    <p class="intelligence-method">Methodology: ${esc(intelligenceData.methodology||'deterministic-v1')} · Generated ${esc(new Date(intelligenceData.generatedAt).toLocaleString())}</p>
+  </section>`;
+}
+
+async function loadPlatformIntelligence(force=false){
+  if(intelligenceData&&!force)return;
+  try{intelligenceData=await api('/api/v1/admin/intelligence')}catch(error){intelligenceData={summary:{},organizations:[],methodology:'unavailable',generatedAt:new Date().toISOString(),error:error.message}}
+  render();
+}
+
+function bindPlatformIntelligence(){
+  const refresh=$('#refresh-intelligence');
+  if(refresh)refresh.onclick=async()=>{intelligenceData=null;render();await loadPlatformIntelligence(true)};
 }
 
 function organizationCenter(){
@@ -1573,7 +1613,8 @@ function lockAdmin(
     ${esc(message)}
   </div>`;
 }
-function render(){const a=$('#app');a.innerHTML=`<div class="overview">${stats(data.stats)}${workflow()}${attention()}${operationsDashboard()}${auditConsole()}${organizationCenter()}</div>`;$('#organization-status').value=currentStatus;
+function render(){const a=$('#app');a.innerHTML=`<div class="overview">${stats(data.stats)}${workflow()}${attention()}${operationsDashboard()}${auditConsole()}${platformIntelligenceCenter()}
+${organizationCenter()}</div>`;$('#organization-status').value=currentStatus;
 $('#organization-search').oninput=debounce(()=>{
   currentQ=$('#organization-search').value;
   load();
