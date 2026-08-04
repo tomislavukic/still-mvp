@@ -84,8 +84,8 @@ jobs:
 
       - name: Commit validated implementation
         run: |
-          if git diff --quiet; then
-            echo "No generated changes to commit."
+          if git diff --quiet -- admin.js admin.html merchant-backend/worker-v107.js; then
+            echo "No source changes to commit."
             exit 0
           fi
 
@@ -95,9 +95,7 @@ jobs:
           git add \
             admin.js \
             admin.html \
-            merchant-backend/worker-v107.js \
-            public/admin.js \
-            public/admin.html
+            merchant-backend/worker-v107.js
 
           git commit -m "Implement Organization Access Controls"
           git push origin HEAD:feature/organization-access-controls
