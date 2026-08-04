@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,selectedOrganizationId='',sessionTimer=0;
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let token='',data=null,currentQ='',currentStatus='',auditData=[],auditAction='',operationsData=null,selectedOrganizationId='',activeOrganizationTab='overview',sessionTimer=0;
 const ADMIN_SESSION_MS=30*60*1000;async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'content-type':'application/json','authorization':'Bearer '+token,...(opt.headers||{})}}),j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||'Request failed'),{data:j,status:r.status});return j}const labels={awaiting_submission:'Waiting for merchant',submitted:'Submitted',under_review:'Ready for review',needs_changes:'Changes requested',approved:'Verified',rejected:'Rejected'};const pill=s=>`<span class="pill ${esc(s||'')}">${esc(labels[s]||s||'Waiting for merchant')}</span>`;function stage(o){if(o.claim_status==='approved')return 4;if(o.organization_status==='verified')return 3;if(o.verification_status==='approved')return 3;if(['submitted','under_review','needs_changes','rejected'].includes(o.verification_status))return 2;return 1}function stageBar(o){const n=stage(o),items=[['1','Registered'],['2','Company verification'],['3','Retailer profile'],['4','Buyer routing']];return `<div class="progress">${items.map((x,i)=>`<div class="${i+1<n?'done':i+1===n?'current':''}"><b>${x[1]}</b><span>${i+1<n?'Complete':i+1===n?'Current step':'Next'}</span></div>`).join('')}</div>`}function nextAction(o){if(!o.verification_id)return ['Waiting for merchant','The company account exists, but no verification details have been submitted yet. No admin action is required.'];if(o.verification_status==='under_review'||o.verification_status==='submitted')return ['Review company identity','Check legal identity, VAT/registration details, website and company email before deciding.'];if(o.verification_status==='needs_changes')return ['Waiting for corrections','The merchant must update and resubmit the verification details.'];if(o.verification_status==='rejected')return ['Verification rejected','No routing will activate unless the merchant submits a new acceptable verification request.'];if(o.organization_status==='verified'&&!o.claim_id)return ['Company verified','Next, the merchant must claim the retailer profile buyers actually select.'];if(o.claim_status==='under_review')return ['Review retailer ownership','Confirm this verified company controls the selected retailer identity before approving.'];if(o.claim_status==='approved')return ['Routing ready','Company and retailer identity are approved. Buyer cases can be routed to this merchant.'];return ['Verification complete','Continue with retailer identity claiming.']}function stats(s){const cards=[['',s.organizations||0,'Companies'],['pending',s.verification_pending||0,'Ready for review'],['needs_changes',s.needs_changes||0,'Needs changes'],['claim_review',s.claim_pending||0,'Retailer claims'],['verified',s.verified||0,'Verified']];return `<div class="stats">${cards.map(c=>`<div class="stat" data-filter="${c[0]}"><b>${c[1]}</b><span>${c[2]}</span></div>`).join('')}</div>`}
 function organizationStage(org){
   if(org.claim_status==='approved')return{
@@ -307,71 +307,454 @@ function organizationCenter(){
   ></aside>`;
 }
 
-function organizationDrawer(org){
-  if(!org)return'';
 
-  const stage=organizationStage(org);
+function organizationReadiness(org){
+  const checks=[
+    {
+      key:'owner',
+      label:'Owner contact',
+      complete:Boolean(org.owner_email)
+    },
+    {
+      key:'legal_name',
+      label:'Legal company name',
+      complete:Boolean(org.legal_name)
+    },
+    {
+      key:'registration',
+      label:'Registration number',
+      complete:Boolean(org.registration_number)
+    },
+    {
+      key:'tax',
+      label:'VAT or tax identifier',
+      complete:Boolean(org.vat_id)
+    },
+    {
+      key:'country',
+      label:'Country',
+      complete:Boolean(org.country_code)
+    },
+    {
+      key:'website',
+      label:'Company website',
+      complete:Boolean(
+        org.verification_website||
+        org.website_url||
+        org.website_domain
+      )
+    },
+    {
+      key:'verification',
+      label:'Verification submitted',
+      complete:Boolean(org.verification_id)
+    },
+    {
+      key:'verification_approved',
+      label:'Legal identity approved',
+      complete:Boolean(
+        org.organization_status==='verified'||
+        org.verification_status==='approved'
+      )
+    },
+    {
+      key:'retailer',
+      label:'Retailer identity selected',
+      complete:Boolean(
+        org.claim_id||
+        org.claimed_retailer_key||
+        org.retailer_name
+      )
+    },
+    {
+      key:'routing',
+      label:'Buyer routing active',
+      complete:org.claim_status==='approved'
+    }
+  ];
+
+  const completed=checks.filter(check=>check.complete).length;
+  const score=Math.round((completed/checks.length)*100);
+
+  return {
+    score,
+    completed,
+    total:checks.length,
+    checks
+  };
+}
+
+function organizationTimeline(org){
+  const registered=Boolean(org.created_at);
+  const submitted=Boolean(org.verification_id);
+  const reviewed=[
+    'under_review',
+    'needs_changes',
+    'approved',
+    'rejected'
+  ].includes(org.verification_status);
+  const approved=
+    org.organization_status==='verified'||
+    org.verification_status==='approved';
+  const retailerSelected=Boolean(
+    org.claim_id||
+    org.claimed_retailer_key||
+    org.retailer_name
+  );
+  const routing=org.claim_status==='approved';
+
+  return [
+    {
+      label:'Organization registered',
+      detail:org.created_at
+        ?new Date(org.created_at).toLocaleString()
+        :'Registration date unavailable',
+      complete:registered,
+      current:registered&&!submitted
+    },
+    {
+      label:'Verification submitted',
+      detail:submitted
+        ?labels[org.verification_status]||
+          org.verification_status||
+          'Submitted'
+        :'Waiting for the company',
+      complete:submitted,
+      current:submitted&&!reviewed
+    },
+    {
+      label:'Platform review',
+      detail:reviewed
+        ?labels[org.verification_status]||
+          org.verification_status
+        :'Not started',
+      complete:reviewed,
+      current:reviewed&&!approved
+    },
+    {
+      label:'Legal identity approved',
+      detail:approved?'Verified':'Not approved',
+      complete:approved,
+      current:approved&&!retailerSelected
+    },
+    {
+      label:'Retailer identity connected',
+      detail:
+        org.retailer_name||
+        org.claimed_retailer_key||
+        'Not connected',
+      complete:retailerSelected,
+      current:retailerSelected&&!routing
+    },
+    {
+      label:'Buyer routing active',
+      detail:routing
+        ?'Buyer cases can be routed'
+        :'Routing is not active',
+      complete:routing,
+      current:routing
+    }
+  ];
+}
+
+function organizationWorkspaceNavigation(){
+  const tabs=[
+    ['overview','Overview'],
+    ['identity','Identity'],
+    ['verification','Verification'],
+    ['retailer','Retailer'],
+    ['platform','Platform']
+  ];
+
+  return `<nav
+    class="organization-workspace-tabs"
+    aria-label="Organization workspace"
+  >
+    ${tabs.map(tab=>`
+      <button
+        class="${
+          activeOrganizationTab===tab[0]?'active':''
+        }"
+        data-organization-tab="${tab[0]}"
+      >
+        ${tab[1]}
+      </button>
+    `).join('')}
+  </nav>`;
+}
+
+function organizationOverviewTab(org){
+  const readiness=organizationReadiness(org);
   const signals=organizationSignals(org);
   const next=nextAction(org);
 
-  const verificationFields=[
-    ['Legal name',org.legal_name||'Not submitted'],
-    ['Registration number',org.registration_number||'—'],
-    ['VAT / tax ID',org.vat_id||'—'],
-    ['Website',org.verification_website||org.website_url||'—'],
-    ['Support email',org.verification_email||org.support_email||'—'],
-    ['Website domain',org.website_domain||'—'],
-    ['Email domain',org.email_domain||'—'],
-    ['Country',(org.country_code||'').toUpperCase()||'—']
-  ];
+  const scoreTone=
+    readiness.score>=80
+      ?'healthy'
+      :readiness.score>=50
+        ?'warning'
+        :'neutral';
 
-  return `<div class="organization-drawer-shell">
-    <div class="organization-drawer-header">
-      <div>
-        <div class="eyebrow">ORGANIZATION</div>
-        <h2>${esc(org.name||'Unnamed organization')}</h2>
-        <p>${esc(org.owner_email||'No owner email')}</p>
+  return `<div class="organization-tab-panel">
+    <div class="organization-overview-hero">
+      <div class="organization-readiness ${scoreTone}">
+        <div
+          class="organization-readiness-ring"
+          style="--readiness:${readiness.score}"
+        >
+          <strong>${readiness.score}%</strong>
+        </div>
+
+        <div>
+          <div class="eyebrow">ONBOARDING READINESS</div>
+          <h3>
+            ${readiness.completed} of ${readiness.total}
+            platform checkpoints complete
+          </h3>
+          <p>
+            This score reflects recorded onboarding fields and approvals.
+            It is not a fraud, financial or business-quality score.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="organization-workspace-grid">
+      <section class="organization-workspace-card">
+        <div class="eyebrow">NEXT PLATFORM ACTION</div>
+        <h3>${esc(next[0])}</h3>
+        <p>${esc(next[1])}</p>
+      </section>
+
+      <section class="organization-workspace-card">
+        <div class="eyebrow">CURRENT STAGE</div>
+        <h3>${esc(organizationStage(org).label)}</h3>
+        <p>
+          Verification:
+          <strong>
+            ${esc(
+              labels[org.verification_status]||
+              org.verification_status||
+              'Not submitted'
+            )}
+          </strong>
+        </p>
+      </section>
+    </div>
+
+    <section class="organization-workspace-section">
+      <div class="organization-section-heading">
+        <div>
+          <div class="eyebrow">CHECKPOINTS</div>
+          <h3>Onboarding completeness</h3>
+        </div>
+
+        <span class="organization-section-count">
+          ${readiness.completed}/${readiness.total}
+        </span>
       </div>
 
-      <button
-        class="secondary organization-drawer-close"
-        id="close-organization"
-        aria-label="Close organization"
-      >
-        Close
-      </button>
-    </div>
-
-    <div class="organization-drawer-status">
-      <span class="organization-stage ${stage.tone}">
-        ${esc(stage.label)}
-      </span>
-
-      <span>
-        Registered ${
-          org.created_at
-            ?esc(new Date(org.created_at).toLocaleString())
-            :'—'
-        }
-      </span>
-    </div>
-
-    <section class="organization-drawer-section">
-      <div class="eyebrow">NEXT PLATFORM ACTION</div>
-      <h3>${esc(next[0])}</h3>
-      <p>${esc(next[1])}</p>
+      <div class="organization-checklist">
+        ${readiness.checks.map(check=>`
+          <div class="${
+            check.complete?'complete':'incomplete'
+          }">
+            <span class="organization-check-icon">
+              ${check.complete?'✓':'○'}
+            </span>
+            <strong>${esc(check.label)}</strong>
+          </div>
+        `).join('')}
+      </div>
     </section>
 
-    <section class="organization-drawer-section">
+    <section class="organization-workspace-section">
+      <div class="eyebrow">ATTENTION SIGNALS</div>
+      <h3>Items visible to Platform Administration</h3>
+
+      <div class="organization-drawer-signals">
+        ${
+          signals.length
+            ?signals.map(signal=>`
+              <div class="${esc(signal.tone)}">
+                ${esc(signal.label)}
+              </div>
+            `).join('')
+            :'<div class="healthy">No current attention signals</div>'
+        }
+      </div>
+    </section>
+  </div>`;
+}
+
+function organizationIdentityTab(org){
+  const fields=[
+    ['Workspace name',org.name||'—'],
+    ['Legal name',org.legal_name||'Not submitted'],
+    ['Registration number',org.registration_number||'Not submitted'],
+    ['VAT / tax ID',org.vat_id||'Not submitted'],
+    ['Country',(org.country_code||'').toUpperCase()||'Not submitted'],
+    ['Owner email',org.owner_email||'Not available'],
+    [
+      'Support email',
+      org.verification_email||
+      org.support_email||
+      'Not submitted'
+    ],
+    [
+      'Website',
+      org.verification_website||
+      org.website_url||
+      'Not submitted'
+    ],
+    ['Website domain',org.website_domain||'Not recorded'],
+    ['Email domain',org.email_domain||'Not recorded']
+  ];
+
+  return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
+      <div class="eyebrow">LEGAL IDENTITY</div>
+      <h3>Recorded company information</h3>
+      <p>
+        These values come from the organization registration and verification
+        workflow. Empty values are shown honestly as not submitted.
+      </p>
+
+      <div class="organization-detail-grid large">
+        ${fields.map(field=>`
+          <div>
+            <span>${esc(field[0])}</span>
+            <strong>${esc(field[1])}</strong>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  </div>`;
+}
+
+function organizationVerificationTab(org){
+  const timeline=organizationTimeline(org);
+
+  return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
+      <div class="eyebrow">VERIFICATION JOURNEY</div>
+      <h3>Company onboarding timeline</h3>
+      <p>
+        This timeline uses the workflow states currently recorded by the
+        platform. It does not manufacture events that are not in the database.
+      </p>
+
+      <div class="organization-timeline">
+        ${timeline.map((item,index)=>`
+          <div class="
+            organization-timeline-item
+            ${item.complete?'complete':''}
+            ${item.current?'current':''}
+          ">
+            <div class="organization-timeline-marker">
+              ${item.complete?'✓':index+1}
+            </div>
+
+            <div>
+              <strong>${esc(item.label)}</strong>
+              <span>${esc(item.detail)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section class="organization-workspace-section">
+      <div class="eyebrow">REVIEW STATUS</div>
+      <h3>
+        ${esc(
+          labels[org.verification_status]||
+          org.verification_status||
+          'Verification not submitted'
+        )}
+      </h3>
+
+      <p>
+        ${
+          org.verification_review_note
+            ?esc(org.verification_review_note)
+            :'No platform review note is currently recorded.'
+        }
+      </p>
+    </section>
+  </div>`;
+}
+
+function organizationRetailerTab(org){
+  const connected=Boolean(
+    org.claim_id||
+    org.claimed_retailer_key||
+    org.retailer_name
+  );
+
+  return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
+      <div class="eyebrow">RETAILER IDENTITY</div>
+      <h3>
+        ${connected
+          ?esc(
+            org.retailer_name||
+            org.claimed_retailer_key||
+            'Retailer selected'
+          )
+          :'No retailer identity connected'}
+      </h3>
+
+      <p>
+        ${
+          connected
+            ?'This is the retailer identity the organization has selected or claimed.'
+            :'The verified organization must select and claim the retailer identity buyers use.'
+        }
+      </p>
+
+      <div class="organization-detail-grid">
+        <div>
+          <span>Claim status</span>
+          <strong>${esc(org.claim_status||'Not submitted')}</strong>
+        </div>
+
+        <div>
+          <span>Claim ID</span>
+          <strong>${esc(org.claim_id||'—')}</strong>
+        </div>
+
+        <div>
+          <span>Retailer key</span>
+          <strong>${esc(org.claimed_retailer_key||'—')}</strong>
+        </div>
+
+        <div>
+          <span>Buyer routing</span>
+          <strong>
+            ${org.claim_status==='approved'?'Active':'Not active'}
+          </strong>
+        </div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function organizationPlatformTab(org){
+  return `<div class="organization-tab-panel">
+    <section class="organization-workspace-section first">
       <div class="organization-section-heading">
-        <h3>Platform identity</h3>
+        <div>
+          <div class="eyebrow">PLATFORM IDENTITY</div>
+          <h3>Tenant identifiers</h3>
+        </div>
 
         <button
           class="secondary compact"
           id="copy-organization-id"
           data-value="${esc(org.id||'')}"
         >
-          Copy ID
+          Copy organization ID
         </button>
       </div>
 
@@ -387,48 +770,26 @@ function organizationDrawer(org){
         </div>
 
         <div>
-          <span>Owner</span>
-          <strong>${esc(org.owner_email||'—')}</strong>
+          <span>Verification ID</span>
+          <strong>${esc(org.verification_id||'—')}</strong>
         </div>
 
         <div>
-          <span>Retailer claim</span>
-          <strong>${esc(org.claim_status||'Not submitted')}</strong>
+          <span>Created</span>
+          <strong>
+            ${
+              org.created_at
+                ?esc(new Date(org.created_at).toLocaleString())
+                :'—'
+            }
+          </strong>
         </div>
       </div>
     </section>
 
-    <section class="organization-drawer-section">
-      <h3>Legal and verification details</h3>
-
-      <div class="organization-detail-grid">
-        ${verificationFields.map(field=>`
-          <div>
-            <span>${esc(field[0])}</span>
-            <strong>${esc(field[1])}</strong>
-          </div>
-        `).join('')}
-      </div>
-    </section>
-
-    <section class="organization-drawer-section">
-      <h3>Attention signals</h3>
-
-      <div class="organization-drawer-signals">
-        ${
-          signals.length
-            ?signals.map(signal=>`
-              <div class="${esc(signal.tone)}">
-                ${esc(signal.label)}
-              </div>
-            `).join('')
-            :'<div class="healthy">No current attention signals</div>'
-        }
-      </div>
-    </section>
-
-    <section class="organization-drawer-section">
-      <h3>Platform-only actions</h3>
+    <section class="organization-workspace-section">
+      <div class="eyebrow">PLATFORM TOOLS</div>
+      <h3>Support and inspection</h3>
 
       <div class="organization-platform-actions">
         <a
@@ -448,13 +809,145 @@ function organizationDrawer(org){
         </button>
       </div>
 
-      <p class="small">
-        Destructive platform actions such as suspension, archival and ownership
-        transfer are intentionally unavailable until their backend rules,
-        permissions and audit events are implemented.
-      </p>
+      <div class="organization-safety-note">
+        <strong>Read-only administration</strong>
+        <span>
+          Suspension, archival, deletion, ownership transfer and member
+          management remain unavailable until their backend permissions,
+          confirmations and audit events are implemented.
+        </span>
+      </div>
     </section>
   </div>`;
+}
+
+function organizationActiveTab(org){
+  switch(activeOrganizationTab){
+    case'identity':
+      return organizationIdentityTab(org);
+    case'verification':
+      return organizationVerificationTab(org);
+    case'retailer':
+      return organizationRetailerTab(org);
+    case'platform':
+      return organizationPlatformTab(org);
+    default:
+      return organizationOverviewTab(org);
+  }
+}
+
+function organizationDrawer(org){
+  if(!org)return'';
+
+  const stage=organizationStage(org);
+
+  return `<div class="organization-drawer-shell workspace">
+    <div class="organization-drawer-header">
+      <div class="organization-workspace-title">
+        <div class="organization-avatar large">
+          ${esc((org.name||'?').trim().slice(0,1).toUpperCase())}
+        </div>
+
+        <div>
+          <div class="eyebrow">ORGANIZATION WORKSPACE</div>
+          <h2>${esc(org.name||'Unnamed organization')}</h2>
+          <p>${esc(org.owner_email||'No owner email')}</p>
+        </div>
+      </div>
+
+      <button
+        class="secondary organization-drawer-close"
+        id="close-organization"
+        aria-label="Close organization"
+      >
+        Close
+      </button>
+    </div>
+
+    <div class="organization-workspace-status">
+      <span class="organization-stage ${stage.tone}">
+        ${esc(stage.label)}
+      </span>
+
+      <span>
+        ${esc((org.country_code||'').toUpperCase()||'Country unknown')}
+      </span>
+
+      <span>
+        Registered ${
+          org.created_at
+            ?esc(new Date(org.created_at).toLocaleDateString())
+            :'—'
+        }
+      </span>
+    </div>
+
+    ${organizationWorkspaceNavigation()}
+
+    <div id="organization-workspace-content">
+      ${organizationActiveTab(org)}
+    </div>
+  </div>`;
+}
+
+
+function bindOrganizationWorkspace(org){
+  document.querySelectorAll('[data-organization-tab]').forEach(button=>{
+    button.onclick=()=>{
+      activeOrganizationTab=button.dataset.organizationTab||'overview';
+
+      document.querySelectorAll('[data-organization-tab]')
+        .forEach(tab=>{
+          tab.classList.toggle(
+            'active',
+            tab.dataset.organizationTab===activeOrganizationTab
+          );
+        });
+
+      const content=$('#organization-workspace-content');
+
+      if(content){
+        content.innerHTML=organizationActiveTab(org);
+        bindOrganizationTabActions(org);
+      }
+    };
+  });
+
+  bindOrganizationTabActions(org);
+}
+
+function bindOrganizationTabActions(org){
+  const copyButton=$('#copy-organization-id');
+
+  if(copyButton){
+    copyButton.onclick=async event=>{
+      const value=event.currentTarget.dataset.value||'';
+
+      try{
+        await navigator.clipboard.writeText(value);
+        event.currentTarget.textContent='Copied';
+
+        setTimeout(()=>{
+          if(event.currentTarget){
+            event.currentTarget.textContent='Copy organization ID';
+          }
+        },1200);
+      }catch{
+        alert('Could not copy the organization ID.');
+      }
+    };
+  }
+
+  const exportButton=$('#export-single-organization');
+
+  if(exportButton){
+    exportButton.onclick=()=>{
+      downloadOrganizationJSON(
+        [org],
+        org.name||'organization'
+      );
+    };
+  }
 }
 
 function openOrganizationDrawer(id){
@@ -464,6 +957,7 @@ function openOrganizationDrawer(id){
   if(!organization)return;
 
   selectedOrganizationId=id;
+  activeOrganizationTab='overview';
 
   const drawer=$('#organization-drawer');
   const backdrop=$('#organization-drawer-backdrop');
@@ -477,29 +971,12 @@ function openOrganizationDrawer(id){
   $('#close-organization').onclick=closeOrganizationDrawer;
   backdrop.onclick=closeOrganizationDrawer;
 
-  $('#copy-organization-id').onclick=async event=>{
-    const value=event.currentTarget.dataset.value||'';
-
-    try{
-      await navigator.clipboard.writeText(value);
-      event.currentTarget.textContent='Copied';
-      setTimeout(()=>{
-        if(event.currentTarget){
-          event.currentTarget.textContent='Copy ID';
-        }
-      },1200);
-    }catch{
-      alert('Could not copy the organization ID.');
-    }
-  };
-
-  $('#export-single-organization').onclick=()=>{
-    downloadOrganizationJSON([organization],organization.name||'organization');
-  };
+  bindOrganizationWorkspace(organization);
 }
 
 function closeOrganizationDrawer(){
   selectedOrganizationId='';
+  activeOrganizationTab='overview';
 
   const drawer=$('#organization-drawer');
   const backdrop=$('#organization-drawer-backdrop');

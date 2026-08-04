@@ -42,6 +42,50 @@
 .organization-drawer{position:fixed;z-index:90;top:0;right:0;width:min(620px,94vw);height:100vh;background:#06110c;border-left:1px solid var(--line);box-shadow:-24px 0 80px rgba(0,0,0,.46);overflow:auto;transform:translateX(102%);transition:transform .22s ease}
 .organization-drawer.open{transform:translateX(0)}
 .drawer-open{overflow:hidden}
+
+.organization-drawer-shell.workspace{min-height:100%;padding:0}
+.organization-drawer-shell.workspace .organization-drawer-header{padding:26px 28px 20px}
+.organization-workspace-title{display:flex;align-items:center;gap:14px;min-width:0}
+.organization-avatar.large{width:52px;height:52px;flex:0 0 52px;font-size:21px}
+.organization-workspace-status{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:14px 28px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}
+.organization-workspace-tabs{position:sticky;top:0;z-index:4;display:flex;gap:5px;padding:10px 28px;border-bottom:1px solid var(--line);background:rgba(6,17,12,.96);backdrop-filter:blur(16px);overflow:auto}
+.organization-workspace-tabs button{flex:0 0 auto;min-height:40px;padding:9px 13px;border-radius:10px;background:transparent;color:var(--muted);border:1px solid transparent}
+.organization-workspace-tabs button:hover{transform:none;background:var(--card2);color:var(--ink)}
+.organization-workspace-tabs button.active{background:var(--card3);color:var(--ink);border-color:var(--line2)}
+.organization-tab-panel{padding:0 28px 34px}
+.organization-overview-hero{padding:24px 0 10px}
+.organization-readiness{display:flex;align-items:center;gap:18px;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.organization-readiness.healthy{border-color:rgba(99,230,155,.38)}
+.organization-readiness.warning{border-color:rgba(244,213,122,.46)}
+.organization-readiness-ring{--readiness:0;display:grid;place-items:center;flex:0 0 92px;width:92px;height:92px;border-radius:50%;background:conic-gradient(var(--green) calc(var(--readiness)*1%),var(--card3) 0);position:relative}
+.organization-readiness-ring:after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--card)}
+.organization-readiness-ring strong{position:relative;z-index:1;font-size:21px}
+.organization-readiness h3{margin:4px 0 4px}
+.organization-readiness p{margin:0}
+.organization-workspace-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.organization-workspace-card{padding:17px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.organization-workspace-card h3{margin:4px 0 6px}
+.organization-workspace-card p{margin-bottom:0}
+.organization-workspace-section{padding:22px 0;border-top:1px solid var(--line)}
+.organization-workspace-section.first{border-top:0;padding-top:24px}
+.organization-section-count{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+.organization-checklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.organization-checklist>div{display:flex;align-items:center;gap:9px;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--card)}
+.organization-checklist>div.complete{border-color:rgba(99,230,155,.28)}
+.organization-checklist>div.incomplete{color:var(--muted)}
+.organization-check-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--card3);font-weight:900}
+.organization-checklist .complete .organization-check-icon{color:var(--green)}
+.organization-detail-grid.large{grid-template-columns:1fr 1fr}
+.organization-timeline{position:relative;display:grid;gap:0;margin-top:18px}
+.organization-timeline-item{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;position:relative;padding-bottom:22px}
+.organization-timeline-item:not(:last-child):before{content:"";position:absolute;left:17px;top:34px;bottom:0;width:1px;background:var(--line)}
+.organization-timeline-marker{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:12px;font-weight:900}
+.organization-timeline-item.complete .organization-timeline-marker{color:var(--green);border-color:rgba(99,230,155,.42)}
+.organization-timeline-item.current .organization-timeline-marker{box-shadow:0 0 0 4px rgba(99,230,155,.08)}
+.organization-timeline-item strong,.organization-timeline-item span{display:block}
+.organization-timeline-item span{margin-top:4px;color:var(--muted);font-size:12px}
+.organization-safety-note{display:grid;gap:4px;margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.organization-safety-note span{color:var(--muted);font-size:12px;line-height:1.5}
 .organization-drawer-shell{padding:28px}
 .organization-drawer-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--line)}
 .organization-drawer-header h2{margin:4px 0 0;font-size:30px}
@@ -158,6 +202,17 @@ body{font-size:17px}.wrap{padding:26px 14px 64px}header{display:block}.eyebrow{f
 .organization-card-head{grid-template-columns:auto minmax(0,1fr)}
 .organization-stage{grid-column:1/-1;justify-self:start}
 .organization-drawer-shell{padding:20px 15px}
+.organization-drawer-shell.workspace{padding:0}
+.organization-drawer-shell.workspace .organization-drawer-header{padding:20px 15px}
+.organization-workspace-title{align-items:flex-start}
+.organization-workspace-status{padding:12px 15px}
+.organization-workspace-tabs{padding:9px 15px}
+.organization-tab-panel{padding:0 15px 26px}
+.organization-readiness{display:block}
+.organization-readiness-ring{margin-bottom:15px}
+.organization-workspace-grid{grid-template-columns:1fr}
+.organization-checklist{grid-template-columns:1fr}
+.organization-detail-grid.large{grid-template-columns:1fr}
 .organization-drawer-header{display:block}
 .organization-drawer-header button{width:100%;margin-top:14px}
 .organization-drawer-status{display:block}
