@@ -21,6 +21,43 @@ function operationsDashboard(){
   </section>`;
 }
 
+
+function incidentCenter(health){
+  const incidents=health.incidents||[];
+
+  if(!incidents.length){
+    return `<div class="incident-center operational">
+      <div class="incident-icon">✓</div>
+      <div>
+        <div class="eyebrow">INCIDENT CENTER</div>
+        <h3>All monitored systems are operational</h3>
+        <p>No database, server-error, latency or authentication incident
+        thresholds are currently active.</p>
+      </div>
+    </div>`;
+  }
+
+  const critical=incidents.some(item=>item.severity==='critical');
+
+  return `<div class="incident-center ${critical?'critical':'warning'}">
+    <div class="incident-icon">${critical?'!':'△'}</div>
+    <div class="incident-content">
+      <div class="eyebrow">INCIDENT CENTER</div>
+      <h3>${critical?'Action required':'Attention recommended'}</h3>
+
+      <div class="incident-list">
+        ${incidents.map(item=>`
+          <div class="incident-item ${esc(item.severity)}">
+            <strong>${esc(item.title)}</strong>
+            <span>${esc(item.detail)}</span>
+            <code>${esc(item.code)}</code>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
 function operationsCards(health){
   const metrics=health.metrics||{};
   const worker=health.worker||{};
@@ -59,8 +96,8 @@ function operationsCards(health){
     ],
     [
       metrics.denied24h??0,
-      'Denied requests',
-      'HTTP 401 and 403 responses',
+      'Security denials',
+      'Excludes anonymous notification polling',
       Number(metrics.denied24h||0)>10?'warning':'neutral'
     ]
   ];
@@ -76,6 +113,8 @@ function operationsCards(health){
   `).join('');
 
   return `
+    ${incidentCenter(health)}
+
     <div class="health-cards">
       ${cards.map(card=>`
         <div class="health-card ${card[3]}">
@@ -87,6 +126,16 @@ function operationsCards(health){
     </div>
 
     <div class="health-footer">
+      <div>
+        <strong>Notification polling excluded</strong>
+        <span>${esc(String(
+          metrics.notificationPollDenied24h??0
+        ))} expected anonymous responses</span>
+      </div>
+      <div>
+        <strong>Maximum latency</strong>
+        <span>${esc(String(metrics.maximumLatencyMs??0))} ms</span>
+      </div>
       <div>
         <strong>Latest activity</strong>
         <span>${metrics.latestActivityAt
