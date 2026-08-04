@@ -64,6 +64,7 @@ function resolveRole(request,env){
 }
 function actionFor(method,path){
   if(path==='/api/v1/admin/audit')return method==='GET'?'audit.read':'audit.unsupported';
+  if(path==='/api/v1/admin/health')return method==='GET'?'operations.health.read':'operations.health.unsupported';
   if(path==='/api/v1/admin/session')return 'session.inspect';
   if(method==='GET'&&path==='/api/v1/admin/overview')return 'merchant.overview.read';
   if(method==='GET'&&/\/organizations\/[^/]+\/events$/.test(path))return 'merchant.audit.read';
@@ -106,6 +107,67 @@ async function auditList(request,env,role,id){
     :await env.DB.prepare(`SELECT request_id,actor_role,action,method,path,status,outcome,ip_hash,user_agent,metadata_json,created_at FROM platform_audit_events ORDER BY created_at DESC LIMIT ?`).bind(limit).all();
   return json({events:(result.results||[]).map(row=>({...row,metadata:JSON.parse(row.metadata_json||'{}'),metadata_json:undefined}))},200,{'x-request-id':id});
 }
+
+async function operationsHealth(request,env,role,id){
+  if(!READ_ROLES.has(role)){
+    return json({error:'forbidden'},403,{'x-request-id':id});
+  }
+
+  const started=Date.now();
+  await ensureSchema(env);
+
+  const databaseCheck=await env.DB.prepare('SELECT 1 AS healthy').first();
+
+  const metrics=await env.DB.prepare(`
+    SELECT
+      COUNT(*) AS requests_24h,
+      SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS errors_24h,
+      SUM(CASE WHEN status IN (401,403) THEN 1 ELSE 0 END) AS denied_24h,
+      ROUND(AVG(
+        CAST(json_extract(metadata_json,'$.durationMs') AS REAL)
+      ),1) AS average_latency_ms,
+      MAX(created_at) AS latest_activity_at
+    FROM platform_audit_events
+    WHERE created_at >= datetime('now','-24 hours')
+  `).first();
+
+  const recent=await env.DB.prepare(`
+    SELECT
+      action,
+      status,
+      outcome,
+      actor_role,
+      created_at
+    FROM platform_audit_events
+    ORDER BY created_at DESC
+    LIMIT 5
+  `).all();
+
+  return json({
+    status:'healthy',
+    worker:{
+      build:107,
+      baseBuild:106,
+      environment:'production',
+      colo:request.cf?.colo||null
+    },
+    database:{
+      status:databaseCheck?.healthy===1?'healthy':'unknown',
+      binding:'DB',
+      responseMs:Date.now()-started
+    },
+    metrics:{
+      requests24h:Number(metrics?.requests_24h||0),
+      errors24h:Number(metrics?.errors_24h||0),
+      denied24h:Number(metrics?.denied_24h||0),
+      averageLatencyMs:Number(metrics?.average_latency_ms||0),
+      latestActivityAt:metrics?.latest_activity_at||null
+    },
+    recentActivity:recent.results||[],
+    checkedAt:now()
+  },200,{'x-request-id':id});
+}
+
 function withRequestId(response,id){
   const headers=new Headers(response.headers);
   headers.set('x-request-id',id);
@@ -129,6 +191,7 @@ export default{
         else if(!allowed(role,request.method,path))response=json({error:'forbidden',role},403,{'x-request-id':id});
         else if(path==='/api/v1/admin/session'&&request.method==='GET')response=json({authenticated:true,role,permissions:{read:READ_ROLES.has(role),review:REVIEW_ROLES.has(role),admin:role==='owner'||role==='admin'}},200,{'x-request-id':id});
         else if(path==='/api/v1/admin/audit'&&request.method==='GET')response=await auditList(request,env,role,id);
+        else if(path==='/api/v1/admin/health'&&request.method==='GET')response=await operationsHealth(request,env,role,id);
         else response=withRequestId(await app.fetch(delegatedRequest(request,env,role),env,ctx),id);
       }else response=withRequestId(await app.fetch(request,env,ctx),id);
     }catch(error){
