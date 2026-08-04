@@ -29,6 +29,7 @@ if(!fail.length){
  const contactWorker=read('merchant-backend/worker-v104.js');
  const setupWorker=read('merchant-backend/worker-v105.js');
  const eslWorker=read('merchant-backend/worker-v106.js');
+ const operationsHardeningWorker=read('merchant-backend/worker-v107.js');
  const build=read('build-public.js');
  const company=read('company.html');
  if(!buyerAuth.includes('/api/v1/buyer-auth/google/config'))fail.push('buyer Google config does not use isolated auth namespace');
@@ -39,7 +40,9 @@ if(!fail.length){
  if(!authWorker.includes("pathname === '/api/v1/buyer-auth/google/config'"))fail.push('worker does not route buyer Google config');
  if(!authWorker.includes("VALUES('GOOGLE_CLIENT_ID'"))fail.push('auth worker does not persist Google Client ID');
  if(!worker.includes("import app from './worker-v79.js'"))fail.push('ownership worker does not delegate to the audited auth router');
- if(!read('wrangler.jsonc').includes('merchant-backend/worker-v106.js'))fail.push('wrangler does not use the electronic shelf-label router');
+ if(!read('wrangler.jsonc').includes('merchant-backend/worker-v107.js'))fail.push('wrangler does not use the Build 107 operations wrapper');
+ if(!operationsHardeningWorker.includes("import app from './worker-v106.js'"))fail.push('Build 107 does not delegate to the validated Build 106 base');
+ ['platform_audit_events','OPERATIONS_REVIEWER_TOKEN','OPERATIONS_SUPPORT_TOKEN','OPERATIONS_READONLY_TOKEN','/api/v1/admin/audit','request.complete'].forEach(capability=>{if(!operationsHardeningWorker.includes(capability))fail.push(`Build 107 operations capability missing ${capability}`)});
  if(!build.includes('site-quality-v82.js')||!build.includes('site-quality-v82.css'))fail.push('responsive visibility layer missing from production build');
  if(build.includes("'buyer-auth-routes-v79.js'"))fail.push('obsolete global fetch auth shim is still shipped');
  if(!read('_headers').includes('Content-Security-Policy:'))fail.push('content security policy missing');

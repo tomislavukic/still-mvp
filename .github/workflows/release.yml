@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   package:
-    name: Validate and package Build 106
+    name: Validate and package Build 107
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -43,11 +43,12 @@ jobs:
       - name: Validate CodeQL configuration
         run: npm run validate:codeql
 
-      - name: Verify Build 106 configuration
+      - name: Verify Build 107 configuration
         run: |
           set -euo pipefail
 
           test -f merchant-backend/worker-v106.js
+          test -f merchant-backend/worker-v107.js
           test -f wrangler.jsonc
           test -f public/build.json
 
@@ -55,9 +56,42 @@ jobs:
           const fs = require('fs');
 
           const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
+          const wrapper = fs.readFileSync(
+            'merchant-backend/worker-v107.js',
+            'utf8'
+          );
 
-          if (!wrangler.includes('"main": "merchant-backend/worker-v106.js"')) {
-            throw new Error('Wrangler no longer targets the Build 106 Worker');
+          if (!wrangler.includes(
+            '"main": "merchant-backend/worker-v107.js"'
+          )) {
+            throw new Error(
+              'Wrangler no longer targets the Build 107 operations wrapper'
+            );
+          }
+
+          if (!wrapper.includes(
+            "import app from './worker-v106.js'"
+          )) {
+            throw new Error(
+              'Build 107 no longer delegates to the validated Build 106 base'
+            );
+          }
+
+          const required = [
+            'platform_audit_events',
+            'OPERATIONS_REVIEWER_TOKEN',
+            'OPERATIONS_SUPPORT_TOKEN',
+            'OPERATIONS_READONLY_TOKEN',
+            '/api/v1/admin/audit',
+            'request.complete'
+          ];
+
+          for (const capability of required) {
+            if (!wrapper.includes(capability)) {
+              throw new Error(
+                `Build 107 capability missing: ${capability}`
+              );
+            }
           }
 
           const build = require('./public/build.json');
@@ -68,11 +102,17 @@ jobs:
 
           if (build.productionBundle < 106) {
             throw new Error(
-              `Production bundle regressed below Build 106: ${build.productionBundle}`
+              `Production web bundle regressed below Build 106: ${
+                build.productionBundle
+              }`
             );
           }
 
-          console.log(`Validated production Build ${build.productionBundle}`);
+          console.log(
+            `Validated Worker Build 107 over web bundle ${
+              build.productionBundle
+            }`
+          );
           NODE
 
       - name: Prepare Cloudflare package without deploying
@@ -96,6 +136,7 @@ jobs:
             --file "$archive" \
             public \
             merchant-backend/worker-v106.js \
+            merchant-backend/worker-v107.js \
             wrangler.jsonc \
             package.json
 
