@@ -16,7 +16,8 @@
     'company-rewards-v75.js',
     'company-control-center-v101.js',
     'company-progressive-access-v108.js',
-    'company-capabilities-v1.js'
+    'company-capabilities-v1.js',
+    'company-unified-workspace-v109.js'
   ];
   let loading;
 
