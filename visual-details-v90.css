@@ -114,6 +114,202 @@ footer {
 .footer-links-v82 a:hover { text-decoration: none; }
 .footer-links-v82 a:hover::after { transform: scaleX(1); }
 
+/* Buyer Wallet: preserve passport behavior while making ownership glanceable. */
+#ownershipHubV83 {
+  background:
+    radial-gradient(circle at 88% 6%, color-mix(in srgb, var(--green) 13%, transparent), transparent 30%),
+    var(--surface);
+}
+#ownershipHubV83 .op83-section-head {
+  align-items: flex-start;
+}
+#ownershipHubV83 .op83-section-head h2 {
+  max-width: 690px;
+}
+#ownershipHubV83 .op83-stats {
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: 0 14px 38px rgba(25,49,76,.06);
+  backdrop-filter: blur(16px);
+}
+#ownershipHubV83 .op83-stats span {
+  min-width: 116px;
+  border: 0;
+  background: transparent;
+}
+#ownershipHubV83 .op83-hub-grid {
+  grid-template-columns: minmax(280px,.7fr) minmax(0,1.3fr);
+  gap: clamp(18px,3vw,34px);
+}
+#ownershipHubV83 .op83-passport-panel {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(20px,3vw,34px);
+  border-radius: 30px;
+  background:
+    linear-gradient(145deg,color-mix(in srgb,var(--surface) 94%,#fff),color-mix(in srgb,var(--surface2) 92%,var(--green) 8%));
+  box-shadow: 0 28px 80px rgba(25,49,76,.11);
+}
+#ownershipHubV83 .op83-passport-panel::before {
+  content: "WALLET";
+  position: absolute;
+  right: 24px;
+  top: 16px;
+  color: color-mix(in srgb,var(--ink) 7%,transparent);
+  font-size: clamp(42px,7vw,88px);
+  font-weight: 950;
+  letter-spacing: -.07em;
+  pointer-events: none;
+}
+#ownershipHubV83 .op83-panel-tools {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 22px;
+}
+#ownershipHubV83 .op83-panel-tools h3 {
+  font-size: clamp(26px,3vw,38px);
+  letter-spacing: -.04em;
+}
+#ownershipHubV83 .op83-panel-tools small {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+#ownershipHubV83 .op83-text {
+  min-height: 42px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--surface) 82%,transparent);
+  backdrop-filter: blur(12px);
+}
+#ownershipHubV83 .op83-passport-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+#ownershipHubV83 .op83-passport {
+  position: relative;
+  min-height: 282px;
+  overflow: hidden;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb,var(--line) 78%,transparent);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 94% 8%,color-mix(in srgb,var(--green) 24%,transparent),transparent 33%),
+    linear-gradient(150deg,color-mix(in srgb,var(--surface) 98%,#fff),color-mix(in srgb,var(--surface2) 90%,var(--green) 10%));
+  box-shadow: 0 18px 44px rgba(25,49,76,.10);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  isolation: isolate;
+}
+#ownershipHubV83 .op83-passport::after {
+  content: "◇";
+  position: absolute;
+  right: 15px;
+  bottom: 5px;
+  z-index: -1;
+  color: color-mix(in srgb,var(--green) 11%,transparent);
+  font-size: 96px;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+#ownershipHubV83 .op83-passport:hover,
+#ownershipHubV83 .op83-passport:focus-within {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb,var(--green) 45%,var(--line));
+  box-shadow: 0 26px 60px rgba(25,49,76,.15);
+}
+#ownershipHubV83 .op83-passport-top {
+  align-items: center;
+  gap: 10px;
+}
+#ownershipHubV83 .op83-passport-top > span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--green) 13%,var(--surface));
+}
+#ownershipHubV83 .op83-passport-top em {
+  max-width: 55%;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--surface) 84%,transparent);
+  color: var(--ink);
+  font-size: 9px;
+  letter-spacing: .02em;
+}
+#ownershipHubV83 .op83-passport h4 {
+  max-width: 88%;
+  margin: 22px 0 5px;
+  font-size: clamp(22px,2.4vw,31px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+#ownershipHubV83 .op83-passport > p {
+  font-size: 13px;
+}
+#ownershipHubV83 .op83-next {
+  margin: 20px 0 14px;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 15px;
+  background: color-mix(in srgb,var(--surface) 78%,transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--line) 78%,transparent);
+  backdrop-filter: blur(12px);
+}
+#ownershipHubV83 .op83-next small {
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#ownershipHubV83 .op83-next b {
+  font-size: 16px;
+}
+#ownershipHubV83 .op83-shared {
+  background: color-mix(in srgb,var(--surface) 78%,transparent);
+  backdrop-filter: blur(12px);
+}
+#ownershipHubV83 .op83-passport-actions {
+  margin-top: auto;
+  padding-top: 8px;
+}
+#ownershipHubV83 .op83-passport-actions button {
+  flex: 1 1 auto;
+  min-height: 43px;
+  border-radius: 13px;
+  background: color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter: blur(12px);
+}
+#ownershipHubV83 .op83-passport-actions .op94-qr-action {
+  flex-basis: 100%;
+  background: linear-gradient(135deg,#087d68,#0a9a80);
+  box-shadow: 0 12px 26px color-mix(in srgb,#087d68 24%,transparent);
+}
+#ownershipHubV83 .op83-connect-box {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 19px;
+  background: color-mix(in srgb,var(--green) 7%,var(--surface));
+}
+#ownershipHubV83 .op83-connect-box b {
+  font-size: 16px;
+}
+#ownershipHubV83 .op83-connect-box input {
+  letter-spacing: .08em;
+  font-weight: 800;
+}
+
 html[data-theme="dark"] .feature-nav-v82 a[data-feature-label] > span {
   background: #2d4358;
   color: #6cc9fa;
@@ -131,7 +327,21 @@ html[data-theme="dark"] .op83-result.pause { background: #44322f; }
 html[data-theme="dark"] .op83-result.verify .op83-score { color: #f2bd51; }
 html[data-theme="dark"] .op83-event { box-shadow: 0 5px 16px rgba(3, 9, 18, .12); }
 html[data-theme="dark"] .op83-empty > span { background: #2c4358; }
+html[data-theme="dark"] #ownershipHubV83 .op83-passport-panel {
+  background: linear-gradient(145deg,#1f3042,#172838);
+}
+html[data-theme="dark"] #ownershipHubV83 .op83-passport {
+  background:
+    radial-gradient(circle at 94% 8%,rgba(44,189,156,.18),transparent 34%),
+    linear-gradient(150deg,#24384b,#1b2f40);
+  box-shadow: 0 18px 44px rgba(3,9,18,.26);
+}
 
+@media (max-width: 980px) {
+  #ownershipHubV83 .op83-hub-grid { grid-template-columns: 1fr; }
+  #ownershipHubV83 .op83-form { order: 2; }
+  #ownershipHubV83 .op83-passport-panel { order: 1; }
+}
 @media (max-width: 767px) {
   .feature-nav-v82 a[data-feature-label] {
     flex-direction: column;
@@ -148,8 +358,58 @@ html[data-theme="dark"] .op83-empty > span { background: #2c4358; }
   }
   .op83-event { padding-left: 48px; }
   .op83-event::before { left: 18px; top: 22px; }
+  #ownershipHubV83 .op83-passport-list {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    padding: 4px 8vw 20px 2px;
+    margin-right: -18px;
+    scrollbar-width: none;
+  }
+  #ownershipHubV83 .op83-passport-list::-webkit-scrollbar { display: none; }
+  #ownershipHubV83 .op83-passport {
+    flex: 0 0 min(84vw,360px);
+    min-height: 300px;
+    scroll-snap-align: start;
+  }
+  #ownershipHubV83 .op83-passport:hover { transform: none; }
+  #ownershipHubV83 .op83-passport-panel {
+    margin-inline: -4px;
+    padding: 20px 16px;
+    border-radius: 26px;
+  }
+  #ownershipHubV83 .op83-passport-panel::before {
+    right: 14px;
+    top: 22px;
+    font-size: 48px;
+  }
+  #ownershipHubV83 .op83-panel-tools {
+    display: grid;
+    gap: 13px;
+  }
+  #ownershipHubV83 .op83-panel-tools > div:last-child {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  #ownershipHubV83 .op83-text { width: 100%; }
+  #ownershipHubV83 .op83-connect-box form { grid-template-columns: 1fr; }
+  #ownershipHubV83 .op83-connect-box button { min-height: 48px; }
+}
+@media (max-width: 520px) {
+  #ownershipHubV83 { padding-inline: 12px; }
+  #ownershipHubV83 .op83-section-head h2 { font-size: 38px; }
+  #ownershipHubV83 .op83-stats { width: 100%; }
+  #ownershipHubV83 .op83-stats span { flex: 1; min-width: 0; }
+  #ownershipHubV83 .op83-passport {
+    flex-basis: calc(100vw - 46px);
+    min-height: 320px;
+  }
+  #ownershipHubV83 .op83-passport-actions button { min-height: 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .footer-links-v82 a::after { transition: none; }
+  .footer-links-v82 a::after,
+  #ownershipHubV83 .op83-passport { transition: none; }
 }

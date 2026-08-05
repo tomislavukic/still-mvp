@@ -196,6 +196,15 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  function loadBuyerWallet() {
+    if (document.body.classList.contains('business-page') || document.querySelector('script[data-buyer-wallet]')) return;
+    const script = document.createElement('script');
+    script.src = '/buyer-wallet-v96.js';
+    script.defer = true;
+    script.dataset.buyerWallet = 'true';
+    document.head.appendChild(script);
+  }
+
   function installHandoffStyles() {
     if ($('#stillHandoffStyles')) return;
     const style = document.createElement('style');
@@ -217,6 +226,7 @@
     installHandoffStyles();
     prepareBuyerConnection();
     enhanceCompanyConnectionCodes();
+    loadBuyerWallet();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
