@@ -1,39 +1,153 @@
+[data-capability] {
+  position: relative;
+}
+
 [data-capability-state="verify"],
 [data-capability-state="plan"],
-[data-capability-state="coming-soon"]{
-opacity:.55;
-filter:grayscale(.25);
-position:relative;
-transition:.25s;
-cursor:pointer;
+[data-capability-state="coming-soon"] {
+  opacity: .58;
+  filter: grayscale(.32);
+  cursor: pointer;
+  transition:
+    opacity .18s ease,
+    filter .18s ease,
+    transform .18s ease;
 }
 
 [data-capability-state="verify"]:hover,
 [data-capability-state="plan"]:hover,
-[data-capability-state="coming-soon"]:hover{
-opacity:.9;
+[data-capability-state="coming-soon"]:hover {
+  opacity: .86;
+  filter: grayscale(.1);
 }
 
-.capability-pill{
-display:inline-flex;
-align-items:center;
-padding:4px 10px;
-border-radius:999px;
-font-size:11px;
-font-weight:600;
+.capability-pill {
+  display: inline-grid;
+  width: 21px;
+  height: 21px;
+  margin-left: 7px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  vertical-align: middle;
+  pointer-events: none;
 }
 
-.capability-pill.verify{
-background:#eab30822;
-color:#facc15;
+.capability-pill.verify {
+  background: color-mix(in srgb, #eab308 12%, transparent);
+  color: #eab308;
 }
 
-.capability-pill.plan{
-background:#3b82f622;
-color:#60a5fa;
+.capability-pill.plan {
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  color: #60a5fa;
 }
 
-.capability-pill.coming{
-background:#6b728022;
-color:#d1d5db;
+.capability-pill.coming-soon {
+  background: color-mix(in srgb, #6b7280 14%, transparent);
+  color: #9ca3af;
+}
+
+.capability-dialog {
+  width: min(520px, calc(100% - 24px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 32px 110px rgba(0, 0, 0, .36);
+}
+
+.capability-dialog::backdrop {
+  background: rgba(5, 12, 20, .64);
+  backdrop-filter: blur(8px);
+}
+
+.capability-dialog-inner {
+  padding: 27px;
+}
+
+.capability-dialog-kicker {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.capability-dialog h3 {
+  margin: 8px 0;
+  font-size: 28px;
+  letter-spacing: -.04em;
+}
+
+.capability-dialog p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.capability-dialog-state {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 17px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface2);
+}
+
+.capability-dialog-state b {
+  text-transform: capitalize;
+}
+
+.capability-dialog-state span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.capability-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 19px;
+  padding: 0;
+  background: transparent;
+}
+
+.capability-dialog button,
+.capability-dialog a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 14px;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.capability-dialog .primary {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
+@media (max-width: 560px) {
+  .capability-dialog footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .capability-dialog button,
+  .capability-dialog a {
+    width: 100%;
+  }
 }
