@@ -14,7 +14,8 @@
     'company-services-v73.js',
     'company-ops-v74.js',
     'company-rewards-v75.js',
-    'company-control-center-v101.js'
+    'company-control-center-v101.js',
+    'company-progressive-access-v108.js'
   ];
   let loading;
 
@@ -31,7 +32,11 @@
   }
 
   function loadAuthenticatedFeatures(event) {
-    if (event?.detail?.organization?.status !== 'verified') return Promise.resolve();
+    // Every authenticated organization receives the complete workspace.
+    // Verification and subscription rules restrict individual actions,
+    // not visibility of the application.
+    if (!event?.detail?.organization) return Promise.resolve();
+    window.__stillOrganization = event.detail.organization;
     if (loading) return loading;
     loading = featureScripts.reduce(
       (chain, file) => chain.then(() => loadScript(file)),
