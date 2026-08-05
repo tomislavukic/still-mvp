@@ -149,7 +149,15 @@ if(!fail.length){
  if(!read('company-authenticated-loader-v82.js').includes('company-control-center-v101.js'))fail.push('advanced company controls are missing from authenticated workspace');
  const controlCenter=read('company-control-center-v101.js');
  ['/milestones','/changes','/completion-events','/evidence-requirements','/ops/capacity','/customers/','/ops/playbooks','/followup-rules','/supplier-claims'].forEach(route=>{if(!controlCenter.includes(route))fail.push(`advanced company control center is missing ${route}`)});
- if(!build.includes('company-demo-v102.js')||!build.includes('company-demo-v102.css'))fail.push('interactive company demo workspace is missing from production');
+ if(!build.includes('company-demo-v102.js')||!build.includes('company-demo-v102.css'))fail.push('interactive company workspace engine is missing from production');
+ if(!build.includes('company-unified-workspace-v109.js'))fail.push('unified business workspace is missing from production');
+ if(!read('company-authenticated-loader-v82.js').includes('company-unified-workspace-v109.js'))fail.push('unified business workspace is not loaded after authentication');
+ const unifiedWorkspace=read('company-unified-workspace-v109.js');
+ if(!unifiedWorkspace.includes('still-company-workspace-drafts-v109'))fail.push('company workspace drafts are not persisted per organization');
+ if(!unifiedWorkspace.includes('localStorage'))fail.push('company workspace drafts do not persist between sessions');
+ if(!unifiedWorkspace.includes('Protected action'))fail.push('unified workspace does not explain protected actions');
+ if(!unifiedWorkspace.includes('Live modules and persistent drafts')&&!unifiedWorkspace.includes('One business workspace'))fail.push('unified workspace positioning is missing');
+ if(unifiedWorkspace.includes('setInterval('))fail.push('unified workspace introduces polling');
  const demo=read('company-demo-v102.js');
  ['sessionStorage','visibleRows','openAction','data-cpv102-form','exportCSV','data-cpv102-step','data-cpv102-undo','data-cpv102-reset-all'].forEach(capability=>{if(!demo.includes(capability))fail.push(`interactive company demo is missing ${capability}`)});
  if(!read('company-preview-v97.js').includes('Temporary interactive workspace')||!read('company-preview-v97.js').includes('data-cpv97-row'))fail.push('all company tour modules are not connected to the interactive demo workspace');
