@@ -21,6 +21,22 @@
   const textFor = card => card.textContent.toLowerCase();
   const isSoon = card => /soon|days?|uskoro|dana|jamstvo|warranty|renewal|obnova|maintenance|održavanje/i.test($('.op83-next', card)?.textContent || '');
 
+  function installStyles() {
+    if ($('#buyerWalletStylesV96')) return;
+    const style = document.createElement('style');
+    style.id = 'buyerWalletStylesV96';
+    style.textContent = `
+      .wallet96-controls{position:relative;z-index:2;display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:12px;align-items:center;margin:0 0 18px;padding:14px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 86%,transparent);box-shadow:0 12px 32px rgba(25,49,76,.07);backdrop-filter:blur(16px)}
+      .wallet96-controls label{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 13px;border:1px solid var(--line);border-radius:13px;background:var(--field)}.wallet96-controls label span{color:var(--green);font-size:18px}.wallet96-controls input{width:100%;border:0;outline:0;background:transparent;color:var(--ink)}
+      .wallet96-controls>div{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.wallet96-controls>div::-webkit-scrollbar{display:none}.wallet96-controls button{min-height:40px;white-space:nowrap;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--muted);padding:0 12px;font-weight:800;cursor:pointer}.wallet96-controls button.active{border-color:color-mix(in srgb,var(--green) 48%,var(--line));background:color-mix(in srgb,var(--green) 13%,var(--surface));color:var(--ink)}.wallet96-controls>small{grid-column:1/-1;color:var(--muted);font-size:11px}
+      .wallet96-card-tools{display:flex;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--line) 76%,transparent)}.wallet96-card-tools button{min-height:38px;border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--surface) 88%,transparent);color:var(--ink);padding:0 10px;font-size:11px;font-weight:800;cursor:pointer}.wallet96-card-tools [data-wallet-pin]{width:40px;padding:0;font-size:18px;color:var(--green)}.wallet96-pinned{order:-1;border-color:color-mix(in srgb,var(--green) 52%,var(--line))!important}.wallet96-pinned::before{content:'PINNED';position:absolute;right:14px;top:46px;color:color-mix(in srgb,var(--green) 68%,var(--ink));font-size:9px;font-weight:900;letter-spacing:.08em}.wallet96-archived{opacity:.72;filter:saturate(.68)}
+      .wallet96-dialog{width:min(620px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--line);border-radius:24px;background:var(--surface);color:var(--ink);box-shadow:0 34px 110px rgba(0,0,0,.34);overflow:auto}.wallet96-dialog::backdrop{background:rgba(4,12,8,.64);backdrop-filter:blur(8px)}.wallet96-dialog>[data-wallet-close]{position:sticky;z-index:4;top:12px;float:right;margin:12px 12px 0 0;width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--ink);font-size:21px;cursor:pointer}.wallet96-detail{padding:38px}.wallet96-detail>span{color:var(--green);font-size:10px;font-weight:900;letter-spacing:.1em}.wallet96-detail>[data-wallet-detail-card]{margin-top:14px}.wallet96-detail .op83-passport{min-height:auto!important;transform:none!important}.wallet96-detail>p{margin:14px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+      @media(max-width:760px){.wallet96-controls{grid-template-columns:1fr;padding:12px}.wallet96-controls>div{margin-inline:-2px;padding-bottom:2px}.wallet96-controls>small{grid-column:auto}.wallet96-card-tools{display:grid;grid-template-columns:42px 1fr 1fr}.wallet96-detail{padding:24px 16px 26px}.wallet96-dialog{border-radius:20px}.wallet96-controls button,.wallet96-card-tools button{min-height:44px}}
+      @media(prefers-reduced-motion:reduce){.wallet96-dialog::backdrop{backdrop-filter:none}}
+    `;
+    document.head.appendChild(style);
+  }
+
   function controls() {
     const panel = $('.op83-passport-panel');
     const list = $('#passportListV83');
@@ -113,6 +129,7 @@
 
   function mount() {
     if (document.body.classList.contains('business-page')) return;
+    installStyles();
     const wait = () => {
       const list = $('#passportListV83');
       if (!list) return setTimeout(wait, 250);
