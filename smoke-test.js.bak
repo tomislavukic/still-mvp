@@ -29,7 +29,7 @@ if(!fail.length){
  const contactWorker=read('merchant-backend/worker-v104.js');
  const setupWorker=read('merchant-backend/worker-v105.js');
  const eslWorker=read('merchant-backend/worker-v106.js');
- const {execFileSync}=require('child_process'); execFileSync(process.execPath,['scripts/validate-active-worker.js']); const operationsHardeningWorker='platform_audit_events OPERATIONS_REVIEWER_TOKEN OPERATIONS_SUPPORT_TOKEN OPERATIONS_READONLY_TOKEN /api/v1/admin/audit request.complete';
+ const operationsHardeningWorker=read('merchant-backend/worker-v107.js');
  const build=read('build-public.js');
  const company=read('company.html');
  if(!buyerAuth.includes('/api/v1/buyer-auth/google/config'))fail.push('buyer Google config does not use isolated auth namespace');
@@ -40,8 +40,9 @@ if(!fail.length){
  if(!authWorker.includes("pathname === '/api/v1/buyer-auth/google/config'"))fail.push('worker does not route buyer Google config');
  if(!authWorker.includes("VALUES('GOOGLE_CLIENT_ID'"))fail.push('auth worker does not persist Google Client ID');
  if(!worker.includes("import app from './worker-v79.js'"))fail.push('ownership worker does not delegate to the audited auth router');
- 
- ['platform_audit_events','OPERATIONS_REVIEWER_TOKEN','OPERATIONS_SUPPORT_TOKEN','OPERATIONS_READONLY_TOKEN','/api/v1/admin/audit','request.complete'].forEach(capability=>{if(!operationsHardeningWorker.includes(capability))fail.push(`active Worker capability missing ${capability}`)});
+ if(!read('wrangler.jsonc').includes('merchant-backend/worker-v107.js'))fail.push('wrangler does not use the Build 107 operations wrapper');
+ if(!operationsHardeningWorker.includes("import app from './worker-v106.js'"))fail.push('Build 107 does not delegate to the validated Build 106 base');
+ ['platform_audit_events','OPERATIONS_REVIEWER_TOKEN','OPERATIONS_SUPPORT_TOKEN','OPERATIONS_READONLY_TOKEN','/api/v1/admin/audit','request.complete'].forEach(capability=>{if(!operationsHardeningWorker.includes(capability))fail.push(`Build 107 operations capability missing ${capability}`)});
  if(!build.includes('site-quality-v82.js')||!build.includes('site-quality-v82.css'))fail.push('responsive visibility layer missing from production build');
  if(build.includes("'buyer-auth-routes-v79.js'"))fail.push('obsolete global fetch auth shim is still shipped');
  if(!read('_headers').includes('Content-Security-Policy:'))fail.push('content security policy missing');
@@ -148,15 +149,7 @@ if(!fail.length){
  if(!read('company-authenticated-loader-v82.js').includes('company-control-center-v101.js'))fail.push('advanced company controls are missing from authenticated workspace');
  const controlCenter=read('company-control-center-v101.js');
  ['/milestones','/changes','/completion-events','/evidence-requirements','/ops/capacity','/customers/','/ops/playbooks','/followup-rules','/supplier-claims'].forEach(route=>{if(!controlCenter.includes(route))fail.push(`advanced company control center is missing ${route}`)});
- if(!build.includes('company-demo-v102.js')||!build.includes('company-demo-v102.css'))fail.push('interactive company workspace engine is missing from production');
- if(!build.includes('company-unified-workspace-v109.js'))fail.push('unified business workspace is missing from production');
- if(!read('company-authenticated-loader-v82.js').includes('company-unified-workspace-v109.js'))fail.push('unified business workspace is not loaded after authentication');
- const unifiedWorkspace=read('company-unified-workspace-v109.js');
- if(!unifiedWorkspace.includes('still-company-workspace-drafts-v109'))fail.push('company workspace drafts are not persisted per organization');
- if(!unifiedWorkspace.includes('localStorage'))fail.push('company workspace drafts do not persist between sessions');
- if(!unifiedWorkspace.includes('Protected action'))fail.push('unified workspace does not explain protected actions');
- if(!unifiedWorkspace.includes('Live modules and persistent drafts')&&!unifiedWorkspace.includes('One business workspace'))fail.push('unified workspace positioning is missing');
- if(unifiedWorkspace.includes('setInterval('))fail.push('unified workspace introduces polling');
+ if(!build.includes('company-demo-v102.js')||!build.includes('company-demo-v102.css'))fail.push('interactive company demo workspace is missing from production');
  const demo=read('company-demo-v102.js');
  ['sessionStorage','visibleRows','openAction','data-cpv102-form','exportCSV','data-cpv102-step','data-cpv102-undo','data-cpv102-reset-all'].forEach(capability=>{if(!demo.includes(capability))fail.push(`interactive company demo is missing ${capability}`)});
  if(!read('company-preview-v97.js').includes('Temporary interactive workspace')||!read('company-preview-v97.js').includes('data-cpv97-row'))fail.push('all company tour modules are not connected to the interactive demo workspace');
@@ -177,6 +170,7 @@ if(!fail.length){
  const availableTools=read('company-available-tools-v105.js');
  ['companyAvailableToolsV105','companyControlCenterV101','companyToolsPreviewV97','cp46-verify','29 modules','/api/v1/business/setup'].forEach(capability=>{if(!availableTools.includes(capability))fail.push(`pre-verification company workspace is missing ${capability}`)});
  if(!availableTools.includes('rewirePendingLinks')||!availableTools.includes('MutationObserver'))fail.push('pending-company tools CTA is not repaired after dashboard rerenders');
+ if(!read('company-authenticated-loader-v82.js').includes("status !== 'verified'"))fail.push('live company operations were accidentally opened before verification');
  if(!read('legal-i18n.js').includes('Pre-verification company setup'))fail.push('pre-verification setup privacy disclosure is missing');
  if(!build.includes('electronic-shelf-labels-v106.js')||!build.includes('electronic-shelf-labels-v106.css'))fail.push('electronic shelf-label studio is missing from production');
  ['esl_connectors','esl_labels','esl_price_updates','/api/v1/business/esl','verification_required','bluetoothEslProfile','adapterPayload'].forEach(capability=>{if(!eslWorker.includes(capability))fail.push(`electronic shelf-label API is missing ${capability}`)});

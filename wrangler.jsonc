@@ -1,9 +1,24 @@
 {
-  // Project metadata — preserve any other fields you need locally.
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
-  // Critical: point the main entry to the Build 107 wrapper expected by CI
-  "main": "merchant-backend/worker-v107.js",
-  // compatibility_date and type are examples — adjust to match your environment
-  "compatibility_date": "2026-01-01",
-  "type": "javascript"
+  "compatibility_date": "2026-07-29",
+  "main": "merchant-backend/worker-v108.js",
+  // Build 108 adds real organization-scoped inventory operations.
+  "keep_vars": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/admin", "/admin/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "still-production",
+      "database_id": "2fce8b3f-ffb7-4ffe-8e11-b565a65ea655"
+    }
+  ]
 }
