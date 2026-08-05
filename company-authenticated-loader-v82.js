@@ -17,7 +17,8 @@
     'company-control-center-v101.js',
     'company-progressive-access-v108.js',
     'company-capabilities-v1.js',
-    'company-unified-workspace-v109.js'
+    'company-unified-workspace-v109.js',
+    'company-inventory-live-v110.js'
   ];
   let loading;
 
