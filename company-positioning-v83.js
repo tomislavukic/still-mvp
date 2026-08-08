@@ -3,12 +3,6 @@
   const isHr = () => $('#language')?.value === 'hr';
   const t = (en, hr) => isHr() ? hr : en;
 
-  // Existing authenticated CompanyOS capabilities remain available during the
-  // BuyerOS-first launch, including the rewards workflow covered by legacy
-  // production smoke tests. Public positioning no longer promotes it first.
-  const preservedCompanyCapability = 'Earn business credits';
-  void preservedCompanyCapability;
-
   function render() {
     if (!document.body.classList.contains('business-page')) return;
 

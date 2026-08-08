@@ -8,6 +8,7 @@
     "test": "node smoke-test.js",
     "security": "gitleaks git --config .gitleaks.toml --redact --no-banner --exit-code 1",
     "validate:codeql": "node scripts/validate-codeql-config.js",
+    "validate:bundle": "node scripts/validate-production-bundle.js",
     "validate:app": "npm run syntax && npm run build && npm test",
     "validate": "npm run validate:app && npm run validate:codeql && npm run security",
     "validate:deploy": "npm run validate && npx --yes wrangler@4.118.0 deploy --dry-run --outdir .wrangler/validate-deploy",
