@@ -70,6 +70,7 @@
   function applyAccessState() {
     document.querySelectorAll('#companyInventoryLiveV110').forEach(element => element.classList.toggle('bv114-authenticated', authenticated));
     if (authenticated) $('#companyToolsPreviewV97')?.classList.add('bv114-preview-open');
+    document.querySelectorAll('.cpv97-entry').forEach(entry => entry.style.setProperty('display', 'none', 'important'));
   }
 
   function render() {

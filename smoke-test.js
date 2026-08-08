@@ -180,6 +180,7 @@ if(!fail.length){
  if(!publicExperience.includes("openTool('ownership')"))fail.push('Start free is not connected to the real ownership workflow');
  if(!publicExperience.includes("openTool('ownership');\n      scan.click()"))fail.push('receipt CTA does not reveal ownership confirmation before scanning');
  if(!publicExperience.includes('detachBuyerAccount(root)'))fail.push('buyer account controls are not preserved across public shell renders');
+ if(!publicExperience.includes("style.setProperty('display', 'none', 'important')"))fail.push('closed ownership tools are not protected from legacy visibility overrides');
  if(!read('still-v114.css').includes('.still-v114 .still-v114-tool:not(.is-open)'))fail.push('supporting ownership modules can leak into the public hierarchy');
  if(!read('still-v114.css').includes('.business-v114 .cpv97-entry'))fail.push('29-module business preview teaser is still exposed above sign-in');
  if(!publicExperience.includes("t('Planned', 'Planirano')"))fail.push('planned consumer capabilities are not clearly labelled');
