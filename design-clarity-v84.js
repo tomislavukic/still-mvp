@@ -4,7 +4,7 @@
   const t = (en, hr) => isHr() ? hr : en;
 
   function setMetadata() {
-    document.title = t('Still? · Everything you own.', 'Still? · Sve što posjeduješ.');
+    document.title = t('Still · Everything you own.', 'Still · Sve što posjeduješ.');
     document.querySelector('meta[name="description"]')?.setAttribute('content', t(
       'Everything you own, in one calm place. Keep products, services, subscriptions, documents, dates and service history together.',
       'Sve što posjeduješ na jednom mirnom mjestu. Drži proizvode, usluge, pretplate, dokumente, rokove i servisnu povijest zajedno.'
