@@ -48,7 +48,7 @@
     const legacyHero = $('#checker');
     if (!main || !legacyHero) return;
 
-    document.title = 'Still? · Everything you own.';
+    document.title = 'Still · Everything you own.';
     document.querySelector('meta[name="description"]')?.setAttribute('content', t(
       'Everything you own, in one calm place. Keep products, services, subscriptions, documents, dates and service history together.',
       'Sve što posjeduješ na jednom mirnom mjestu. Drži proizvode, usluge, pretplate, dokumente, rokove i servisnu povijest zajedno.'
@@ -124,21 +124,23 @@
         <div class="op83-section-head"><div><span class="op83-kicker">${t('MY THINGS', 'MOJE STVARI')}</span><h2>${t('One passport for every important purchase or promise.', 'Jedna putovnica za svaku važnu kupnju ili obećanje.')}</h2></div><div class="op83-stats"><span><b id="op83PassportCount">0</b>${t('passports', 'putovnica')}</span><span><b id="op83ActionCount">0</b>${t('upcoming', 'nadolazeće')}</span></div></div>
         <div class="op83-hub-grid">
           <form id="passportFormV83" class="op83-card op83-form">
-            <h3>${t('Create a passport', 'Izradi putovnicu')}</h3>
-            <label>${t('Type', 'Vrsta')}<select name="kind">${typeOptions()}</select></label>
+            <h3>${t('Add to Still', 'Dodaj u Still')}</h3>
             <label>${t('Name', 'Naziv')}<input name="title" required maxlength="120" placeholder="${t('Item, service, booking or project', 'Proizvod, usluga, rezervacija ili projekt')}"></label>
-            <label>${t('Business', 'Tvrtka')}<input name="business" maxlength="120" placeholder="${t('Seller, manufacturer or provider', 'Prodavatelj, proizvođač ili pružatelj')}"></label>
-            <label>${t('Order / reference', 'Narudžba / referenca')}<input name="reference" maxlength="120"></label>
-            <div class="op83-form-grid">
-              <label>${t('Purchased / started', 'Kupljeno / započeto')}<input name="purchasedOn" type="date"></label>
-              <label>${t('Return / cancellation by', 'Povrat / otkazivanje do')}<input name="returnBy" type="date"></label>
-              <label>${t('Warranty / guarantee until', 'Jamstvo do')}<input name="warrantyUntil" type="date"></label>
-              <label>${t('Renewal / next payment', 'Obnova / sljedeće plaćanje')}<input name="renewalAt" type="date"></label>
-              <label>${t('Maintenance / next action', 'Održavanje / sljedeća radnja')}<input name="nextActionAt" type="date"></label>
-            </div>
-            <label>${t('Private notes', 'Privatne bilješke')}<textarea name="notes" maxlength="1200" placeholder="${t('Condition, scope, included accessories, promised result…', 'Stanje, opseg, uključena oprema, obećani rezultat…')}"></textarea></label>
-            <button class="op83-primary" type="submit">${t('Save buyer-owned passport', 'Spremi putovnicu kupca')}</button>
-            <small>${t('Saved locally first. Account sync is optional.', 'Najprije se sprema lokalno. Sinkronizacija računa nije obavezna.')}</small>
+            <label>${t('Type', 'Vrsta')}<select name="kind">${typeOptions()}</select></label>
+            <label>${t('Business · optional', 'Tvrtka · neobavezno')}<input name="business" maxlength="120" placeholder="${t('Seller, manufacturer or provider', 'Prodavatelj, proizvođač ili pružatelj')}"></label>
+            <details class="op83-progressive-details"><summary>${t('Add details now · optional', 'Dodaj detalje sada · neobavezno')}</summary>
+              <label>${t('Order / reference', 'Narudžba / referenca')}<input name="reference" maxlength="120"></label>
+              <div class="op83-form-grid">
+                <label>${t('Purchased / started', 'Kupljeno / započeto')}<input name="purchasedOn" type="date"></label>
+                <label>${t('Return / cancellation by', 'Povrat / otkazivanje do')}<input name="returnBy" type="date"></label>
+                <label>${t('Warranty / guarantee until', 'Jamstvo do')}<input name="warrantyUntil" type="date"></label>
+                <label>${t('Renewal / next payment', 'Obnova / sljedeće plaćanje')}<input name="renewalAt" type="date"></label>
+                <label>${t('Maintenance / next action', 'Održavanje / sljedeća radnja')}<input name="nextActionAt" type="date"></label>
+              </div>
+              <label>${t('Private notes', 'Privatne bilješke')}<textarea name="notes" maxlength="1200" placeholder="${t('Condition, scope, included accessories, promised result…', 'Stanje, opseg, uključena oprema, obećani rezultat…')}"></textarea></label>
+            </details>
+            <button class="op83-primary" type="submit">${t('Add to Still', 'Dodaj u Still')}</button>
+            <small>${t('Found it. Saved locally first; account sync is optional.', 'Pronađeno. Najprije se sprema lokalno; sinkronizacija računa nije obavezna.')}</small>
           </form>
           <div class="op83-card op83-passport-panel">
             <div class="op83-panel-tools"><div><h3>${t('Your passports', 'Tvoje putovnice')}</h3><small>${t('Products, services and commitments together.', 'Proizvodi, usluge i obećanja zajedno.')}</small></div><div><button type="button" class="op83-text" data-op83-sync>${t('Sync account', 'Sinkroniziraj račun')}</button><button type="button" class="op83-text" data-op83-export>${t('Export', 'Izvezi')}</button></div></div>

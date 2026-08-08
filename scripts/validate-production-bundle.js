@@ -20,6 +20,7 @@ const buyerScripts = [
   'flow-feedback-v89.js',
   'relationship-dashboard-v103.js',
   'contact-profile-v104.js',
+  'still-public-v114.js',
 ];
 
 const buyerStyles = [
@@ -40,6 +41,7 @@ const buyerStyles = [
   'rewards-visible-v91.css',
   'relationship-dashboard-v103.css',
   'brand-alignment-v104.css',
+  'still-v114.css',
 ];
 
 const companyScripts = [
@@ -57,6 +59,7 @@ const companyScripts = [
   'company-available-tools-v105.js',
   'electronic-shelf-labels-v106.js',
   'company-intelligence-v107.js',
+  'still-business-v114.js',
 ];
 
 const companyStyles = [
@@ -69,6 +72,7 @@ const companyStyles = [
   'company-demo-v102.css',
   'company-available-tools-v105.css',
   'electronic-shelf-labels-v106.css',
+  'still-v114.css',
 ];
 
 const staticAssets = ['og-v85.png'];
@@ -108,6 +112,7 @@ function assertManifestIncludes(list, file, label) {
 
 const indexHtml = read('public/index.html');
 const companyHtml = read('public/company.html');
+const pricingHtml = read('public/pricing.html');
 const manifestText = read('public/build.json');
 let manifest = {};
 
@@ -174,7 +179,7 @@ for (const file of manifest.companyScripts || []) {
   if (bundle) assertVersionedReference(companyHtml, 'public/company.html', file, bundle);
 }
 
-for (const [page, html] of [['public/index.html', indexHtml], ['public/company.html', companyHtml]]) {
+for (const [page, html] of [['public/index.html', indexHtml], ['public/company.html', companyHtml], ['public/pricing.html', pricingHtml]]) {
   const metaBuild = html.match(/<meta\s+name=["']still-build["']\s+content=["']([^"']+)["']/i)?.[1];
   if (String(metaBuild) !== String(bundle)) fail(`${page} still-build metadata does not match productionBundle`);
   for (const match of html.matchAll(/(?:src|href)=["'][^"']+\?v=([^"']+)["']/gi)) {
@@ -182,11 +187,19 @@ for (const [page, html] of [['public/index.html', indexHtml], ['public/company.h
   }
 }
 
-if (!/<title>Still\? · Everything you own\.<\/title>/i.test(indexHtml)) fail('BuyerOS production title is not ownership-first');
+if (!/<title>Still · Everything you own\.<\/title>/i.test(indexHtml)) fail('Still production title is not ownership-first');
 if (!/<meta\s+name=["']description["'][^>]+content=["'][^"']*own[^"']*["']/i.test(indexHtml)) fail('BuyerOS production description is not ownership-first');
 if (!/<meta\s+property=["']og:title["'][^>]+Everything you own\./i.test(indexHtml)) fail('BuyerOS Open Graph title is not ownership-first');
 if (!/<meta\s+name=["']twitter:card["'][^>]+summary_large_image/i.test(indexHtml)) fail('BuyerOS Twitter card metadata is missing');
 if ((manifest.runtime || []).includes('buyer-auth-routes-v79.js')) fail('obsolete global buyer auth shim is shipped');
+if (!indexHtml.includes('still-public-v114.js')) fail('consumer-first public experience is not shipped');
+if (!indexHtml.includes('still-v114.css')) fail('consumer-first visual system is not shipped');
+if (!companyHtml.includes('still-business-v114.js')) fail('Still for Business public experience is not shipped');
+if (!pricingHtml.includes('pricing-v114.js') || !pricingHtml.includes('still-v114.css')) fail('pricing hierarchy is not shipped');
+const consumerRuntime = read('public/still-public-v114.js');
+if (!consumerRuntime.includes('Everything you own.') || !consumerRuntime.includes('One trusted place.')) fail('consumer proposition is missing from production runtime');
+if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("openTool('ownership')")) fail('consumer CTAs are not connected to the real ownership workflow');
+if (!consumerRuntime.includes("t('Planned', 'Planirano')")) fail('unavailable consumer capabilities are not truthfully labelled');
 
 if (failures.length) {
   console.error(`Production bundle validation FAILED\n- ${failures.join('\n- ')}`);
