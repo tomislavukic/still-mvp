@@ -149,6 +149,13 @@ for (const file of staticAssets) {
   assertManifestIncludes(manifest.files, file, 'production file manifest');
 }
 
+for (const file of (manifest.files || []).filter(file => file.endsWith('.js'))) {
+  const source = read(`public/${file}`);
+  for (const match of source.matchAll(/\?v=(\d+)\b/g)) {
+    if (match[1] !== String(bundle)) fail(`public/${file} contains mixed runtime cache version ${match[1]} (expected ${bundle})`);
+  }
+}
+
 for (const file of manifest.companyScripts || []) {
   if (bundle) assertVersionedReference(companyHtml, 'public/company.html', file, bundle);
 }

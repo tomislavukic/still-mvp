@@ -32,14 +32,19 @@
         if (version) return version;
       } catch {}
     }
-    return 'current';
+    return '';
+  }
+
+  function versionedAsset(file) {
+    const version = activeBuildVersion();
+    return version ? `${file}?v=${encodeURIComponent(version)}` : file;
   }
 
   function loadScript(file) {
     return new Promise((resolve, reject) => {
       if (document.querySelector(`script[data-company-feature="${file}"]`)) return resolve();
       const script = document.createElement('script');
-      script.src = `${file}?v=${encodeURIComponent(activeBuildVersion())}`;
+      script.src = versionedAsset(file);
       script.dataset.companyFeature = file;
       script.onload = resolve;
       script.onerror = () => reject(new Error(`Could not load ${file}`));
