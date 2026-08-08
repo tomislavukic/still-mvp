@@ -372,6 +372,26 @@ body.pricing-v114 {
 [data-theme="dark"] .sp114-collection,
 [data-theme="dark"] .sp114-plus,
 [data-theme="dark"] .bv114-principle { background: #101722; }
+[data-theme="light"] {
+  --still-bg: #f6f5f2;
+  --still-paper: #fffefb;
+  --still-ink: #182033;
+  --still-muted: #62697a;
+  --still-line: rgba(24, 32, 51, .12);
+  --still-soft: #ececf7;
+  --still-shadow: 0 24px 70px rgba(35, 39, 71, .10);
+}
+[data-theme="light"] body.still-v114,
+[data-theme="light"] body.business-v114,
+[data-theme="light"] body.pricing-v114 { background: var(--still-bg) !important; color: var(--still-ink) !important; }
+[data-theme="light"] .sp114-passport-object { background: linear-gradient(145deg, #ffffff 5%, #f3f2fa 100%); }
+[data-theme="light"] .sp114-transformation,
+[data-theme="light"] .sp114-final,
+[data-theme="light"] .bv114-access { background: #e6e4f4; }
+[data-theme="light"] .sp114-passport { background: #ebeaf5; }
+[data-theme="light"] .sp114-collection,
+[data-theme="light"] .sp114-plus,
+[data-theme="light"] .bv114-principle { background: #20283b; }
 
 @media (max-width: 980px) {
   .still-v114 .topbar .nav { display: none !important; }

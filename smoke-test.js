@@ -183,6 +183,7 @@ if(!fail.length){
  if(!publicExperience.includes("section.id === 'checker' ? 'grid' : 'block'"))fail.push('ownership tools do not override legacy visibility rules in both open and closed states');
  if(!read('still-v114.css').includes('.still-v114 .still-v114-tool:not(.is-open)'))fail.push('supporting ownership modules can leak into the public hierarchy');
  if(!read('still-v114.css').includes('.business-v114 .cpv97-entry'))fail.push('29-module business preview teaser is still exposed above sign-in');
+ if(!read('still-v114.css').includes('[data-theme="light"]'))fail.push('explicit light theme does not override a dark system preference');
  if(!publicExperience.includes("t('Planned', 'Planirano')"))fail.push('planned consumer capabilities are not clearly labelled');
  const businessExperience=read('still-business-v114.js');
  ['OPERATE','SELL','SERVE','TRUST','GROW','Request Early Access','still:company-authenticated'].forEach(capability=>{if(!businessExperience.includes(capability))fail.push(`Still for Business public experience is missing ${capability}`)});
