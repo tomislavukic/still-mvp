@@ -3,7 +3,7 @@
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v108.js",
-  // Build 108 adds real organization-scoped inventory operations.
+  // Active Worker adds real organization-scoped inventory operations.
   "keep_vars": true,
   "observability": {
     "enabled": true,

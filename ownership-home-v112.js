@@ -47,11 +47,12 @@
     return passports.flatMap(passport => defs.map(([field,label]) => {
       const date = parseDate(passport[field]);
       const days = daysUntil(date);
-      return date && days != null && days >= 0 && days <= 60 ? { passport, field, label, date, days } : null;
+      return date && days != null && days >= -30 && days <= 60 ? { passport, field, label, date, days } : null;
     }).filter(Boolean)).sort((a,b) => a.date - b.date);
   }
 
   function timingText(item) {
+    if (item.days < 0) return t(`${Math.abs(item.days)} days overdue`, `kasni ${Math.abs(item.days)} dana`);
     if (item.days === 0) return t('today', 'danas');
     if (item.days === 1) return t('tomorrow', 'sutra');
     return t(`in ${item.days} days`, `za ${item.days} dana`);
@@ -121,6 +122,8 @@
       setTimeout(() => observer.disconnect(),10000);
     }
     window.addEventListener('storage', event => { if (event.key === STORAGE_KEY) render(); });
+    window.addEventListener('still:ownership-updated', render);
+    window.addEventListener('still:commerce-paid', render);
     document.addEventListener('submit', event => { if (event.target?.id === 'passportFormV83') setTimeout(render,80); });
     $('#language')?.addEventListener('change', () => setTimeout(render,20));
   }

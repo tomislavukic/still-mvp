@@ -49,7 +49,7 @@ jobs:
       - name: Validate CodeQL workflow configuration
         run: npm run validate:codeql
 
-      - name: Verify Build 107 wrapper architecture
+      - name: Verify active Worker architecture
         run: |
           set -euo pipefail
           test -f wrangler.jsonc

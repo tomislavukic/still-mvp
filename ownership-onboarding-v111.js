@@ -25,12 +25,6 @@
     return hostname.replace(/^www\./i, '').split('.')[0].replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
-  function titleFromUrl(url) {
-    const last = url.pathname.split('/').filter(Boolean).pop() || '';
-    const text = decodeURIComponent(last).replace(/\.(html?|php)$/i, '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-    return text ? text.replace(/\b\w/g, c => c.toUpperCase()) : '';
-  }
-
   function useProductUrl(raw) {
     let url;
     try {
@@ -43,11 +37,10 @@
     }
 
     setField('kind', 'product');
-    setField('title', titleFromUrl(url) || t('Product from link', 'Proizvod iz poveznice'));
     setField('business', cleanHost(url.hostname));
     setField('reference', url.toString());
     const message = $('#oo111Message');
-    if (message) message.textContent = t('Link details prepared. Review them and save the passport.', 'Podaci iz poveznice su pripremljeni. Pregledaj ih i spremi putovnicu.');
+    if (message) message.textContent = t('Seller and source link prepared. Add the product name, review the fields and save the passport.', 'Prodavatelj i izvorna poveznica su pripremljeni. Dodaj naziv proizvoda, pregledaj polja i spremi putovnicu.');
     scrollToForm();
   }
 

@@ -1,8 +1,9 @@
 const fs=require('fs');
 const path=require('path');
+const {findWorkerContaining}=require('./worker-chain');
 
 const root=path.resolve(__dirname,'..');
-const workerPath=path.join(root,'merchant-backend','worker-v107.js');
+const workerPath=findWorkerContaining("path==='/api/v1/admin/health'",root).absolutePath;
 const adminPath=path.join(root,'admin.js');
 const htmlPath=path.join(root,'admin.html');
 
