@@ -57,8 +57,17 @@
             const message = $('#oo111Message');
             if (message) {
               const found = [item, date, store && !/^choose|odaberi/i.test(store) ? store : ''].filter(Boolean);
-              message.innerHTML = `<b>${t('Found it.', 'Pronađeno.')}</b><span>${t('We found', 'Pronašli smo')}: ${found.join(' · ')}</span><button type="button" id="oo111ConfirmReceipt">${t('Add to Still?', 'Dodati u Still?')}</button>`;
-              $('#oo111ConfirmReceipt')?.addEventListener('click', () => {
+              message.replaceChildren();
+              const heading = document.createElement('b');
+              const details = document.createElement('span');
+              const confirm = document.createElement('button');
+              heading.textContent = t('Found it.', 'Pronađeno.');
+              details.textContent = `${t('We found', 'Pronašli smo')}: ${found.join(' · ')}`;
+              confirm.type = 'button';
+              confirm.id = 'oo111ConfirmReceipt';
+              confirm.textContent = t('Add to Still?', 'Dodati u Still?');
+              message.append(heading, details, confirm);
+              confirm.addEventListener('click', () => {
                 if (item) setField('title', item);
                 if (store && !/^choose|odaberi/i.test(store)) setField('business', store);
                 if (date) setField('purchasedOn', date);

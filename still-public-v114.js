@@ -194,12 +194,20 @@
     if (auth && mount && auth.parentElement !== mount) mount.appendChild(auth);
   }
 
+  function detachBuyerAccount(root) {
+    const auth = $('#buyerAuthV77,.ba77');
+    if (!auth || !root.contains(auth)) return null;
+    auth.remove();
+    return auth;
+  }
+
   function bind(root) {
     root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => openTool('ownership')));
     root.querySelectorAll('[data-still-tool]').forEach(button => button.addEventListener('click', () => openTool(button.dataset.stillTool)));
     root.querySelector('[data-still-scan]')?.addEventListener('click', () => {
       const scan = $('#scanReceipt');
       if (!scan) return openTool('ownership');
+      openTool('ownership');
       scan.click();
     });
   }
@@ -220,11 +228,13 @@
       const platform = $('#ownershipPlatformV83');
       (platform || $('main')?.firstElementChild)?.insertAdjacentElement(platform ? 'beforebegin' : 'beforebegin', root);
     }
+    const preservedAccount = detachBuyerAccount(root);
     root.innerHTML = shell();
     header();
     bind(root);
     registerTools();
-    moveBuyerAccount();
+    if (preservedAccount) $('#stillAccountMountV114')?.appendChild(preservedAccount);
+    else moveBuyerAccount();
     const deepLink = toolFromHash();
     if (deepLink) openTool(deepLink, false);
     const footer = document.querySelector('footer');
