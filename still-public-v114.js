@@ -159,6 +159,13 @@
       button.addEventListener('click', () => openTool('ownership'));
       actions.prepend(button);
     } else if ($('#stillHeaderStartV114')) $('#stillHeaderStartV114').textContent = t('Start free', 'Počni besplatno');
+    const footer = document.querySelector('footer');
+    const footerCopy = footer?.querySelector('[data-v10="footer"]');
+    if (footer && footerCopy) {
+      const brandNode = [...footer.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+      if (brandNode) brandNode.nodeValue = 'Still ';
+      footerCopy.textContent = t('Calm. Private. Useful.', 'Mirno. Privatno. Korisno.');
+    }
   }
 
   function registerTools() {
