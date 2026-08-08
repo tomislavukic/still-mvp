@@ -66,9 +66,18 @@ if(!fail.length){
  if(!worker.includes("'/api/v1/business/passports'"))fail.push('business passport route is missing');
  if(!read('legal-i18n.js').includes('not a webshop'))fail.push('mediator role is missing from terms disclosure');
  if(!read('legal-i18n.js').includes('private notes'))fail.push('passport privacy disclosure is missing');
- if(!read('ownership-platform-v83.js').includes('Decide before buying'))fail.push('three-task buyer entry point is missing');
- if(!read('buyer-rewards-v76.js').includes('Claim benefit'))fail.push('buyer reward claim action is missing');
- if(!read('buyer-rewards-v76.js').includes('/rewards/offers/'))fail.push('buyer reward claim endpoint is not connected');
+ const ownership=read('ownership-platform-v83.js');
+ ['id="decisionFormV83"',"decisionSelect('terms'","decisionSelect('repair'","decisionSelect('support'","decisionSelect('costs'",'data-save-discovery'].forEach(capability=>{if(!ownership.includes(capability))fail.push(`buyer decision capability missing ${capability}`)});
+ const ownershipOnboarding=read('ownership-onboarding-v111.js');
+ ['data-oo111="manual"','data-oo111="receipt"','oo111UrlForm',"setField('kind', 'product')","setField('reference', url.toString())"].forEach(capability=>{if(!ownershipOnboarding.includes(capability))fail.push(`ownership onboarding capability missing ${capability}`)});
+ if(ownershipOnboarding.includes('fetch('))fail.push('product URL onboarding performs an external fetch');
+ const ownershipHome=read('ownership-home-v112.js');
+ ['still-ownership-passports-v83','returnBy','warrantyUntil','renewalAt','nextActionAt','recently added','still:ownership-updated'].forEach(capability=>{if(!ownershipHome.toLowerCase().includes(capability.toLowerCase()))fail.push(`living ownership home capability missing ${capability}`)});
+ const ownershipFeed=read('ownership-feed-v113.js');
+ ['still-ownership-passports-v83','purchasedOn','returnBy','warrantyUntil','renewalAt','nextActionAt','still:ownership-updated'].forEach(capability=>{if(!ownershipFeed.includes(capability))fail.push(`ownership activity feed capability missing ${capability}`)});
+ if(!ownership.includes("document.title = 'Still? · Everything you own.'"))fail.push('BuyerOS runtime title is not ownership-first');
+ const buyerRewards=read('buyer-rewards-v76.js');
+ if(!buyerRewards.includes('data-claim-offer')||!buyerRewards.includes('/rewards/offers/'))fail.push('buyer reward claim action is not connected');
  const companyRewards=read('company-rewards-v75.js');
  ['/api/v1/rewards/business/summary','/api/v1/rewards/business/offers','/api/v1/rewards/business/redeem-code','/api/v1/rewards/business/platform-credit'].forEach(route=>{if(!companyRewards.includes(route))fail.push(`company rewards capability missing ${route}`)});
  if(!read('site-quality-v82.js').includes("t('Next dates', 'Rokovi')"))fail.push('compact responsive buyer navigation is missing');
@@ -77,7 +86,7 @@ if(!fail.length){
  if(!commerceWorker.includes("'/api/v1/commerce/requests'"))fail.push('buyer request API is missing');
  if(!commerceWorker.includes("'/api/v1/business/commerce/requests'"))fail.push('verified business request board API is missing');
  if(!commerceWorker.includes('acceptQuote'))fail.push('private quote acceptance flow is missing');
- if(!read('passport-commerce-v92.js').includes('Request verified quotes'))fail.push('buyer quote request action is missing');
+ if(!read('passport-commerce-v92.js').includes('id="pc93RequestForm"')||!read('passport-commerce-v92.js').includes('createRequest(event)'))fail.push('buyer quote request action is missing');
  if(!read('passport-commerce-v92.js').includes('data-pc92-accept-quote'))fail.push('buyer quote comparison and acceptance UI is missing');
  if(!read('company-commerce-v92.js').includes('data-cc93-quote'))fail.push('company quote response form is missing');
  if(!commerceWorker.includes("'/api/v1/commerce/webhooks/stripe'"))fail.push('verified payment webhook is missing');
@@ -102,7 +111,6 @@ if(!fail.length){
    });
  if(!stripeOrigin)fail.push('payment provider CSP is missing');
  if(!read('qrcode-generator-v94.js').includes('qrcode'))fail.push('Passport QR generator capability is missing');
- const ownership=read('ownership-platform-v83.js');
  if(!ownership.includes('Passport QR')||!ownership.includes('passportSnapshot'))fail.push('Passport QR buyer interface is missing');
  if(!ownership.includes('/shares')||!ownership.includes('/ownership/verify/'))fail.push('Passport QR verification client routes are missing');
  if(!worker.includes('passport_public_shares')||!worker.includes('verifyPassportShare')||!worker.includes('revokePassportShare'))fail.push('revocable Passport QR server routes are missing');

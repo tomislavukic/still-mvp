@@ -22,7 +22,10 @@
       return [];
     }
   };
-  const write = value => localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  const write = value => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    window.dispatchEvent(new CustomEvent('still:ownership-updated', { detail: { count: value.length } }));
+  };
   let passports = read();
   let lastDiscovery = null;
   let qrDialog;
@@ -45,10 +48,10 @@
     const legacyHero = $('#checker');
     if (!main || !legacyHero) return;
 
-    document.title = t('Still? · Buy better. Own smarter. Keep promises.', 'Still? · Kupi bolje. Upravljaj pametnije.');
+    document.title = 'Still? · Everything you own.';
     document.querySelector('meta[name="description"]')?.setAttribute('content', t(
-      'A buyer-owned passport for products, services, subscriptions and the promises businesses make.',
-      'Putovnica u vlasništvu kupca za proizvode, usluge, pretplate i obećanja tvrtki.'
+      'Everything you own, in one calm place. Keep products, services, subscriptions, documents, dates and service history together.',
+      'Sve što posjeduješ na jednom mirnom mjestu. Drži proizvode, usluge, pretplate, dokumente, rokove i servisnu povijest zajedno.'
     ));
 
     const platform = document.createElement('div');
@@ -78,9 +81,9 @@
     return `
       <section class="op83-home" id="discoverV83">
         <div class="op83-home-copy">
-          <span class="op83-kicker">${t('BEFORE · DURING · AFTER', 'PRIJE · TIJEKOM · POSLIJE')}</span>
-          <h1>${t('Buy with confidence.<br><em>Keep every promise.</em>', 'Kupi sigurnije.<br><em>Sačuvaj svako obećanje.</em>')}</h1>
-          <p>${t('Before you buy, while you own, or when something goes wrong—Still? keeps the facts, dates and next step clear.', 'Prije kupnje, tijekom vlasništva ili kada nešto pođe po zlu—Still? jasno čuva činjenice, rokove i sljedeći korak.')}</p>
+          <span class="op83-kicker">BUYEROS · ${t('EVERYTHING YOU OWN', 'SVE ŠTO POSJEDUJEŠ')}</span>
+          <h1>${t('Everything you own.<br><em>One calm place.</em>', 'Sve što posjeduješ.<br><em>Jedno mirno mjesto.</em>')}</h1>
+          <p>${t('Products, services, subscriptions, documents, dates and service history stay useful before, during and after ownership.', 'Proizvodi, usluge, pretplate, dokumenti, rokovi i servisna povijest ostaju korisni prije, tijekom i nakon vlasništva.')}</p>
           <div class="v84-task-grid" aria-label="${t('Choose what you want to do', 'Odaberi što želiš učiniti')}">
             <a href="#passportCommerceV92"><span>01</span><b>${t('Buy with a passport', 'Kupi s putovnicom')}</b><small>${t('Verified seller, terms, payment and rewards.', 'Verificirani prodavatelj, uvjeti, plaćanje i nagrade.')}</small><i>→</i></a>
             <a href="#decisionLabV83"><span>02</span><b>${t('Decide before buying', 'Odluči prije kupnje')}</b><small>${t('Check what is known and what to ask.', 'Provjeri što znaš i što treba pitati.')}</small><i>→</i></a>
