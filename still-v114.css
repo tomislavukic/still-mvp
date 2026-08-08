@@ -20,6 +20,16 @@ body.pricing-v114 {
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.still-v114 .page-shell {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
 .still-v114 .topbar {
   width: min(1320px, calc(100% - 48px));
   min-height: 72px;
@@ -34,7 +44,7 @@ body.pricing-v114 {
 
 .still-v114 .brand { color: var(--still-ink) !important; letter-spacing: -.06em; }
 .still-v114 .brand span { color: var(--still-accent) !important; }
-.still-v114 .topbar .nav { gap: 4px; }
+.still-v114 .topbar .nav { display: flex !important; gap: 4px; }
 .still-v114 .topbar .nav a {
   min-height: 44px;
   display: inline-flex;
@@ -267,6 +277,7 @@ body.pricing-v114 {
 .still-v114 #recent,
 .still-v114 #how { display: none !important; }
 .still-v114 .still-v114-tool.is-open { display: block !important; width: min(1240px, calc(100% - 48px)); margin: 0 auto 80px !important; scroll-margin-top: 100px; }
+.still-v114 .still-v114-tool:not(.is-open) { display: none !important; }
 .still-v114 #checker.still-v114-tool.is-open { display: grid !important; }
 .still-v114-workspace-open .sp114-workspace-intro { padding-bottom: 28px; }
 .still-v114 .still-v114-tool .op83-card,
@@ -319,6 +330,7 @@ body.pricing-v114 {
 .business-v114 #companyPortalV46 { width: min(1180px, calc(100% - 48px)); margin: 0 auto 90px; scroll-margin-top: 90px; }
 .business-v114 #companyInventoryLiveV110:not(.bv114-authenticated),
 .business-v114 #companyToolsPreviewV97:not(.bv114-preview-open) { display: none !important; }
+.business-v114 .cpv97-entry { display: none !important; }
 .bv114-access > button { display: block; margin-top: 18px; padding: 0; border: 0; background: none; color: var(--still-accent); font: inherit; font-weight: 720; cursor: pointer; }
 
 /* Pricing */
@@ -375,7 +387,7 @@ body.pricing-v114 {
 
 @media (max-width: 720px) {
   .still-v114 .topbar { width: 100%; min-height: 64px; margin: 0; padding: 0 14px; border-radius: 0; }
-  .still-v114 .topbar .nav { display: none; }
+  .still-v114 .topbar .nav { display: none !important; }
   .still-v114 .top-actions .top-currency,
   .still-v114 .top-actions #market { display: none !important; }
   .sp114-header-start { min-height: 42px; padding-inline: 13px; font-size: 13px; }

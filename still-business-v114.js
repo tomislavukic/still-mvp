@@ -54,6 +54,9 @@
     if (brand) { brand.href = '/'; brand.innerHTML = 'Still <small>for Business</small>'; }
     const buyer = $('#buyerLink');
     if (buyer) buyer.textContent = t('Home', 'Početna');
+    $('.business-top .back')?.setAttribute('aria-label', t('Still home', 'Početna Still'));
+    const footer = $('.business-footer');
+    if (footer) footer.textContent = t('Still for Business · Early Access', 'Still za tvrtke · Rani pristup');
   }
 
   function openPreview() {
