@@ -46,7 +46,7 @@ Build 97 adds a clearly labelled, no-write preview of every company tool before 
 
 ## Production architecture
 
-- Cloudflare Worker entry point: `merchant-backend/worker-v106.js` (adds persistent verified-company electronic shelf labels and portable connector payloads, while preserving the pre-verification setup workspace and earlier audited routers)
+- Cloudflare Worker entry point: the `main` file declared in `wrangler.jsonc`; its delegation chain preserves authenticated CompanyOS, Trust Layer and ownership APIs while newer wrappers add capabilities.
 - Cloudflare static asset bundle: generated in `public/` by `build-public.js`
 - Cloudflare D1 binding: `DB`
 - Optional private profile-image storage: Cloudflare R2 binding `PROFILE_MEDIA` after R2 is enabled; until then buyer Google photos and privacy-proxied company HTTPS logo URLs provide the live identity layer.
@@ -74,11 +74,15 @@ The Google OAuth client must authorize both the production origin and the local 
 
 ## Deploy
 
+Production deployment is managed by the existing Cloudflare Workers Git integration connected to this repository. Cloudflare builds commits using `wrangler.jsonc`; the production branch remains `main`. A second GitHub Actions deployment pipeline is intentionally not used.
+
+For an authorized manual recovery deployment only:
+
 ```bash
 npm run deploy
 ```
 
-Before deploying, authenticate Wrangler with the Cloudflare account that owns the Worker and confirm `GOOGLE_CLIENT_ID` is configured. The deploy script runs syntax checks, the smoke test, and a clean production build first.
+Before a manual recovery deployment, authenticate Wrangler with the Cloudflare account that owns the Worker and confirm `GOOGLE_CLIENT_ID` is configured. The deploy script runs syntax checks, the smoke test, and a clean production build first.
 
 ## Production Validation
 

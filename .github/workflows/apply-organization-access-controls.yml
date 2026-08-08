@@ -45,7 +45,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check admin.js
-          node --check merchant-backend/worker-v107.js
+          node scripts/validate-active-worker.js
 
       - name: Run application validation
         run: npm run validate:app
@@ -73,7 +73,7 @@ jobs:
           test -f public/admin.html
           grep -q "accessControlDialog" public/admin.js
           grep -q "access-control-dialog" public/admin.html
-          grep -q "changeMemberStatus" merchant-backend/worker-v107.js
+          node -e "const {activeWorkerChain}=require('./scripts/worker-chain'); if(!activeWorkerChain().some(worker=>worker.source.includes('changeMemberStatus'))) process.exit(1)"
 
       - name: Wrangler deployment dry-run
         run: |
@@ -84,7 +84,7 @@ jobs:
 
       - name: Commit validated implementation
         run: |
-          if git diff --quiet -- admin.js admin.html merchant-backend/worker-v107.js; then
+          if git diff --quiet -- admin.js admin.html merchant-backend; then
             echo "No source changes to commit."
             exit 0
           fi
@@ -95,7 +95,7 @@ jobs:
           git add \
             admin.js \
             admin.html \
-            merchant-backend/worker-v107.js
+            merchant-backend
 
           git commit -m "Implement Organization Access Controls"
           git push origin HEAD:feature/organization-access-controls

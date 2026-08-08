@@ -1,15 +1,18 @@
-const fs=require('fs');
-const path=require('path');
-const wr=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8').replace(/\/\/.*$/mg,'').replace(/,\s*([}\]])/g,'$1'));
-const main=wr.main;
-if(!main) throw new Error('No main worker');
-const seen=new Set();let src='';
-function walk(f){
- const p=path.resolve(f); if(seen.has(p)) return; seen.add(p);
- const t=fs.readFileSync(p,'utf8'); src+=t;
- const m=t.match(/import\s+app\s+from\s+'(\.\/worker-v\d+\.js)'/);
- if(m) walk(path.join(path.dirname(p),m[1]));
+const { activeWorkerChain } = require('./worker-chain');
+
+const chain = activeWorkerChain();
+const source = chain.map(worker => worker.source).join('\n');
+const requiredCapabilities = [
+  'platform_audit_events',
+  'OPERATIONS_REVIEWER_TOKEN',
+  'OPERATIONS_SUPPORT_TOKEN',
+  'OPERATIONS_READONLY_TOKEN',
+  '/api/v1/admin/audit',
+  'request.complete',
+];
+
+for (const capability of requiredCapabilities) {
+  if (!source.includes(capability)) throw new Error(`Missing capability ${capability}`);
 }
-walk(main);
-for(const c of ['platform_audit_events','OPERATIONS_REVIEWER_TOKEN','OPERATIONS_SUPPORT_TOKEN','OPERATIONS_READONLY_TOKEN','/api/v1/admin/audit','request.complete']) if(!src.includes(c)) throw new Error('Missing capability '+c);
-console.log('Validated active worker',main);
+
+console.log(`Validated active Worker ${chain[0].relativePath} (${chain.length} files in delegation chain)`);

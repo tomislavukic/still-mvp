@@ -19,11 +19,11 @@ Check every command that was run successfully:
 - [ ] Wrangler production deployment dry-run
 - [ ] Relevant manual testing completed
 
-## Build 106 safety
+## Active production safety
 
-- [ ] `merchant-backend/worker-v106.js` still exists
-- [ ] `wrangler.jsonc` still targets `merchant-backend/worker-v106.js`
-- [ ] `public/build.json` reports production bundle 106 or newer
+- [ ] `node scripts/validate-active-worker.js` passes
+- [ ] The `wrangler.jsonc` `main` entrypoint and its complete delegation chain are present
+- [ ] `public/build.json` reports the active positive production bundle
 - [ ] No production secrets were added
 - [ ] No placeholder or simulated implementation was introduced
 

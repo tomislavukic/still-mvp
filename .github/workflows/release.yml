@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   package:
-    name: Validate and package Build 107
+    name: Validate and package active Worker
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -43,7 +43,7 @@ jobs:
       - name: Validate CodeQL configuration
         run: npm run validate:codeql
 
-      - name: Verify Build 107 configuration
+      - name: Verify active Worker configuration
         run: |
           set -euo pipefail
 
@@ -74,10 +74,10 @@ jobs:
             --gzip \
             --file "$archive" \
             public \
-            merchant-backend/worker-v106.js \
-            merchant-backend/worker-v107.js \
+            merchant-backend \
             wrangler.jsonc \
-            package.json
+            package.json \
+            package-lock.json
 
           shasum -a 256 "$archive" > "$checksum"
 

@@ -1,5 +1,5 @@
 // merchant-backend/worker-v107.js
-// Build 107 wrapper — delegates to the validated Build 106 base (worker-v106.js)
+// Operations hardening wrapper; delegates to the validated ESL-capable base.
 //
 // This file intentionally includes the capability strings the validation
 // smoke-test checks for so the CI verification step can detect the wrapper
