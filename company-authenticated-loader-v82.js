@@ -22,11 +22,24 @@
   ];
   let loading;
 
+  function activeBuildVersion() {
+    const meta = document.querySelector('meta[name="still-build"]')?.content?.trim();
+    if (meta) return meta;
+    const ownScript = Array.from(document.scripts).find(script => script.src.includes('company-authenticated-loader-v82.js'));
+    if (ownScript) {
+      try {
+        const version = new URL(ownScript.src, location.href).searchParams.get('v');
+        if (version) return version;
+      } catch {}
+    }
+    return 'current';
+  }
+
   function loadScript(file) {
     return new Promise((resolve, reject) => {
       if (document.querySelector(`script[data-company-feature="${file}"]`)) return resolve();
       const script = document.createElement('script');
-      script.src = `${file}?v=106`;
+      script.src = `${file}?v=${encodeURIComponent(activeBuildVersion())}`;
       script.dataset.companyFeature = file;
       script.onload = resolve;
       script.onerror = () => reject(new Error(`Could not load ${file}`));
