@@ -156,6 +156,20 @@ for (const file of (manifest.files || []).filter(file => file.endsWith('.js'))) 
   }
 }
 
+const activeSourceFiles = new Set([
+  'index.html',
+  'company.html',
+  ...(manifest.runtime || []),
+  ...(manifest.companyScripts || []),
+  ...(manifest.companyFeatureScripts || []),
+]);
+
+for (const file of activeSourceFiles) {
+  const source = read(file);
+  const fixedVersion = source.match(/\?v=(\d+)\b/);
+  if (fixedVersion) fail(`${file} hardcodes cache version ${fixedVersion[1]} instead of resolving the active build`);
+}
+
 for (const file of manifest.companyScripts || []) {
   if (bundle) assertVersionedReference(companyHtml, 'public/company.html', file, bundle);
 }
