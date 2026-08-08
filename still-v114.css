@@ -374,6 +374,7 @@ body.pricing-v114 {
 [data-theme="dark"] .bv114-principle { background: #101722; }
 
 @media (max-width: 980px) {
+  .still-v114 .topbar .nav { display: none !important; }
   .sp114-hero { min-height: auto; grid-template-columns: 1fr; padding-top: 72px; }
   .sp114-passport-object { width: min(620px, 88%); margin: 0 auto; transform: none; }
   .sp114-action-line { grid-template-columns: 1fr 1fr; }
