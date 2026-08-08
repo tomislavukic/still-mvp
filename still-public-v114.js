@@ -180,8 +180,7 @@
     document.querySelectorAll('.still-v114-tool').forEach(section => {
       const open = section.id === mapping[activeTool];
       section.classList.toggle('is-open', open);
-      if (open) section.style.removeProperty('display');
-      else section.style.setProperty('display', 'none', 'important');
+      section.style.setProperty('display', open ? (section.id === 'checker' ? 'grid' : 'block') : 'none', 'important');
     });
     return mapping;
   }
