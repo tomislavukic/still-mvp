@@ -79,9 +79,9 @@ if(!fail.length){
  const ownershipFeed=read('ownership-feed-v113.js');
  ['still-ownership-passports-v83','purchasedOn','returnBy','warrantyUntil','renewalAt','nextActionAt','still:ownership-updated'].forEach(capability=>{if(!ownershipFeed.includes(capability))fail.push(`ownership activity feed capability missing ${capability}`)});
  if(!ownershipFeed.includes("still:language"))fail.push('ownership activity feed is not restored after platform language remount');
- if(!ownership.includes("document.title = 'Still? · Everything you own.'"))fail.push('BuyerOS runtime title is not ownership-first');
+ if(!ownership.includes("document.title = 'Still · Everything you own.'"))fail.push('ownership runtime title is not consumer-first');
  const designClarity=read('design-clarity-v84.js');
- if(!designClarity.includes('Still? · Everything you own.'))fail.push('late BuyerOS metadata override is not ownership-first');
+ if(!designClarity.includes('Still · Everything you own.'))fail.push('late metadata override is not consumer-first');
  if(designClarity.includes('Still? · Decide. Manage. Resolve.'))fail.push('late BuyerOS metadata override restores stale positioning');
  const buyerRewards=read('buyer-rewards-v76.js');
  if(!buyerRewards.includes('data-claim-offer')||!buyerRewards.includes('/rewards/offers/'))fail.push('buyer reward claim action is not connected');
@@ -173,6 +173,14 @@ if(!fail.length){
  if(!eslStudio.includes('vendor adapter required')||!eslWorker.includes('vendor_credentials_and_gateway_required'))fail.push('electronic shelf-label vendor boundary is not disclosed');
  if(!read('legal-i18n.js').includes('Electronic shelf labels and price updates'))fail.push('electronic shelf-label privacy disclosure is missing');
  if(!read('legal-i18n.js').includes('Lifecycle history, alerts and support'))fail.push('lifecycle privacy disclosure is missing');
+ const publicExperience=read('still-public-v114.js');
+ ['Everything you own.','One trusted place.','Bring your things into Still.','Meet the Passport.','PRIVATE BY CHOICE','STILL FOR BUSINESS · EARLY ACCESS','data-still-start'].forEach(capability=>{if(!publicExperience.includes(capability))fail.push(`consumer-first public experience is missing ${capability}`)});
+ if(!publicExperience.includes("openTool('ownership')"))fail.push('Start free is not connected to the real ownership workflow');
+ if(!publicExperience.includes("t('Planned', 'Planirano')"))fail.push('planned consumer capabilities are not clearly labelled');
+ const businessExperience=read('still-business-v114.js');
+ ['OPERATE','SELL','SERVE','TRUST','GROW','Request Early Access','still:company-authenticated'].forEach(capability=>{if(!businessExperience.includes(capability))fail.push(`Still for Business public experience is missing ${capability}`)});
+ if(!read('pricing-v114.js').includes('Still Free')||!read('pricing-v114.js').includes('Still+')||!read('pricing-v114.js').includes('Still for Business'))fail.push('pricing hierarchy is incomplete');
+ if(!read('sitemap.xml').includes('/pricing.html'))fail.push('pricing page is missing from sitemap');
 }
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');

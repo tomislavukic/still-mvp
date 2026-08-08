@@ -8,9 +8,15 @@
   </url>
   <url>
     <loc>https://still-mvp.tomislav-ukic-tu.workers.dev/company.html</loc>
-    <lastmod>2026-08-01</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://still-mvp.tomislav-ukic-tu.workers.dev/pricing.html</loc>
+    <lastmod>2026-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://still-mvp.tomislav-ukic-tu.workers.dev/privacy.html</loc>
