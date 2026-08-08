@@ -4,10 +4,10 @@
   const t = (en, hr) => isHr() ? hr : en;
 
   function setMetadata() {
-    document.title = t('Still? · Decide. Manage. Resolve.', 'Still? · Odluči. Upravljaj. Riješi.');
+    document.title = t('Still? · Everything you own.', 'Still? · Sve što posjeduješ.');
     document.querySelector('meta[name="description"]')?.setAttribute('content', t(
-      'One clear place to decide before buying, manage what you own and resolve problems with verified companies.',
-      'Jedno jasno mjesto za odluku prije kupnje, upravljanje onime što imaš i rješavanje problema s verificiranim tvrtkama.'
+      'Everything you own, in one calm place. Keep products, services, subscriptions, documents, dates and service history together.',
+      'Sve što posjeduješ na jednom mirnom mjestu. Drži proizvode, usluge, pretplate, dokumente, rokove i servisnu povijest zajedno.'
     ));
   }
 

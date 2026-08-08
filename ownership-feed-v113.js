@@ -48,14 +48,16 @@
   }
 
   function start(){
+    const renderAfterLanguage=()=>setTimeout(render,30);
     if(!render()){
       const observer=new MutationObserver(()=>{if(render())observer.disconnect()});observer.observe(document.documentElement,{childList:true,subtree:true});setTimeout(()=>observer.disconnect(),10000);
     }
     window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY)render()});
     window.addEventListener('still:ownership-updated',render);
     window.addEventListener('still:commerce-paid',render);
+    window.addEventListener('still:language',renderAfterLanguage);
     document.addEventListener('submit',e=>{if(e.target?.id==='passportFormV83')setTimeout(render,100)});
-    $('#language')?.addEventListener('change',()=>setTimeout(render,20));
+    $('#language')?.addEventListener('change',renderAfterLanguage);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
