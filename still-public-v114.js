@@ -177,7 +177,12 @@
       const section = document.getElementById(id);
       if (section) section.classList.add('still-v114-tool');
     });
-    document.querySelectorAll('.still-v114-tool').forEach(section => section.classList.toggle('is-open', section.id === mapping[activeTool]));
+    document.querySelectorAll('.still-v114-tool').forEach(section => {
+      const open = section.id === mapping[activeTool];
+      section.classList.toggle('is-open', open);
+      if (open) section.style.removeProperty('display');
+      else section.style.setProperty('display', 'none', 'important');
+    });
     return mapping;
   }
 
