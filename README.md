@@ -74,7 +74,9 @@ The Google OAuth client must authorize both the production origin and the local 
 
 ## Deploy
 
-Production deployment is managed by the existing Cloudflare Workers Git integration connected to this repository. Cloudflare builds commits using `wrangler.jsonc`; the production branch remains `main`. A second GitHub Actions deployment pipeline is intentionally not used.
+Production deployment is managed by the existing Cloudflare Workers Git integration connected to this repository. Cloudflare builds commits using `wrangler.jsonc`; a second GitHub Actions deployment pipeline is intentionally not used.
+
+Workers Builds branch controls are stored in the Cloudflare dashboard, not in this repository. Configure the production trigger for `main` with `npx wrangler deploy`, and configure non-production branches with `npx wrangler versions upload` so pull-request builds create preview versions without replacing the active deployment. The August 2026 audit observed a feature-branch commit becoming the active Worker, so these dashboard-owned trigger settings must be verified before the next feature-branch push. Correcting them uses the existing Cloudflare Git integration and does not require new GitHub Actions credentials.
 
 For an authorized manual recovery deployment only:
 
