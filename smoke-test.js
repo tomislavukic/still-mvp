@@ -71,12 +71,18 @@ if(!fail.length){
  ['id="decisionFormV83"',"decisionSelect('terms'","decisionSelect('repair'","decisionSelect('support'","decisionSelect('costs'",'data-save-discovery'].forEach(capability=>{if(!ownership.includes(capability))fail.push(`buyer decision capability missing ${capability}`)});
  const ownershipOnboarding=read('ownership-onboarding-v111.js');
  ['data-oo111="manual"','data-oo111="receipt"','oo111UrlForm',"setField('kind', 'product')","setField('reference', url.toString())"].forEach(capability=>{if(!ownershipOnboarding.includes(capability))fail.push(`ownership onboarding capability missing ${capability}`)});
+ if(!ownershipOnboarding.includes("still:language"))fail.push('ownership onboarding is not restored after platform language remount');
  if(ownershipOnboarding.includes('fetch('))fail.push('product URL onboarding performs an external fetch');
  const ownershipHome=read('ownership-home-v112.js');
  ['still-ownership-passports-v83','returnBy','warrantyUntil','renewalAt','nextActionAt','recently added','still:ownership-updated'].forEach(capability=>{if(!ownershipHome.toLowerCase().includes(capability.toLowerCase()))fail.push(`living ownership home capability missing ${capability}`)});
+ if(!ownershipHome.includes("still:language"))fail.push('living ownership home is not restored after platform language remount');
  const ownershipFeed=read('ownership-feed-v113.js');
  ['still-ownership-passports-v83','purchasedOn','returnBy','warrantyUntil','renewalAt','nextActionAt','still:ownership-updated'].forEach(capability=>{if(!ownershipFeed.includes(capability))fail.push(`ownership activity feed capability missing ${capability}`)});
+ if(!ownershipFeed.includes("still:language"))fail.push('ownership activity feed is not restored after platform language remount');
  if(!ownership.includes("document.title = 'Still? · Everything you own.'"))fail.push('BuyerOS runtime title is not ownership-first');
+ const designClarity=read('design-clarity-v84.js');
+ if(!designClarity.includes('Still? · Everything you own.'))fail.push('late BuyerOS metadata override is not ownership-first');
+ if(designClarity.includes('Still? · Decide. Manage. Resolve.'))fail.push('late BuyerOS metadata override restores stale positioning');
  const buyerRewards=read('buyer-rewards-v76.js');
  if(!buyerRewards.includes('data-claim-offer')||!buyerRewards.includes('/rewards/offers/'))fail.push('buyer reward claim action is not connected');
  const companyRewards=read('company-rewards-v75.js');
