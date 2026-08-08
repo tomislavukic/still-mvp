@@ -103,6 +103,9 @@
   }
 
   function start() {
+    const remountAfterLanguage = () => setTimeout(mount, 30);
+    window.addEventListener('still:language', remountAfterLanguage);
+    $('#language')?.addEventListener('change', remountAfterLanguage);
     if (mount()) return;
     const observer = new MutationObserver(() => { if (mount()) observer.disconnect(); });
     observer.observe(document.documentElement, { childList: true, subtree: true });
