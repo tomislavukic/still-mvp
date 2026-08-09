@@ -115,6 +115,8 @@
 
   let current = 'home';
   let mounted = false;
+  let selectedThingId =
+    sessionStorage.getItem('still-buyeros-selected-thing-v135') || '';
 
   function installStyle() {
     if ($('#bos132Style')) return;
@@ -620,6 +622,168 @@
       .bos132-service-row b{font-size:12px}
       .bos132-service-row small{display:block;color:var(--muted,#66727a);margin-top:3px}
       .bos132-section-note{margin:3px 0 0;color:var(--muted,#66727a);font-size:11px;line-height:1.5}
+      .bos135-back{
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+        margin:0 0 14px;
+        padding:0;
+        border:0;
+        background:none;
+        color:var(--muted,#66727a);
+        font:inherit;
+        font-size:11px;
+        font-weight:760;
+        cursor:pointer
+      }
+
+      .bos135-hero{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:22px;
+        align-items:start;
+        padding:22px;
+        border:1px solid var(--line,#d9e1e5);
+        border-radius:22px;
+        background:var(--surface,#fff)
+      }
+
+      .bos135-eyebrow{
+        margin:0 0 7px;
+        color:var(--muted,#66727a);
+        font-size:9px;
+        font-weight:850;
+        letter-spacing:.12em;
+        text-transform:uppercase
+      }
+
+      .bos135-title{
+        margin:0;
+        font-size:clamp(28px,4vw,48px);
+        line-height:.98;
+        letter-spacing:-.055em
+      }
+
+      .bos135-subtitle{
+        margin:10px 0 0;
+        color:var(--muted,#66727a);
+        font-size:12px;
+        line-height:1.55
+      }
+
+      .bos135-state{
+        min-width:150px;
+        padding:14px;
+        border-radius:16px;
+        background:var(--soft,#f3f6f4)
+      }
+
+      .bos135-state span{
+        display:block;
+        color:var(--muted,#66727a);
+        font-size:9px;
+        font-weight:800;
+        letter-spacing:.08em;
+        text-transform:uppercase
+      }
+
+      .bos135-state strong{
+        display:block;
+        margin-top:6px;
+        font-size:15px
+      }
+
+      .bos135-tabs{
+        position:sticky;
+        top:10px;
+        z-index:3;
+        display:flex;
+        gap:6px;
+        overflow:auto;
+        margin:12px 0;
+        padding:6px;
+        border:1px solid var(--line,#d9e1e5);
+        border-radius:14px;
+        background:color-mix(in srgb,var(--surface,#fff) 92%,transparent);
+        backdrop-filter:blur(18px)
+      }
+
+      .bos135-tabs button{
+        flex:0 0 auto;
+        min-height:34px;
+        padding:0 11px;
+        border:0;
+        border-radius:9px;
+        background:transparent;
+        color:var(--muted,#66727a);
+        font-size:10px;
+        font-weight:780;
+        cursor:pointer
+      }
+
+      .bos135-tabs button:hover{
+        background:var(--soft,#f3f6f4);
+        color:var(--ink,#111)
+      }
+
+      .bos135-overview{
+        display:grid;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:10px
+      }
+
+      .bos135-metric{
+        padding:15px;
+        border:1px solid var(--line,#d9e1e5);
+        border-radius:16px;
+        background:var(--surface,#fff)
+      }
+
+      .bos135-metric span{
+        display:block;
+        color:var(--muted,#66727a);
+        font-size:9px;
+        font-weight:800;
+        letter-spacing:.07em;
+        text-transform:uppercase
+      }
+
+      .bos135-metric strong{
+        display:block;
+        margin-top:7px;
+        font-size:17px
+      }
+
+      .bos135-section{
+        scroll-margin-top:76px
+      }
+
+      .bos135-empty{
+        padding:18px;
+        border:1px dashed var(--line,#d9e1e5);
+        border-radius:14px;
+        color:var(--muted,#66727a);
+        font-size:11px;
+        line-height:1.55
+      }
+
+      .bos135-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:7px;
+        margin-top:14px
+      }
+
+      @media(max-width:800px){
+        .bos135-overview{grid-template-columns:1fr 1fr}
+        .bos135-hero{grid-template-columns:1fr}
+        .bos135-state{min-width:0}
+      }
+
+      @media(max-width:520px){
+        .bos135-overview{grid-template-columns:1fr}
+      }
+
       @media(max-width:900px){.bos132-dashboard{grid-template-columns:1fr}.bos132-thing-grid{grid-template-columns:1fr}}
       @media(max-width:560px){.bos132-quick-grid{grid-template-columns:1fr}}
 
@@ -866,12 +1030,563 @@
         </div>
 
         <div class="bos132-thing-actions">
+          <button class="bos132-primary" data-bos132-open-thing="${esc(item.id)}">${t('Open','Otvori')} →</button>
           <button data-bos132-thing-route="timeline">${t('Timeline','Vremenska crta')}</button>
           <button data-bos132-thing-route="protection">${t('Protection','Zaštita')}</button>
           <button data-bos132-add="document" data-bos132-thing-id="${esc(item.id)}">${t('Add document','Dodaj dokument')}</button>
           <button data-bos132-add="service" data-bos132-thing-id="${esc(item.id)}">${t('Add service','Dodaj servis')}</button>
         </div>
       </article>
+    `;
+  }
+
+  function thingDetailPage() {
+    const item = things().find(entry => entry.id === selectedThingId);
+
+    if (!item) {
+      return `
+        ${pageHead(
+          'THING',
+          t('Thing not found.', 'Stvar nije pronađena.'),
+          t(
+            'This ownership record may have been removed.',
+            'Ovaj zapis vlasništva možda je uklonjen.'
+          )
+        )}
+
+        <button
+          class="bos132-primary"
+          data-bos132-go="things"
+        >
+          ← ${t('Back to My Things', 'Natrag na Moje stvari')}
+        </button>
+      `;
+    }
+
+    const docs = documentLinks(item);
+    const services = serviceHistory(item)
+      .slice()
+      .sort((a, b) =>
+        String(b.occurredOn || '')
+          .localeCompare(String(a.occurredOn || ''))
+      );
+
+    const warrantyDays = daysUntil(item.warrantyUntil);
+    const returnDays = daysUntil(item.returnBy);
+    const renewalDays = daysUntil(item.renewalAt);
+
+    const protectedNow =
+      (warrantyDays !== null && warrantyDays >= 0) ||
+      (returnDays !== null && returnDays >= 0);
+
+    const timeline = [];
+
+    if (purchaseDateOf(item)) {
+      timeline.push({
+        date: purchaseDateOf(item),
+        icon: '◇',
+        title: t('Purchased', 'Kupljeno'),
+        detail: item.business || item.store || ''
+      });
+    }
+
+    if (item.warrantyUntil) {
+      timeline.push({
+        date: item.warrantyUntil,
+        icon: '◉',
+        title: t('Warranty ends', 'Jamstvo završava'),
+        detail: item.title || ''
+      });
+    }
+
+    if (item.returnBy) {
+      timeline.push({
+        date: item.returnBy,
+        icon: '↩',
+        title: t('Return deadline', 'Rok povrata'),
+        detail: item.title || ''
+      });
+    }
+
+    if (item.renewalAt) {
+      timeline.push({
+        date: item.renewalAt,
+        icon: '↻',
+        title: t('Renewal', 'Obnova'),
+        detail: item.business || ''
+      });
+    }
+
+    docs.forEach(doc => {
+      if (!doc.date) return;
+
+      timeline.push({
+        date: doc.date,
+        icon: '▤',
+        title: t('Document added', 'Dodan dokument'),
+        detail: doc.title || ''
+      });
+    });
+
+    services.forEach(service => {
+      if (!service.occurredOn) return;
+
+      timeline.push({
+        date: service.occurredOn,
+        icon: '⌁',
+        title:
+          service.title ||
+          t('Service event', 'Servisni događaj'),
+        detail:
+          service.providerName ||
+          service.type ||
+          ''
+      });
+    });
+
+    timeline.sort((a, b) =>
+      String(b.date || '').localeCompare(String(a.date || ''))
+    );
+
+    return `
+      <button class="bos135-back" data-bos132-go="things">
+        ← ${t('My Things', 'Moje stvari')}
+      </button>
+
+      <section class="bos135-hero">
+        <div>
+          <p class="bos135-eyebrow">
+            ${esc(item.kind || t('THING', 'STVAR'))}
+          </p>
+
+          <h2 class="bos135-title">
+            ${esc(
+              item.title ||
+              t('Untitled thing', 'Stvar bez naziva')
+            )}
+          </h2>
+
+          <p class="bos135-subtitle">
+            ${esc(
+              item.business ||
+              item.store ||
+              t(
+                'Personally owned',
+                'Osobno vlasništvo'
+              )
+            )}
+            ${
+              purchaseDateOf(item)
+                ? ` · ${t('Bought', 'Kupljeno')} ${esc(
+                    dateText(purchaseDateOf(item))
+                  )}`
+                : ''
+            }
+          </p>
+
+          <div class="bos135-actions">
+            <button
+              class="bos132-primary"
+              data-bos132-add="document"
+              data-bos132-thing-id="${esc(item.id)}"
+            >
+              + ${t('Document', 'Dokument')}
+            </button>
+
+            <button
+              class="bos132-secondary"
+              data-bos132-add="service"
+              data-bos132-thing-id="${esc(item.id)}"
+            >
+              + ${t('Service', 'Servis')}
+            </button>
+          </div>
+        </div>
+
+        <div class="bos135-state">
+          <span>${t('Protection', 'Zaštita')}</span>
+          <strong>
+            ${
+              protectedNow
+                ? t('Protected', 'Zaštićeno')
+                : t(
+                    'No active protection',
+                    'Nema aktivne zaštite'
+                  )
+            }
+          </strong>
+        </div>
+      </section>
+
+      <nav class="bos135-tabs">
+        <button data-bos135-jump="overview">
+          ${t('Overview', 'Pregled')}
+        </button>
+        <button data-bos135-jump="protection">
+          ${t('Protection', 'Zaštita')}
+        </button>
+        <button data-bos135-jump="documents">
+          ${t('Documents', 'Dokumenti')}
+        </button>
+        <button data-bos135-jump="services">
+          ${t('Services', 'Usluge')}
+        </button>
+        <button data-bos135-jump="timeline">
+          ${t('Timeline', 'Vremenska crta')}
+        </button>
+      </nav>
+
+      <section
+        class="bos135-section"
+        data-bos135-section="overview"
+      >
+        <div class="bos135-overview">
+          <article class="bos135-metric">
+            <span>${t('DOCUMENTS', 'DOKUMENTI')}</span>
+            <strong>${docs.length}</strong>
+          </article>
+
+          <article class="bos135-metric">
+            <span>${t('SERVICE EVENTS', 'SERVISNI DOGAĐAJI')}</span>
+            <strong>${services.length}</strong>
+          </article>
+
+          <article class="bos135-metric">
+            <span>${t('WARRANTY', 'JAMSTVO')}</span>
+            <strong>
+              ${
+                warrantyDays !== null && warrantyDays >= 0
+                  ? `${warrantyDays}d`
+                  : '—'
+              }
+            </strong>
+          </article>
+
+          <article class="bos135-metric">
+            <span>${t('RETURN', 'POVRAT')}</span>
+            <strong>
+              ${
+                returnDays !== null && returnDays >= 0
+                  ? `${returnDays}d`
+                  : '—'
+              }
+            </strong>
+          </article>
+        </div>
+
+        ${
+          item.notes
+            ? `
+              <section class="bos132-section">
+                <div class="bos132-section-head">
+                  <h3>${t('Private notes', 'Privatne bilješke')}</h3>
+                </div>
+
+                <p class="bos132-section-note">
+                  ${esc(item.notes)}
+                </p>
+              </section>
+            `
+            : ''
+        }
+      </section>
+
+      <section
+        class="bos132-section bos135-section"
+        data-bos135-section="protection"
+      >
+        <div class="bos132-section-head">
+          <div>
+            <h3>${t('Protection', 'Zaštita')}</h3>
+            <p class="bos132-section-note">
+              ${t(
+                'Important ownership deadlines for this thing.',
+                'Važni rokovi vlasništva za ovu stvar.'
+              )}
+            </p>
+          </div>
+
+          <button
+            class="bos132-secondary"
+            data-bos132-go="protection"
+          >
+            ${t('Open Protection Center', 'Otvori Centar zaštite')}
+          </button>
+        </div>
+
+        <div class="bos132-list">
+          ${
+            item.warrantyUntil
+              ? `
+                <div class="bos132-row">
+                  <span class="bos132-row-icon">◉</span>
+                  <div>
+                    <b>${t('Warranty', 'Jamstvo')}</b>
+                    <small>
+                      ${esc(dateText(item.warrantyUntil))}
+                      ${
+                        warrantyDays !== null &&
+                        warrantyDays >= 0
+                          ? ` · ${warrantyDays}d`
+                          : ''
+                      }
+                    </small>
+                  </div>
+                  <span>›</span>
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            item.returnBy
+              ? `
+                <div class="bos132-row">
+                  <span class="bos132-row-icon">↩</span>
+                  <div>
+                    <b>${t('Return window', 'Rok povrata')}</b>
+                    <small>
+                      ${esc(dateText(item.returnBy))}
+                      ${
+                        returnDays !== null &&
+                        returnDays >= 0
+                          ? ` · ${returnDays}d`
+                          : ''
+                      }
+                    </small>
+                  </div>
+                  <span>›</span>
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            item.renewalAt
+              ? `
+                <div class="bos132-row">
+                  <span class="bos132-row-icon">↻</span>
+                  <div>
+                    <b>${t('Renewal', 'Obnova')}</b>
+                    <small>
+                      ${esc(dateText(item.renewalAt))}
+                      ${
+                        renewalDays !== null &&
+                        renewalDays >= 0
+                          ? ` · ${renewalDays}d`
+                          : ''
+                      }
+                    </small>
+                  </div>
+                  <span>›</span>
+                </div>
+              `
+              : ''
+          }
+        </div>
+
+        ${
+          !item.warrantyUntil &&
+          !item.returnBy &&
+          !item.renewalAt
+            ? `
+              <div class="bos135-empty">
+                ${t(
+                  'No protection dates have been stored for this thing yet.',
+                  'Za ovu stvar još nisu spremljeni rokovi zaštite.'
+                )}
+              </div>
+            `
+            : ''
+        }
+      </section>
+
+      <section
+        class="bos132-section bos135-section"
+        data-bos135-section="documents"
+      >
+        <div class="bos132-section-head">
+          <div>
+            <h3>${t('Documents', 'Dokumenti')}</h3>
+            <p class="bos132-section-note">
+              ${t(
+                'Receipts, invoices, manuals and proof attached to this thing.',
+                'Računi, fakture, priručnici i dokazi vezani uz ovu stvar.'
+              )}
+            </p>
+          </div>
+
+          <button
+            class="bos132-primary"
+            data-bos132-add="document"
+            data-bos132-thing-id="${esc(item.id)}"
+          >
+            + ${t('Add', 'Dodaj')}
+          </button>
+        </div>
+
+        ${
+          docs.length
+            ? `
+              <div class="bos132-list">
+                ${docs.map(doc => `
+                  <div class="bos132-row">
+                    <span class="bos132-row-icon">▤</span>
+                    <div>
+                      <b>${esc(doc.title)}</b>
+                      <small>
+                        ${esc(doc.type || '')}
+                        ${
+                          doc.date
+                            ? ` · ${esc(dateText(doc.date))}`
+                            : ''
+                        }
+                      </small>
+                    </div>
+                    <span>›</span>
+                  </div>
+                `).join('')}
+              </div>
+            `
+            : `
+              <div class="bos135-empty">
+                ${t(
+                  'No documents are linked to this thing yet.',
+                  'Još nema dokumenata povezanih s ovom stvari.'
+                )}
+              </div>
+            `
+        }
+      </section>
+
+      <section
+        class="bos132-section bos135-section"
+        data-bos135-section="services"
+      >
+        <div class="bos132-section-head">
+          <div>
+            <h3>${t('Service history', 'Servisna povijest')}</h3>
+            <p class="bos132-section-note">
+              ${t(
+                'Repairs, inspections and upgrades stay with the ownership record.',
+                'Popravci, pregledi i nadogradnje ostaju uz zapis vlasništva.'
+              )}
+            </p>
+          </div>
+
+          <button
+            class="bos132-primary"
+            data-bos132-add="service"
+            data-bos132-thing-id="${esc(item.id)}"
+          >
+            + ${t('Add', 'Dodaj')}
+          </button>
+        </div>
+
+        ${
+          services.length
+            ? `
+              <div class="bos132-service-grid">
+                ${services.map(service => `
+                  <div class="bos132-service-row">
+                    <span class="bos132-row-icon">⌁</span>
+                    <div>
+                      <b>
+                        ${esc(
+                          service.title ||
+                          t('Service', 'Servis')
+                        )}
+                      </b>
+                      <small>
+                        ${
+                          service.providerName
+                            ? esc(service.providerName)
+                            : ''
+                        }
+                        ${
+                          service.occurredOn
+                            ? ` · ${esc(
+                                dateText(service.occurredOn)
+                              )}`
+                            : ''
+                        }
+                      </small>
+                    </div>
+                    <span class="bos132-mini-pill">
+                      ${
+                        service.isPublic
+                          ? t('Public', 'Javno')
+                          : t('Private', 'Privatno')
+                      }
+                    </span>
+                  </div>
+                `).join('')}
+              </div>
+            `
+            : `
+              <div class="bos135-empty">
+                ${t(
+                  'No service events have been recorded yet.',
+                  'Još nije zabilježen nijedan servisni događaj.'
+                )}
+              </div>
+            `
+        }
+      </section>
+
+      <section
+        class="bos132-section bos135-section"
+        data-bos135-section="timeline"
+      >
+        <div class="bos132-section-head">
+          <div>
+            <h3>${t('Ownership timeline', 'Vremenska crta vlasništva')}</h3>
+            <p class="bos132-section-note">
+              ${t(
+                'The story of this thing, assembled from its real stored data.',
+                'Priča ove stvari sastavljena iz stvarno spremljenih podataka.'
+              )}
+            </p>
+          </div>
+        </div>
+
+        ${
+          timeline.length
+            ? `
+              <div class="bos132-list">
+                ${timeline.map(event => `
+                  <div class="bos132-row">
+                    <span class="bos132-row-icon">
+                      ${event.icon}
+                    </span>
+
+                    <div>
+                      <b>${esc(event.title)}</b>
+                      <small>
+                        ${esc(event.detail || '')}
+                        ${
+                          event.date
+                            ? ` · ${esc(dateText(event.date))}`
+                            : ''
+                        }
+                      </small>
+                    </div>
+
+                    <span>›</span>
+                  </div>
+                `).join('')}
+              </div>
+            `
+            : `
+              <div class="bos135-empty">
+                ${t(
+                  'The timeline will grow as you add documents, protection dates and service history.',
+                  'Vremenska crta rast će kako dodaješ dokumente, rokove zaštite i servisnu povijest.'
+                )}
+              </div>
+            `
+        }
+      </section>
     `;
   }
 
@@ -2001,6 +2716,29 @@
       });
     });
 
+    $$('[data-bos132-open-thing]').forEach(button => {
+      button.addEventListener(
+        'click',
+        () => openThing(button.dataset.bos132OpenThing)
+      );
+    });
+
+    $$('[data-bos135-jump]').forEach(button => {
+      button.addEventListener('click', () => {
+        const section = document.querySelector(
+          `[data-bos135-section="${button.dataset.bos135Jump}"]`
+        );
+
+        section?.scrollIntoView({
+          behavior:
+            matchMedia('(prefers-reduced-motion: reduce)').matches
+              ? 'auto'
+              : 'smooth',
+          block: 'start'
+        });
+      });
+    });
+
     $$('[data-bos132-thing-route]').forEach(button => {
       button.addEventListener('click', () => navigate(button.dataset.bos132ThingRoute));
     });
@@ -2113,6 +2851,8 @@
       content.innerHTML = renderHome();
     } else if (current === 'things') {
       content.innerHTML = thingsPage();
+    } else if (current === 'thing') {
+      content.innerHTML = thingDetailPage();
     } else if (current === 'protection') {
       content.innerHTML = protectionPage();
     } else if (current === 'timeline') {
@@ -2132,6 +2872,35 @@
     }
 
     bindContent();
+  }
+
+  function openThing(id) {
+    selectedThingId = id || '';
+
+    if (!selectedThingId) return;
+
+    sessionStorage.setItem(
+      'still-buyeros-selected-thing-v135',
+      selectedThingId
+    );
+
+    current = 'thing';
+
+    history.replaceState(
+      null,
+      '',
+      '#buyeros-thing'
+    );
+
+    render();
+
+    $('#buyerOSV132')?.scrollIntoView({
+      behavior:
+        matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'auto'
+          : 'smooth',
+      block: 'start'
+    });
   }
 
   function navigate(id) {
@@ -2191,10 +2960,14 @@
       });
 
     const match = location.hash.match(
-      /^#buyeros-(home|things|protection|timeline|documents|services|household|family|search|assistant)$/
+      /^#buyeros-(home|things|thing|protection|timeline|documents|services|household|family|search|assistant)$/
     );
 
     if (match) current = match[1];
+
+    if (current === 'thing' && !selectedThingId) {
+      current = 'things';
+    }
 
     mounted = true;
     render();
