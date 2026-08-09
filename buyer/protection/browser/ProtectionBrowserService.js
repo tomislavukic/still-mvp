@@ -27,7 +27,6 @@ class ProtectionBrowserService {
       : [];
 
     this.cache.set(key, retailers);
-
     return retailers;
   }
 
@@ -55,12 +54,10 @@ class ProtectionBrowserService {
       markets.map(code => this.loadMarket(code))
     );
 
-    return groups.flat().filter(retailer => {
-      return (
-        String(retailer.id || '').toLowerCase().includes(needle) ||
-        String(retailer.name || '').toLowerCase().includes(needle)
-      );
-    });
+    return groups.flat().filter(retailer => (
+      String(retailer.id || '').toLowerCase().includes(needle) ||
+      String(retailer.name || '').toLowerCase().includes(needle)
+    ));
   }
 
   evaluateWarranty(product = {}) {
@@ -80,11 +77,11 @@ class ProtectionBrowserService {
     }
 
     const startDate = warranty.startDate
-      ? new Date(warranty.startDate)
+      ? new Date(`${String(warranty.startDate).slice(0, 10)}T12:00:00`)
       : null;
 
     const endDate = warranty.endDate
-      ? new Date(warranty.endDate)
+      ? new Date(`${String(warranty.endDate).slice(0, 10)}T23:59:59`)
       : null;
 
     const now = new Date();
@@ -132,7 +129,7 @@ class ProtectionBrowserService {
           },
           status: retailer.verificationStatus || 'unverified',
           source: retailer.policyUrl || null,
-          returnUntil: null,
+          returnUntil: product.returnUntil || null,
           verifiedAt: retailer.verifiedAt || null
         }
       : {
@@ -142,7 +139,7 @@ class ProtectionBrowserService {
             ? 'retailer-not-found'
             : 'retailer-missing',
           source: null,
-          returnUntil: null,
+          returnUntil: product.returnUntil || null,
           verifiedAt: null
         };
 
@@ -177,3 +174,17 @@ class ProtectionBrowserService {
 }
 
 window.StillProtection = new ProtectionBrowserService();
+
+(() => {
+  const selector = 'script[data-still-protection-center]';
+  if (document.querySelector(selector)) return;
+
+  const script = document.createElement('script');
+  script.src = '/buyer/protection/ui/ProtectionCenter.js';
+  script.defer = true;
+  script.dataset.stillProtectionCenter = '1';
+  script.addEventListener('error', () => {
+    console.error('[Still Protection] Unable to load Protection Center UI.');
+  }, { once: true });
+  document.head.appendChild(script);
+})();
