@@ -220,6 +220,22 @@ for (const region of ['cos120-dashboard', 'cos120-record-rail', 'cos120-record-m
   if (!companyRuntime.includes(region)) fail(`CompanyOS production cockpit is missing ${region}`);
 }
 if (!companyRuntime.includes('state.notifications.slice(0,5)')) fail('CompanyOS production activity is not sourced from authenticated notifications');
+for (const tool of ['repairs', 'inventory', 'customer360', 'warranty']) {
+  if (!companyRuntime.includes(`data-cos-tool="${tool}"`)) fail(`CompanyOS object workspace is missing ${tool}`);
+}
+if (!companyRuntime.includes('const toolGroups=') || companyRuntime.includes('const toolResults=')) fail('CompanyOS production bundle hides part of its tool catalogue');
+if (!companyRuntime.includes('cos120ToolParking') || !companyRuntime.includes('parking.append(legacyNode)')) fail('CompanyOS production tool switching loses mounted modules');
+if (!companyRuntime.includes('data-cos-memory-query')) fail('CompanyOS authorized assistant prompts are missing');
+const productionToolSource = companyRuntime.match(/const tools=\[([\s\S]*?)\n  \];/)?.[1] || '';
+const productionToolIds = [...productionToolSource.matchAll(/\['([A-Za-z][A-Za-z0-9]*)',t\(/g)].map(match => match[1]);
+const productionToolGroups = companyRuntime.match(/const toolGroups=\[([\s\S]*?)\n  \];/)?.[1] || '';
+for (const id of productionToolIds) {
+  if (!productionToolGroups.includes(`'${id}'`)) fail(`CompanyOS production tool is outside the visible groups: ${id}`);
+}
+if (productionToolIds.length < 33) fail(`CompanyOS production tool catalogue is incomplete (${productionToolIds.length}/33)`);
+if (!companyRuntime.includes('openUnavailableTool') || !companyRuntime.includes('state.permissions.buyerFacing')) fail('CompanyOS verification-gated tool context is missing');
+const workbenchRuntime = read('public/company-workbench-v72.js');
+if (!workbenchRuntime.includes("document.readyState==='loading'") || !workbenchRuntime.includes('else shell()')) fail('Company workbench cannot mount from the authenticated loader');
 
 if (failures.length) {
   console.error(`Production bundle validation FAILED\n- ${failures.join('\n- ')}`);
