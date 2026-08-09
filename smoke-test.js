@@ -60,6 +60,7 @@ if(!fail.length){
  ['companyos_situations','companyos_relationships','companyos_events','companyos_documents','companyos_work_objects','platform_audit_events','companyos_rate_limits'].forEach(table=>{if(!companyOSWorker.includes(table))fail.push(`CompanyOS schema is missing ${table}`)});
  ["cookie(request,'still_company')",'organization_id=?','sameOrigin(request)','platformAudit','rateLimit'].forEach(boundary=>{if(!companyOSWorker.includes(boundary))fail.push(`CompanyOS security boundary is missing ${boundary}`)});
  if(companyOS.includes('sessionStorage')||companyOS.includes('localStorage'))fail.push('live CompanyOS shell uses browser-only simulated persistence');
+ if(!companyOS.includes("if(window.__stillOrganization)mount({organization:window.__stillOrganization})"))fail.push('CompanyOS does not mount when the authenticated loader finishes before the shell runtime');
  if(!companyOS.includes('authorized-deterministic-retrieval')&&!companyOSWorker.includes('authorized-deterministic-retrieval'))fail.push('Company Memory does not disclose deterministic authorized retrieval');
  if(!read('company-authenticated-loader-v82.js').includes('company-passport-studio-v83.js'))fail.push('company passport studio is missing from authenticated workspace');
  if(!worker.includes("'/api/v1/ownership/connect'"))fail.push('buyer-company passport connection route is missing');
