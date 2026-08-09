@@ -70,6 +70,7 @@ if(!fail.length){
  if(!companyOS.includes('const toolGroups=')||companyOS.includes('const toolResults='))fail.push('CompanyOS does not expose its complete grouped production tool catalogue');
  if(!companyOS.includes('cos120ToolParking')||!companyOS.includes('parking.append(legacyNode)'))fail.push('CompanyOS tool switching does not preserve mounted production modules');
  if(!companyOS.includes('data-cos-memory-query')||!companyOS.includes('/api/v1/companyos/memory'))fail.push('CompanyOS authorized assistant is not integrated');
+ if(!read('companyos-v120.css').includes('.cos120-assistant-prompts button{width:100%'))fail.push('CompanyOS assistant prompt actions collapse at desktop widths');
  const companyToolSource=companyOS.match(/const tools=\[([\s\S]*?)\n  \];/)?.[1]||'';
  const companyToolIds=[...companyToolSource.matchAll(/\['([A-Za-z][A-Za-z0-9]*)',t\(/g)].map(match=>match[1]);
  const companyToolGroupSource=companyOS.match(/const toolGroups=\[([\s\S]*?)\n  \];/)?.[1]||'';
