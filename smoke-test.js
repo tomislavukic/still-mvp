@@ -91,6 +91,7 @@ if(!fail.length){
  ['retail','services','manufacturer','rental','subscription','professional'].forEach(type=>{if(!companyIntelligence.includes(`${type}:`))fail.push(`CompanyOS is missing adaptive priorities for ${type} businesses`)});
  if(!companyIntelligence.includes('/api/v1/business/setup')||!companyIntelligence.includes('REQUIRED BEFORE VERIFICATION'))fail.push('business type is not required and persisted before verification');
  if(!companyIntelligence.includes("if($('#companyOSV120'))return adapt()"))fail.push('adaptive business context does not tolerate authenticated module load order');
+ if(!read('company-intelligence-v128.css').includes('input[type=checkbox]{width:16px;height:16px'))fail.push('business profile checkbox controls can stretch when localized labels wrap');
  if(!companyIntelligence.includes('/api/v1/companyos/knowledge/import')||!companyIntelligence.includes('Review before anything is applied.'))fail.push('reviewable document OCR workflow is not integrated');
  if(!companyOSWorker.includes("error:'business_setup_required'")||!companyOSWorker.includes("verificationSubmission"))fail.push('verification submission is not protected by a server-side business setup gate');
  ['companyos_knowledge_documents','env.AI.toMarkdown','MAX_DOCUMENT_BYTES','file_hash','extracted-text-only'].forEach(capability=>{if(!companyOSWorker.includes(capability))fail.push(`document intelligence backend is missing ${capability}`)});
