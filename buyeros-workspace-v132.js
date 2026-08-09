@@ -48,6 +48,32 @@
   const household = () => read(HOUSEHOLD_KEY);
   const family = () => read(FAMILY_KEY);
 
+  const purchaseDateOf = item => item?.purchasedOn || item?.purchaseDate || '';
+
+  function documentLinks(item) {
+    const title = String(item?.title || '').trim().toLowerCase();
+
+    return documents().filter(doc =>
+      doc.thingId === item.id ||
+      doc.relatedThingId === item.id ||
+      (title && String(doc.relatedThing || '').trim().toLowerCase() === title)
+    );
+  }
+
+  function serviceHistory(item) {
+    return Array.isArray(item?.serviceHistory) ? item.serviceHistory : [];
+  }
+
+  function allServiceHistory() {
+    return things().flatMap(item =>
+      serviceHistory(item).map(event => ({
+        ...event,
+        thingId: item.id,
+        thingTitle: item.title || t('Untitled thing', 'Stvar bez naziva')
+      }))
+    );
+  }
+
   function dateText(value) {
     if (!value) return '';
 
@@ -569,6 +595,34 @@
         color:var(--muted,#66727a)
       }
 
+      .bos132-dashboard{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:14px;margin-top:14px}
+      .bos132-attention{display:grid;gap:8px}
+      .bos132-attention-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border:0;border-radius:13px;background:var(--soft,#f3f6f4);color:var(--ink,#111);text-align:left;cursor:pointer}
+      .bos132-attention-item.urgent{box-shadow:inset 3px 0 0 #d65b62}
+      .bos132-attention-item.soon{box-shadow:inset 3px 0 0 #c9902f}
+      .bos132-attention-item b{display:block;font-size:12px}
+      .bos132-attention-item small{display:block;margin-top:3px;color:var(--muted,#66727a);font-size:10px}
+      .bos132-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .bos132-quick-grid button{min-height:66px;border:1px solid var(--line,#d9e1e5);border-radius:14px;padding:11px;text-align:left;background:var(--soft,#f3f6f4);color:var(--ink,#111);cursor:pointer}
+      .bos132-quick-grid b{display:block;font-size:12px}
+      .bos132-quick-grid small{display:block;margin-top:4px;color:var(--muted,#66727a);font-size:9px}
+      .bos132-thing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .bos132-thing-card{border:1px solid var(--line,#d9e1e5);border-radius:18px;padding:16px;background:var(--surface,#fff)}
+      .bos132-thing-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+      .bos132-thing-top h3{margin:4px 0 2px;font-size:18px}
+      .bos132-thing-top small{color:var(--muted,#66727a)}
+      .bos132-thing-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--soft,#f3f6f4);font-size:19px}
+      .bos132-thing-meta{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0}
+      .bos132-thing-actions{display:flex;flex-wrap:wrap;gap:6px}
+      .bos132-thing-actions button{min-height:32px;border:1px solid var(--line,#d9e1e5);border-radius:9px;padding:0 9px;background:var(--surface,#fff);color:var(--ink,#111);font-size:10px;font-weight:750;cursor:pointer}
+      .bos132-service-grid{display:grid;gap:8px}
+      .bos132-service-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:13px;background:var(--soft,#f3f6f4)}
+      .bos132-service-row b{font-size:12px}
+      .bos132-service-row small{display:block;color:var(--muted,#66727a);margin-top:3px}
+      .bos132-section-note{margin:3px 0 0;color:var(--muted,#66727a);font-size:11px;line-height:1.5}
+      @media(max-width:900px){.bos132-dashboard{grid-template-columns:1fr}.bos132-thing-grid{grid-template-columns:1fr}}
+      @media(max-width:560px){.bos132-quick-grid{grid-template-columns:1fr}}
+
       @media(max-width:900px){
         .bos132-shell{grid-template-columns:1fr}
         .bos132-sidebar{
@@ -678,104 +732,110 @@
     return { items, docs, people, home, upcoming };
   }
 
-  function renderHome() {
-    const { items, docs, people, home, upcoming } = stats();
+  function attentionItems() {
+    const result = [];
 
-    const recent = items.slice(-5).reverse();
+    things().forEach(item => {
+      [
+        ['returnBy', t('Return deadline', 'Rok povrata'), '↩'],
+        ['warrantyUntil', t('Warranty ends', 'Jamstvo završava'), '◇'],
+        ['renewalAt', t('Renewal', 'Obnova'), '↻'],
+        ['nextActionAt', t('Next action', 'Sljedeća radnja'), '→']
+      ].forEach(([field, label, icon]) => {
+        const days = daysUntil(item[field]);
+
+        if (days !== null && days >= 0 && days <= 60) {
+          result.push({ item, field, label, icon, days, date: item[field] });
+        }
+      });
+    });
+
+    return result.sort((a, b) => a.days - b.days);
+  }
+
+  function recentActivity(limit = 6) {
+    return timelineEvents().slice(0, limit);
+  }
+
+  function renderHome() {
+    const { items, docs, upcoming } = stats();
+    const recent = items.slice(-4).reverse();
+    const attention = attentionItems().slice(0, 6);
+    const activity = recentActivity(5);
+    const serviceCount = allServiceHistory().length;
 
     return `
       ${pageHead(
         'BUYEROS',
         t('Everything you own.', 'Sve što posjeduješ.'),
         t(
-          'Your things, documents, protection, services and people in one calm workspace.',
-          'Tvoje stvari, dokumenti, zaštita, usluge i ljudi u jednom mirnom radnom prostoru.'
-        )
+          'What you own, what needs attention and what happened recently — in one calm workspace.',
+          'Što posjeduješ, što zahtijeva pažnju i što se nedavno dogodilo — u jednom mirnom radnom prostoru.'
+        ),
+        `<button class="bos132-primary" data-bos132-add="thing">+ ${t('Add thing', 'Dodaj stvar')}</button>`
       )}
 
       <div class="bos132-grid">
+        <article class="bos132-card"><span>${t('MY THINGS','MOJE STVARI')}</span><strong>${items.length}</strong><p>${t('Products, services and commitments.','Proizvodi, usluge i obveze.')}</p></article>
+        <article class="bos132-card"><span>${t('NEEDS ATTENTION','ZAHTIJEVA PAŽNJU')}</span><strong>${upcoming.length}</strong><p>${t('Important dates in the next 60 days.','Važni datumi u sljedećih 60 dana.')}</p></article>
+        <article class="bos132-card"><span>${t('DOCUMENTS','DOKUMENTI')}</span><strong>${docs.length}</strong><p>${t('Receipts, manuals and proof.','Računi, priručnici i dokazi.')}</p></article>
+        <article class="bos132-card"><span>${t('SERVICE HISTORY','SERVISNA POVIJEST')}</span><strong>${serviceCount}</strong><p>${t('Repairs, inspections and upgrades.','Popravci, pregledi i nadogradnje.')}</p></article>
+      </div>
 
-        <article class="bos132-card">
-          <span>${t('MY THINGS', 'MOJE STVARI')}</span>
-          <strong>${items.length}</strong>
-          <p>${t(
-            'Products, services, subscriptions and commitments.',
-            'Proizvodi, usluge, pretplate i obveze.'
-          )}</p>
-        </article>
+      <div class="bos132-dashboard">
+        <section class="bos132-section" style="margin-top:0">
+          <div class="bos132-section-head">
+            <h3>${t('Needs attention','Zahtijeva pažnju')}</h3>
+            <button class="bos132-secondary" data-bos132-go="protection">${t('Protection','Zaštita')}</button>
+          </div>
 
-        <article class="bos132-card">
-          <span>${t('DOCUMENTS', 'DOKUMENTI')}</span>
-          <strong>${docs.length}</strong>
-          <p>${t(
-            'Receipts, invoices, manuals and other records.',
-            'Računi, fakture, priručnici i drugi zapisi.'
-          )}</p>
-        </article>
+          ${attention.length
+            ? `<div class="bos132-attention">${attention.map(entry => `
+                <button class="bos132-attention-item ${entry.days <= 7 ? 'urgent' : entry.days <= 30 ? 'soon' : ''}" data-bos132-go="${entry.field === 'warrantyUntil' || entry.field === 'returnBy' ? 'protection' : 'timeline'}">
+                  <span class="bos132-row-icon">${entry.icon}</span>
+                  <span><b>${esc(entry.item.title || t('Untitled thing','Stvar bez naziva'))}</b><small>${esc(entry.label)} · ${esc(dateText(entry.date))}</small></span>
+                  <strong>${entry.days === 0 ? t('Today','Danas') : `${entry.days}d`}</strong>
+                </button>`).join('')}</div>`
+            : `<div class="bos132-empty">${t('Nothing urgent in the next 60 days.','Ništa hitno u sljedećih 60 dana.')}</div>`}
+        </section>
 
-        <article class="bos132-card">
-          <span>${t('NEXT 60 DAYS', 'SLJEDEĆIH 60 DANA')}</span>
-          <strong>${upcoming.length}</strong>
-          <p>${t(
-            'Upcoming dates that may need attention.',
-            'Nadolazeći datumi koji mogu zahtijevati pažnju.'
-          )}</p>
-        </article>
+        <aside>
+          <section class="bos132-section" style="margin-top:0">
+            <div class="bos132-section-head"><h3>${t('Quick actions','Brze radnje')}</h3></div>
+            <div class="bos132-quick-grid">
+              <button data-bos132-add="thing"><b>+ ${t('Add thing','Dodaj stvar')}</b><small>${t('Something you already own','Nešto što već posjeduješ')}</small></button>
+              <button data-bos132-add="document"><b>▤ ${t('Add document','Dodaj dokument')}</b><small>${t('Receipt, invoice or manual','Račun, faktura ili priručnik')}</small></button>
+              <button data-bos132-add="service"><b>⌁ ${t('Add service','Dodaj servis')}</b><small>${t('Repair, inspection or upgrade','Popravak, pregled ili nadogradnja')}</small></button>
+              <button data-bos132-go="assistant"><b>✦ ${t('Ask Still','Pitaj Still')}</b><small>${t('Use your ownership context','Koristi kontekst vlasništva')}</small></button>
+            </div>
+          </section>
+        </aside>
+      </div>
 
-        <article class="bos132-card">
-          <span>${t('HOUSEHOLD', 'KUĆANSTVO')}</span>
-          <strong>${home.length}</strong>
-          <p>${t(
-            `${people.length} family profiles stored locally.`,
-            `${people.length} obiteljskih profila spremljeno lokalno.`
-          )}</p>
-        </article>
+      <div class="bos132-dashboard">
+        <section class="bos132-section" style="margin-top:0">
+          <div class="bos132-section-head"><h3>${t('Recent activity','Nedavna aktivnost')}</h3><button class="bos132-secondary" data-bos132-go="timeline">${t('Timeline','Vremenska crta')}</button></div>
+          ${activity.length
+            ? `<div class="bos132-list">${activity.map(event => `<div class="bos132-row"><span class="bos132-row-icon">◷</span><div><b>${esc(event.title)}</b><small>${esc(event.detail || '')}${event.date ? ` · ${esc(dateText(event.date))}` : ''}</small></div><span>›</span></div>`).join('')}</div>`
+            : `<div class="bos132-empty">${t('Activity appears as you add and maintain things.','Aktivnost se pojavljuje kako dodaješ i održavaš stvari.')}</div>`}
+        </section>
 
+        <section class="bos132-section" style="margin-top:0">
+          <div class="bos132-section-head"><h3>${t('Recently added','Nedavno dodano')}</h3><button class="bos132-secondary" data-bos132-go="things">${t('View all','Prikaži sve')}</button></div>
+          ${recent.length
+            ? `<div class="bos132-list">${recent.map(item => `<div class="bos132-row"><span class="bos132-row-icon">◇</span><div><b>${esc(item.title || t('Untitled thing','Stvar bez naziva'))}</b><small>${esc(item.business || item.kind || '')}</small></div><span>→</span></div>`).join('')}</div>`
+            : `<div class="bos132-empty">${t('Your Still is empty. Add something you already own.','Tvoj Still je prazan. Dodaj nešto što već posjeduješ.')}</div>`}
+        </section>
       </div>
 
       <section class="bos132-section">
-
-        <div class="bos132-section-head">
-          <h3>${t('Recently added', 'Nedavno dodano')}</h3>
-
-          <button
-            class="bos132-secondary"
-            data-bos132-go="things"
-          >
-            ${t('View all', 'Prikaži sve')}
-          </button>
+        <div class="bos132-section-head"><div><h3>${t('Useful tools already in Still','Korisni alati koji su već u Still-u')}</h3><p class="bos132-section-note">${t('BuyerOS keeps existing workflows close instead of hiding them farther down the page.','BuyerOS drži postojeće funkcije blizu umjesto da ih skriva niže na stranici.')}</p></div></div>
+        <div class="bos132-quick-grid">
+          <button data-bos132-scroll="#decisionLabV83"><b>◎ ${t('Plan a purchase','Planiraj kupnju')}</b><small>${t('Compare before paying.','Usporedi prije kupnje.')}</small></button>
+          <button data-bos132-scroll="#passportCommerceV92"><b>◇ ${t('Passport commerce','Kupnja s putovnicom')}</b><small>${t('Open the existing purchase workflow.','Otvori postojeći tijek kupnje.')}</small></button>
+          <button data-bos132-scroll="#checker"><b>↩ ${t('Return & warranty checker','Provjera povrata i jamstva')}</b><small>${t('Use the existing rights and retailer-policy workflow.','Koristi postojeću provjeru prava i pravila trgovca.')}</small></button>
+          <button data-bos132-scroll="#lifecyclePlatformV95"><b>◷ ${t('Lifecycle workspace','Životni ciklus')}</b><small>${t('Support, alerts and detailed history.','Podrška, upozorenja i detaljna povijest.')}</small></button>
         </div>
-
-        ${
-          recent.length
-            ? `<div class="bos132-list">
-                ${recent.map(item => `
-                  <div class="bos132-row">
-                    <span class="bos132-row-icon">◇</span>
-
-                    <div>
-                      <b>${esc(item.title || t(
-                        'Untitled thing',
-                        'Stvar bez naziva'
-                      ))}</b>
-
-                      <small>${esc(
-                        item.business || item.kind || ''
-                      )}</small>
-                    </div>
-
-                    <span>→</span>
-                  </div>
-                `).join('')}
-              </div>`
-            : `<div class="bos132-empty">
-                ${t(
-                  'Your Still is empty. Add something you already own in My Things.',
-                  'Tvoj Still je prazan. Dodaj nešto što već posjeduješ u Moje stvari.'
-                )}
-              </div>`
-        }
-
       </section>
     `;
   }
@@ -783,64 +843,35 @@
   function thingCard(item) {
     const warrantyDays = daysUntil(item.warrantyUntil);
     const returnDays = daysUntil(item.returnBy);
+    const docs = documentLinks(item);
+    const services = serviceHistory(item);
 
     return `
-      <div class="bos132-row">
-
-        <span class="bos132-row-icon">◇</span>
-
-        <div>
-          <b>${esc(
-            item.title ||
-            t('Untitled thing', 'Stvar bez naziva')
-          )}</b>
-
-          <small>
-            ${esc(
-              item.business ||
-              item.store ||
-              item.kind ||
-              t('Personal ownership', 'Osobno vlasništvo')
-            )}
-          </small>
-
-          <div style="
-            display:flex;
-            gap:6px;
-            flex-wrap:wrap;
-            margin-top:7px
-          ">
-
-            ${
-              item.purchaseDate
-                ? `<span class="bos132-mini-pill">
-                    ${t('Bought', 'Kupljeno')} ${esc(dateText(item.purchaseDate))}
-                   </span>`
-                : ''
-            }
-
-            ${
-              warrantyDays !== null && warrantyDays >= 0
-                ? `<span class="bos132-mini-pill">
-                    ${t('Warranty', 'Jamstvo')} ${warrantyDays}d
-                   </span>`
-                : ''
-            }
-
-            ${
-              returnDays !== null && returnDays >= 0
-                ? `<span class="bos132-mini-pill">
-                    ${t('Return', 'Povrat')} ${returnDays}d
-                   </span>`
-                : ''
-            }
-
+      <article class="bos132-thing-card">
+        <div class="bos132-thing-top">
+          <div>
+            <small>${esc(item.kind || t('Thing','Stvar'))}</small>
+            <h3>${esc(item.title || t('Untitled thing','Stvar bez naziva'))}</h3>
+            <small>${esc(item.business || item.store || t('Personally owned','Osobno vlasništvo'))}</small>
           </div>
+          <span class="bos132-thing-icon">◇</span>
         </div>
 
-        <span>→</span>
+        <div class="bos132-thing-meta">
+          ${purchaseDateOf(item) ? `<span class="bos132-mini-pill">${t('Bought','Kupljeno')} ${esc(dateText(purchaseDateOf(item)))}</span>` : ''}
+          ${warrantyDays !== null && warrantyDays >= 0 ? `<span class="bos132-mini-pill">${t('Warranty','Jamstvo')} ${warrantyDays}d</span>` : ''}
+          ${returnDays !== null && returnDays >= 0 ? `<span class="bos132-mini-pill">${t('Return','Povrat')} ${returnDays}d</span>` : ''}
+          <span class="bos132-mini-pill">▤ ${docs.length}</span>
+          <span class="bos132-mini-pill">⌁ ${services.length}</span>
+        </div>
 
-      </div>
+        <div class="bos132-thing-actions">
+          <button data-bos132-thing-route="timeline">${t('Timeline','Vremenska crta')}</button>
+          <button data-bos132-thing-route="protection">${t('Protection','Zaštita')}</button>
+          <button data-bos132-add="document" data-bos132-thing-id="${esc(item.id)}">${t('Add document','Dodaj dokument')}</button>
+          <button data-bos132-add="service" data-bos132-thing-id="${esc(item.id)}">${t('Add service','Dodaj servis')}</button>
+        </div>
+      </article>
     `;
   }
 
@@ -852,33 +883,17 @@
         'MY THINGS',
         t('Everything you own.', 'Sve što posjeduješ.'),
         t(
-          'Products, services, subscriptions and other things you want Still to remember.',
-          'Proizvodi, usluge, pretplate i druge stvari koje želiš da Still pamti.'
-        )
+          'Each thing keeps its proof, protection and service history together.',
+          'Svaka stvar drži dokaze, zaštitu i servisnu povijest na jednom mjestu.'
+        ),
+        `<button class="bos132-primary" data-bos132-add="thing">+ ${t('Add thing','Dodaj stvar')}</button>`
       )}
 
       <section class="bos132-section">
-
-        <div class="bos132-section-head">
-          <h3>
-            ${data.length}
-            ${t('ownership records', 'zapisa vlasništva')}
-          </h3>
-        </div>
-
-        ${
-          data.length
-            ? `<div class="bos132-list">
-                ${data.map(thingCard).join('')}
-              </div>`
-            : `<div class="bos132-empty">
-                ${t(
-                  'Nothing here yet. Add something you already own.',
-                  'Ovdje još nema ničega. Dodaj nešto što već posjeduješ.'
-                )}
-              </div>`
-        }
-
+        <div class="bos132-section-head"><div><h3>${data.length} ${t('ownership records','zapisa vlasništva')}</h3><p class="bos132-section-note">${t('Open one thing through its timeline, protection, documents and service history.','Otvori jednu stvar kroz njezinu vremensku crtu, zaštitu, dokumente i servisnu povijest.')}</p></div><button class="bos132-secondary" data-bos132-go="search">${t('Search','Pretraži')}</button></div>
+        ${data.length
+          ? `<div class="bos132-thing-grid">${data.map(thingCard).join('')}</div>`
+          : `<div class="bos132-empty">${t('Nothing here yet. Add something you already own.','Ovdje još nema ničega. Dodaj nešto što već posjeduješ.')}</div>`}
       </section>
     `;
   }
@@ -1050,9 +1065,9 @@
         });
       }
 
-      if (item.purchaseDate) {
+      if (purchaseDateOf(item)) {
         events.push({
-          date: item.purchaseDate,
+          date: purchaseDateOf(item),
           title: t('Purchased', 'Kupljeno'),
           detail: title
         });
@@ -1086,10 +1101,24 @@
     documents().forEach(doc => {
       if (!doc.date) return;
 
+      const related = doc.thingId
+        ? things().find(item => item.id === doc.thingId)
+        : null;
+
       events.push({
         date: doc.date,
         title: t('Document added', 'Dodan dokument'),
-        detail: doc.title
+        detail: [doc.title, related?.title].filter(Boolean).join(' · ')
+      });
+    });
+
+    allServiceHistory().forEach(service => {
+      if (!service.occurredOn) return;
+
+      events.push({
+        date: service.occurredOn,
+        title: service.title || t('Service event', 'Servisni događaj'),
+        detail: [service.thingTitle, service.providerName].filter(Boolean).join(' · ')
       });
     });
 
@@ -1151,9 +1180,10 @@
   }
 
   function servicesPage() {
-    const items = things();
+    const history = allServiceHistory()
+      .sort((a, b) => String(b.occurredOn || '').localeCompare(String(a.occurredOn || '')));
 
-    const serviceLike = items.filter(item =>
+    const serviceLike = things().filter(item =>
       ['service', 'subscription', 'rental', 'booking']
         .includes(String(item.kind || '').toLowerCase())
     );
@@ -1163,57 +1193,27 @@
         'SERVICES',
         t('Keep it working.', 'Neka i dalje radi.'),
         t(
-          'Services, subscriptions, rentals and bookings connected to your ownership records.',
-          'Usluge, pretplate, najmovi i rezervacije povezani s tvojim zapisima vlasništva.'
-        )
+          'Repairs, inspections, upgrades and ongoing services stay attached to the things they belong to.',
+          'Popravci, pregledi, nadogradnje i trajne usluge ostaju vezani uz stvari kojima pripadaju.'
+        ),
+        `<button class="bos132-primary" data-bos132-add="service">+ ${t('Add service','Dodaj servis')}</button>`
       )}
 
+      <div class="bos132-grid">
+        <article class="bos132-card"><span>${t('SERVICE HISTORY','SERVISNA POVIJEST')}</span><strong>${history.length}</strong><p>${t('Recorded maintenance events.','Evidentirani događaji održavanja.')}</p></article>
+        <article class="bos132-card"><span>${t('ONGOING SERVICES','TRAJNE USLUGE')}</span><strong>${serviceLike.length}</strong><p>${t('Subscriptions, rentals and bookings.','Pretplate, najmovi i rezervacije.')}</p></article>
+        <article class="bos132-card"><span>${t('WITH PROVIDER','S PRUŽATELJEM')}</span><strong>${history.filter(item => item.providerName).length}</strong><p>${t('Events with a recorded provider.','Događaji s evidentiranim pružateljem.')}</p></article>
+        <article class="bos132-card"><span>${t('PUBLIC IN PASSPORT','JAVNO U PUTOVNICI')}</span><strong>${history.filter(item => item.isPublic).length}</strong><p>${t('Events explicitly allowed in public history.','Događaji izričito dopušteni u javnoj povijesti.')}</p></article>
+      </div>
+
       <section class="bos132-section">
-
-        <div class="bos132-section-head">
-          <h3>
-            ${serviceLike.length}
-            ${t('service records', 'servisnih zapisa')}
-          </h3>
-        </div>
-
-        ${
-          serviceLike.length
-            ? `<div class="bos132-list">
-                ${serviceLike.map(item => `
-                  <div class="bos132-row">
-
-                    <span class="bos132-row-icon">⌁</span>
-
-                    <div>
-                      <b>${esc(
-                        item.title ||
-                        t('Untitled service', 'Usluga bez naziva')
-                      )}</b>
-
-                      <small>
-                        ${esc(
-                          item.business ||
-                          item.kind ||
-                          ''
-                        )}
-                      </small>
-                    </div>
-
-                    <span>›</span>
-
-                  </div>
-                `).join('')}
-              </div>`
-            : `<div class="bos132-empty">
-                ${t(
-                  'No services or subscriptions are stored yet.',
-                  'Još nema spremljenih usluga ili pretplata.'
-                )}
-              </div>`
-        }
-
+        <div class="bos132-section-head"><h3>${t('Service history','Servisna povijest')}</h3></div>
+        ${history.length
+          ? `<div class="bos132-service-grid">${history.map(event => `<div class="bos132-service-row"><span class="bos132-row-icon">⌁</span><div><b>${esc(event.title || t('Service','Servis'))}</b><small>${esc(event.thingTitle)}${event.providerName ? ` · ${esc(event.providerName)}` : ''}${event.occurredOn ? ` · ${esc(dateText(event.occurredOn))}` : ''}</small></div><span class="bos132-mini-pill">${event.isPublic ? t('Public','Javno') : t('Private','Privatno')}</span></div>`).join('')}</div>`
+          : `<div class="bos132-empty">${t('No service history yet. Add a repair, inspection or upgrade.','Još nema servisne povijesti. Dodaj popravak, pregled ili nadogradnju.')}</div>`}
       </section>
+
+      ${serviceLike.length ? `<section class="bos132-section"><div class="bos132-section-head"><h3>${t('Ongoing services','Trajne usluge')}</h3></div><div class="bos132-list">${serviceLike.map(item => `<div class="bos132-row"><span class="bos132-row-icon">↻</span><div><b>${esc(item.title || t('Untitled service','Usluga bez naziva'))}</b><small>${esc(item.business || item.kind || '')}${item.renewalAt ? ` · ${t('renews','obnova')} ${esc(dateText(item.renewalAt))}` : ''}</small></div><span>›</span></div>`).join('')}</div></section>` : ''}
     `;
   }
 
@@ -1253,6 +1253,7 @@
 
                       <small>
                         ${esc(doc.type)}
+                        ${doc.thingId ? ` · ${esc(things().find(item => item.id === doc.thingId)?.title || t('Linked thing', 'Povezana stvar'))}` : ''}
                         ${doc.reference ? ` · ${esc(doc.reference)}` : ''}
                         ${doc.date ? ` · ${esc(dateText(doc.date))}` : ''}
                       </small>
@@ -1717,6 +1718,16 @@
     const dialog = $('#bos132Dialog');
 
     const configs = {
+      thing: {
+        title: t('Add something you own', 'Dodaj nešto što posjeduješ'),
+        body: `<label>${t('Name','Naziv')}<input name="title" required maxlength="160"></label><div class="bos132-form-grid"><label>${t('Type','Vrsta')}<select name="kind"><option value="product">${t('Product','Proizvod')}</option><option value="service">${t('Service','Usluga')}</option><option value="subscription">${t('Subscription','Pretplata')}</option><option value="rental">${t('Rental','Najam')}</option><option value="booking">${t('Booking','Rezervacija')}</option></select></label><label>${t('Store / provider','Trgovina / pružatelj')}<input name="business" maxlength="160"></label></div><div class="bos132-form-grid"><label>${t('Purchase date','Datum kupnje')}<input name="purchaseDate" type="date"></label><label>${t('Warranty until','Jamstvo do')}<input name="warrantyUntil" type="date"></label></div><div class="bos132-form-grid"><label>${t('Return deadline','Rok povrata')}<input name="returnBy" type="date"></label><label>${t('Renewal','Obnova')}<input name="renewalAt" type="date"></label></div><label>${t('Private notes','Privatne bilješke')}<textarea name="notes" maxlength="1000"></textarea></label>`
+      },
+
+      service: {
+        title: t('Add service event', 'Dodaj servisni događaj'),
+        body: `<label>${t('Thing','Stvar')}<select name="thingId" required>${things().map(item => `<option value="${esc(item.id)}">${esc(item.title || t('Untitled thing','Stvar bez naziva'))}</option>`).join('')}</select></label><div class="bos132-form-grid"><label>${t('Type','Vrsta')}<select name="serviceType"><option value="service">${t('Service','Servis')}</option><option value="repair">${t('Repair','Popravak')}</option><option value="inspection">${t('Inspection','Pregled')}</option><option value="upgrade">${t('Upgrade','Nadogradnja')}</option></select></label><label>${t('Date','Datum')}<input name="occurredOn" type="date" required></label></div><label>${t('What happened?','Što se dogodilo?')}<input name="title" required maxlength="180"></label><label>${t('Provider','Izvršitelj')}<input name="providerName" maxlength="160"></label><label>${t('Private details','Privatni detalji')}<textarea name="notes" maxlength="1500"></textarea></label><label><input name="isPublic" type="checkbox"> ${t('Allow this event in public Passport history','Dopusti ovaj zapis u javnoj povijesti putovnice')}</label>`
+      },
+
       document: {
         title: t('Add document', 'Dodaj dokument'),
         body: `
@@ -1737,6 +1748,14 @@
               )}</option>
               <option>${t('Certificate', 'Potvrda')}</option>
               <option>${t('Other', 'Ostalo')}</option>
+            </select>
+          </label>
+
+          <label>
+            ${t('Related thing', 'Povezana stvar')}
+            <select name="thingId">
+              <option value="">${t('Not linked', 'Nije povezano')}</option>
+              ${things().map(item => `<option value="${esc(item.id)}">${esc(item.title || t('Untitled thing','Stvar bez naziva'))}</option>`).join('')}
             </select>
           </label>
 
@@ -1851,6 +1870,49 @@
     const form = event.currentTarget;
     const fd = new FormData(form);
 
+    if (form.dataset.type === 'thing') {
+      const data = things();
+
+      data.push({
+        id: uid('thing'),
+        title: String(fd.get('title') || '').trim(),
+        kind: String(fd.get('kind') || 'product'),
+        business: String(fd.get('business') || '').trim(),
+        purchasedOn: String(fd.get('purchaseDate') || ''),
+        warrantyUntil: String(fd.get('warrantyUntil') || ''),
+        returnBy: String(fd.get('returnBy') || ''),
+        renewalAt: String(fd.get('renewalAt') || ''),
+        notes: String(fd.get('notes') || '').trim(),
+        serviceHistory: [],
+        createdAt: new Date().toISOString()
+      });
+
+      write(OWNERSHIP_KEY, data);
+      window.dispatchEvent(new CustomEvent('still:ownership-updated'));
+    }
+
+    if (form.dataset.type === 'service') {
+      const data = things();
+      const item = data.find(entry => entry.id === String(fd.get('thingId') || ''));
+
+      if (item) {
+        item.serviceHistory = Array.isArray(item.serviceHistory) ? item.serviceHistory : [];
+        item.serviceHistory.push({
+          id: uid('service'),
+          type: String(fd.get('serviceType') || 'service'),
+          occurredOn: String(fd.get('occurredOn') || ''),
+          title: String(fd.get('title') || '').trim(),
+          providerName: String(fd.get('providerName') || '').trim(),
+          notes: String(fd.get('notes') || '').trim(),
+          isPublic: fd.get('isPublic') === 'on',
+          createdAt: new Date().toISOString()
+        });
+
+        write(OWNERSHIP_KEY, data);
+        window.dispatchEvent(new CustomEvent('still:ownership-updated'));
+      }
+    }
+
     if (form.dataset.type === 'document') {
       const data = documents();
 
@@ -1861,6 +1923,7 @@
         date: String(fd.get('date') || ''),
         reference: String(fd.get('reference') || '').trim(),
         notes: String(fd.get('notes') || '').trim(),
+        thingId: String(fd.get('thingId') || ''),
         createdAt: new Date().toISOString()
       });
 
@@ -1928,10 +1991,29 @@
     });
 
     $$('[data-bos132-add]').forEach(button => {
-      button.addEventListener(
-        'click',
-        () => openDialog(button.dataset.bos132Add)
-      );
+      button.addEventListener('click', () => {
+        openDialog(button.dataset.bos132Add);
+
+        const thingId = button.dataset.bos132ThingId;
+        const select = $('#bos132CrudForm [name="thingId"]');
+
+        if (thingId && select) select.value = thingId;
+      });
+    });
+
+    $$('[data-bos132-thing-route]').forEach(button => {
+      button.addEventListener('click', () => navigate(button.dataset.bos132ThingRoute));
+    });
+
+    $$('[data-bos132-scroll]').forEach(button => {
+      button.addEventListener('click', () => {
+        const target = document.querySelector(button.dataset.bos132Scroll);
+        if (!target) return;
+        target.scrollIntoView({
+          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start'
+        });
+      });
     });
 
     $$('[data-bos132-delete-document]').forEach(button => {
