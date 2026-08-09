@@ -81,5 +81,6 @@
   }
 
   addEventListener('change',async e=>{const s=e.target.closest('[data-task-status]');if(!s)return;try{await api('/api/v1/business/tasks/'+encodeURIComponent(s.dataset.taskStatus),{method:'POST',body:JSON.stringify({status:s.value})});await load();render('tasks')}catch(x){alert(x.message)}});
-  document.addEventListener('DOMContentLoaded',shell);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',shell);else shell();
+  window.addEventListener('still:company-authenticated',shell);
 })();
