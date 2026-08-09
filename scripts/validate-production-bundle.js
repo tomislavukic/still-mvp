@@ -226,6 +226,7 @@ for (const tool of ['repairs', 'inventory', 'customer360', 'warranty']) {
 if (!companyRuntime.includes('const toolGroups=') || companyRuntime.includes('const toolResults=')) fail('CompanyOS production bundle hides part of its tool catalogue');
 if (!companyRuntime.includes('cos120ToolParking') || !companyRuntime.includes('parking.append(legacyNode)')) fail('CompanyOS production tool switching loses mounted modules');
 if (!companyRuntime.includes('data-cos-memory-query')) fail('CompanyOS authorized assistant prompts are missing');
+if (!read('public/companyos-v120.css').includes('.cos120-assistant-prompts button{width:100%')) fail('CompanyOS assistant prompt actions are not readable in production');
 const productionToolSource = companyRuntime.match(/const tools=\[([\s\S]*?)\n  \];/)?.[1] || '';
 const productionToolIds = [...productionToolSource.matchAll(/\['([A-Za-z][A-Za-z0-9]*)',t\(/g)].map(match => match[1]);
 const productionToolGroups = companyRuntime.match(/const toolGroups=\[([\s\S]*?)\n  \];/)?.[1] || '';
