@@ -339,6 +339,76 @@
         color:var(--muted,#66727a)
       }
 
+
+      .bos132-mini-pill{
+        display:inline-flex;
+        align-items:center;
+        min-height:23px;
+        padding:0 8px;
+        border:1px solid var(--line,#d9e1e5);
+        border-radius:999px;
+        background:var(--surface,#fff);
+        color:var(--muted,#66727a);
+        font-size:9px;
+        font-weight:760
+      }
+
+      .bos132-timeline-list{
+        display:grid
+      }
+
+      .bos132-timeline-event{
+        display:grid;
+        grid-template-columns:110px 24px minmax(0,1fr);
+        gap:10px;
+        min-height:72px
+      }
+
+      .bos132-timeline-date{
+        padding-top:2px;
+        text-align:right;
+        color:var(--muted,#66727a);
+        font-size:10px
+      }
+
+      .bos132-timeline-track{
+        position:relative
+      }
+
+      .bos132-timeline-track::before{
+        content:'';
+        position:absolute;
+        left:11px;
+        top:0;
+        bottom:0;
+        width:1px;
+        background:var(--line,#d9e1e5)
+      }
+
+      .bos132-timeline-track span{
+        position:absolute;
+        z-index:2;
+        left:6px;
+        top:3px;
+        width:10px;
+        height:10px;
+        border-radius:50%;
+        background:var(--green,#337b58);
+        border:3px solid var(--surface,#fff);
+        box-shadow:0 0 0 1px var(--line,#d9e1e5)
+      }
+
+      .bos132-timeline-event b{
+        display:block;
+        font-size:13px
+      }
+
+      .bos132-timeline-event small{
+        display:block;
+        margin-top:4px;
+        color:var(--muted,#66727a)
+      }
+
       .bos132-empty{
         padding:34px 18px;
         text-align:center;
@@ -710,91 +780,441 @@
     `;
   }
 
-  function existingPage(id) {
-    const copy = {
-      things: [
+  function thingCard(item) {
+    const warrantyDays = daysUntil(item.warrantyUntil);
+    const returnDays = daysUntil(item.returnBy);
+
+    return `
+      <div class="bos132-row">
+
+        <span class="bos132-row-icon">◇</span>
+
+        <div>
+          <b>${esc(
+            item.title ||
+            t('Untitled thing', 'Stvar bez naziva')
+          )}</b>
+
+          <small>
+            ${esc(
+              item.business ||
+              item.store ||
+              item.kind ||
+              t('Personal ownership', 'Osobno vlasništvo')
+            )}
+          </small>
+
+          <div style="
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+            margin-top:7px
+          ">
+
+            ${
+              item.purchaseDate
+                ? `<span class="bos132-mini-pill">
+                    ${t('Bought', 'Kupljeno')} ${esc(dateText(item.purchaseDate))}
+                   </span>`
+                : ''
+            }
+
+            ${
+              warrantyDays !== null && warrantyDays >= 0
+                ? `<span class="bos132-mini-pill">
+                    ${t('Warranty', 'Jamstvo')} ${warrantyDays}d
+                   </span>`
+                : ''
+            }
+
+            ${
+              returnDays !== null && returnDays >= 0
+                ? `<span class="bos132-mini-pill">
+                    ${t('Return', 'Povrat')} ${returnDays}d
+                   </span>`
+                : ''
+            }
+
+          </div>
+        </div>
+
+        <span>→</span>
+
+      </div>
+    `;
+  }
+
+  function thingsPage() {
+    const data = things();
+
+    return `
+      ${pageHead(
         'MY THINGS',
         t('Everything you own.', 'Sve što posjeduješ.'),
         t(
-          'Products, services, subscriptions, bookings, rentals and projects remain connected to the existing ownership passport system.',
-          'Proizvodi, usluge, pretplate, rezervacije, najmovi i projekti ostaju povezani s postojećim sustavom putovnica vlasništva.'
+          'Products, services, subscriptions and other things you want Still to remember.',
+          'Proizvodi, usluge, pretplate i druge stvari koje želiš da Still pamti.'
         )
-      ],
-
-      protection: [
-        t('PROTECTION CENTER', 'CENTAR ZAŠTITE'),
-        t('Know what protects it.', 'Znaj što ga štiti.'),
-        t(
-          'Warranty, retailer sources and protection information stay together.',
-          'Jamstvo, izvori trgovca i informacije o zaštiti ostaju zajedno.'
-        )
-      ],
-
-      timeline: [
-        'TIMELINE',
-        t('Everything has a history.', 'Sve ima svoju povijest.'),
-        t(
-          'Purchases, warranty dates, renewals and maintenance become one ownership timeline.',
-          'Kupnje, datumi jamstva, obnove i održavanje postaju jedna vremenska crta vlasništva.'
-        )
-      ],
-
-      services: [
-        'SERVICES',
-        t('Keep it working.', 'Neka i dalje radi.'),
-        t(
-          'Repairs, maintenance and service history belong here.',
-          'Popravci, održavanje i servisna povijest pripadaju ovdje.'
-        )
-      ]
-    };
-
-    const [kicker, title, description] = copy[id];
-
-    return `
-      ${pageHead(kicker, title, description)}
+      )}
 
       <section class="bos132-section">
 
         <div class="bos132-section-head">
-          <h3>${t(
-            'Existing Still module',
-            'Postojeći Still modul'
-          )}</h3>
-
-          <button
-            class="bos132-primary"
-            data-bos132-existing="${id}"
-          >
-            ${t('Open module', 'Otvori modul')}
-          </button>
+          <h3>
+            ${data.length}
+            ${t('ownership records', 'zapisa vlasništva')}
+          </h3>
         </div>
 
-        <p>
-          ${t(
-            'The existing production functionality is preserved and now has one permanent place in BuyerOS.',
-            'Postojeća produkcijska funkcionalnost je sačuvana i sada ima jedno stalno mjesto u BuyerOS-u.'
-          )}
-        </p>
+        ${
+          data.length
+            ? `<div class="bos132-list">
+                ${data.map(thingCard).join('')}
+              </div>`
+            : `<div class="bos132-empty">
+                ${t(
+                  'Nothing here yet. Add something you already own.',
+                  'Ovdje još nema ničega. Dodaj nešto što već posjeduješ.'
+                )}
+              </div>`
+        }
 
       </section>
     `;
   }
 
-  function routeExisting(id) {
-    const selectors = {
-      things: '#ownershipHubV83',
-      protection: '#protectionCenterV1',
-      timeline: '#timelineV83',
-      services: '#lifecyclePlatformV95'
-    };
+  function protectionPage() {
+    const data = things();
 
-    const target = $(selectors[id]);
-
-    target?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+    const active = data.filter(item => {
+      const days = daysUntil(item.warrantyUntil);
+      return days !== null && days >= 0;
     });
+
+    const expiring = active.filter(item => {
+      const days = daysUntil(item.warrantyUntil);
+      return days !== null && days <= 60;
+    });
+
+    const returns = data.filter(item => {
+      const days = daysUntil(item.returnBy);
+      return days !== null && days >= 0;
+    });
+
+    const protectedItems = data.filter(
+      item => item.warrantyUntil || item.returnBy
+    );
+
+    return `
+      ${pageHead(
+        t('PROTECTION CENTER', 'CENTAR ZAŠTITE'),
+        t('Know what protects it.', 'Znaj što ga štiti.'),
+        t(
+          'Warranty dates and return windows are visible directly inside BuyerOS.',
+          'Datumi jamstva i rokovi povrata vidljivi su izravno unutar BuyerOS-a.'
+        )
+      )}
+
+      <div class="bos132-grid">
+
+        <article class="bos132-card">
+          <span>${t('ACTIVE WARRANTIES', 'AKTIVNA JAMSTVA')}</span>
+          <strong>${active.length}</strong>
+          <p>${t(
+            'Recorded warranties still active.',
+            'Evidentirana jamstva koja još vrijede.'
+          )}</p>
+        </article>
+
+        <article class="bos132-card">
+          <span>${t('EXPIRING SOON', 'USKORO ISTJEČE')}</span>
+          <strong>${expiring.length}</strong>
+          <p>${t(
+            'Within the next 60 days.',
+            'Unutar sljedećih 60 dana.'
+          )}</p>
+        </article>
+
+        <article class="bos132-card">
+          <span>${t('RETURN WINDOWS', 'ROKOVI POVRATA')}</span>
+          <strong>${returns.length}</strong>
+          <p>${t(
+            'Recorded return deadlines still open.',
+            'Evidentirani rokovi povrata koji još traju.'
+          )}</p>
+        </article>
+
+        <article class="bos132-card">
+          <span>${t('MISSING WARRANTY DATE', 'NEDOSTAJE DATUM JAMSTVA')}</span>
+          <strong>${data.filter(item => !item.warrantyUntil).length}</strong>
+          <p>${t(
+            'Ownership records without a warranty date.',
+            'Zapisi vlasništva bez datuma jamstva.'
+          )}</p>
+        </article>
+
+      </div>
+
+      <section class="bos132-section">
+
+        <div class="bos132-section-head">
+          <h3>${t('Protection overview', 'Pregled zaštite')}</h3>
+        </div>
+
+        ${
+          protectedItems.length
+            ? `<div class="bos132-list">
+                ${protectedItems.map(item => {
+                  const warrantyDays = daysUntil(item.warrantyUntil);
+                  const returnDays = daysUntil(item.returnBy);
+
+                  return `
+                    <div class="bos132-row">
+
+                      <span class="bos132-row-icon">◉</span>
+
+                      <div>
+                        <b>${esc(
+                          item.title ||
+                          t('Untitled thing', 'Stvar bez naziva')
+                        )}</b>
+
+                        <small>
+                          ${
+                            item.warrantyUntil
+                              ? `${t('Warranty until', 'Jamstvo do')} ${esc(dateText(item.warrantyUntil))}`
+                              : t(
+                                  'Warranty date not recorded',
+                                  'Datum jamstva nije evidentiran'
+                                )
+                          }
+                        </small>
+
+                        <div style="
+                          display:flex;
+                          gap:6px;
+                          flex-wrap:wrap;
+                          margin-top:7px
+                        ">
+
+                          ${
+                            warrantyDays !== null && warrantyDays >= 0
+                              ? `<span class="bos132-mini-pill">
+                                  ${warrantyDays} ${t('days', 'dana')}
+                                 </span>`
+                              : ''
+                          }
+
+                          ${
+                            returnDays !== null && returnDays >= 0
+                              ? `<span class="bos132-mini-pill">
+                                  ${t('Return', 'Povrat')} ${returnDays}d
+                                 </span>`
+                              : ''
+                          }
+
+                        </div>
+                      </div>
+
+                      <span>›</span>
+
+                    </div>
+                  `;
+                }).join('')}
+              </div>`
+            : `<div class="bos132-empty">
+                ${t(
+                  'No protection dates are recorded yet.',
+                  'Još nema evidentiranih datuma zaštite.'
+                )}
+              </div>`
+        }
+
+      </section>
+    `;
+  }
+
+  function timelineEvents() {
+    const events = [];
+
+    things().forEach(item => {
+      const title =
+        item.title ||
+        t('Untitled thing', 'Stvar bez naziva');
+
+      if (item.createdAt) {
+        events.push({
+          date: item.createdAt,
+          title: t('Added to Still', 'Dodano u Still'),
+          detail: title
+        });
+      }
+
+      if (item.purchaseDate) {
+        events.push({
+          date: item.purchaseDate,
+          title: t('Purchased', 'Kupljeno'),
+          detail: title
+        });
+      }
+
+      if (item.returnBy) {
+        events.push({
+          date: item.returnBy,
+          title: t('Return deadline', 'Rok povrata'),
+          detail: title
+        });
+      }
+
+      if (item.warrantyUntil) {
+        events.push({
+          date: item.warrantyUntil,
+          title: t('Warranty ends', 'Jamstvo završava'),
+          detail: title
+        });
+      }
+
+      if (item.renewalAt) {
+        events.push({
+          date: item.renewalAt,
+          title: t('Renewal', 'Obnova'),
+          detail: title
+        });
+      }
+    });
+
+    documents().forEach(doc => {
+      if (!doc.date) return;
+
+      events.push({
+        date: doc.date,
+        title: t('Document added', 'Dodan dokument'),
+        detail: doc.title
+      });
+    });
+
+    return events
+      .filter(event => event.date)
+      .sort(
+        (a, b) =>
+          String(b.date).localeCompare(String(a.date))
+      );
+  }
+
+  function timelinePage() {
+    const events = timelineEvents();
+
+    return `
+      ${pageHead(
+        'TIMELINE',
+        t('Everything has a history.', 'Sve ima svoju povijest.'),
+        t(
+          'Purchases, warranty dates, return deadlines and documents form one ownership timeline.',
+          'Kupnje, datumi jamstva, rokovi povrata i dokumenti čine jednu vremensku crtu vlasništva.'
+        )
+      )}
+
+      <section class="bos132-section">
+
+        ${
+          events.length
+            ? `<div class="bos132-timeline-list">
+                ${events.map(event => `
+                  <div class="bos132-timeline-event">
+
+                    <div class="bos132-timeline-date">
+                      ${esc(dateText(event.date))}
+                    </div>
+
+                    <div class="bos132-timeline-track">
+                      <span></span>
+                    </div>
+
+                    <div>
+                      <b>${esc(event.title)}</b>
+                      <small>${esc(event.detail)}</small>
+                    </div>
+
+                  </div>
+                `).join('')}
+              </div>`
+            : `<div class="bos132-empty">
+                ${t(
+                  'Your timeline will appear as you add things and documents.',
+                  'Tvoja vremenska crta pojavit će se kako dodaješ stvari i dokumente.'
+                )}
+              </div>`
+        }
+
+      </section>
+    `;
+  }
+
+  function servicesPage() {
+    const items = things();
+
+    const serviceLike = items.filter(item =>
+      ['service', 'subscription', 'rental', 'booking']
+        .includes(String(item.kind || '').toLowerCase())
+    );
+
+    return `
+      ${pageHead(
+        'SERVICES',
+        t('Keep it working.', 'Neka i dalje radi.'),
+        t(
+          'Services, subscriptions, rentals and bookings connected to your ownership records.',
+          'Usluge, pretplate, najmovi i rezervacije povezani s tvojim zapisima vlasništva.'
+        )
+      )}
+
+      <section class="bos132-section">
+
+        <div class="bos132-section-head">
+          <h3>
+            ${serviceLike.length}
+            ${t('service records', 'servisnih zapisa')}
+          </h3>
+        </div>
+
+        ${
+          serviceLike.length
+            ? `<div class="bos132-list">
+                ${serviceLike.map(item => `
+                  <div class="bos132-row">
+
+                    <span class="bos132-row-icon">⌁</span>
+
+                    <div>
+                      <b>${esc(
+                        item.title ||
+                        t('Untitled service', 'Usluga bez naziva')
+                      )}</b>
+
+                      <small>
+                        ${esc(
+                          item.business ||
+                          item.kind ||
+                          ''
+                        )}
+                      </small>
+                    </div>
+
+                    <span>›</span>
+
+                  </div>
+                `).join('')}
+              </div>`
+            : `<div class="bos132-empty">
+                ${t(
+                  'No services or subscriptions are stored yet.',
+                  'Još nema spremljenih usluga ili pretplata.'
+                )}
+              </div>`
+        }
+
+      </section>
+    `;
   }
 
   function documentPage() {
@@ -1507,13 +1927,6 @@
       );
     });
 
-    $$('[data-bos132-existing]').forEach(button => {
-      button.addEventListener(
-        'click',
-        () => routeExisting(button.dataset.bos132Existing)
-      );
-    });
-
     $$('[data-bos132-add]').forEach(button => {
       button.addEventListener(
         'click',
@@ -1616,11 +2029,14 @@
 
     if (current === 'home') {
       content.innerHTML = renderHome();
-    } else if (
-      ['things','protection','timeline','services']
-        .includes(current)
-    ) {
-      content.innerHTML = existingPage(current);
+    } else if (current === 'things') {
+      content.innerHTML = thingsPage();
+    } else if (current === 'protection') {
+      content.innerHTML = protectionPage();
+    } else if (current === 'timeline') {
+      content.innerHTML = timelinePage();
+    } else if (current === 'services') {
+      content.innerHTML = servicesPage();
     } else if (current === 'documents') {
       content.innerHTML = documentPage();
     } else if (current === 'household') {
