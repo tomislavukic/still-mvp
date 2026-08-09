@@ -50,16 +50,12 @@ const companyScripts = [
   'company-commerce-v92.js',
   'company-lifecycle-v95.js',
   'company-operations-v96.js',
-  'company-preview-v97.js',
   'company-control-center-v101.js',
-  'company-demo-v102.js',
-  'company-progressive-access-v108.js',
-  'company-unified-workspace-v109.js',
   'company-inventory-live-v110.js',
-  'company-available-tools-v105.js',
   'electronic-shelf-labels-v106.js',
   'company-intelligence-v107.js',
   'still-business-v114.js',
+  'companyos-v120.js',
 ];
 
 const companyStyles = [
@@ -67,12 +63,20 @@ const companyStyles = [
   'company-commerce-v92.css',
   'company-lifecycle-v95.css',
   'company-operations-v96.css',
-  'company-preview-v97.css',
   'company-control-center-v101.css',
-  'company-demo-v102.css',
-  'company-available-tools-v105.css',
   'electronic-shelf-labels-v106.css',
   'still-v114.css',
+  'companyos-v120.css',
+];
+
+const retiredDemoAssets = [
+  'company-preview-v97.js',
+  'company-demo-v102.js',
+  'company-unified-workspace-v109.js',
+  'company-progressive-access-v108.js',
+  'company-capabilities-v1.js',
+  'company-preview-v97.css',
+  'company-demo-v102.css',
 ];
 
 const staticAssets = ['og-v85.png'];
@@ -149,6 +153,12 @@ for (const file of companyStyles) {
   if (bundle) assertVersionedReference(companyHtml, 'public/company.html', file, bundle);
 }
 
+for (const file of retiredDemoAssets) {
+  if (fs.existsSync(path.join(publicDirectory, file))) fail(`retired demo asset is still shipped: ${file}`);
+  if ((manifest.files || []).includes(file)) fail(`retired demo asset remains in production manifest: ${file}`);
+  if ((manifest.companyScripts || []).includes(file) || (manifest.companyFeatureScripts || []).includes(file)) fail(`retired demo runtime remains active: ${file}`);
+}
+
 for (const file of staticAssets) {
   assertFileExists(`public/${file}`);
   assertManifestIncludes(manifest.files, file, 'production file manifest');
@@ -195,11 +205,17 @@ if ((manifest.runtime || []).includes('buyer-auth-routes-v79.js')) fail('obsolet
 if (!indexHtml.includes('still-public-v114.js')) fail('consumer-first public experience is not shipped');
 if (!indexHtml.includes('still-v114.css')) fail('consumer-first visual system is not shipped');
 if (!companyHtml.includes('still-business-v114.js')) fail('Still for Business public experience is not shipped');
+if (!companyHtml.includes('companyos-v120.css')) fail('live CompanyOS visual system is not shipped');
 if (!pricingHtml.includes('pricing-v114.js') || !pricingHtml.includes('still-v114.css')) fail('pricing hierarchy is not shipped');
 const consumerRuntime = read('public/still-public-v114.js');
 if (!consumerRuntime.includes('Everything you own.') || !consumerRuntime.includes('One trusted place.')) fail('consumer proposition is missing from production runtime');
 if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("openTool('ownership')")) fail('consumer CTAs are not connected to the real ownership workflow');
 if (!consumerRuntime.includes("t('Planned', 'Planirano')")) fail('unavailable consumer capabilities are not truthfully labelled');
+const companyRuntime = read('public/companyos-v120.js');
+if (!companyRuntime.includes('/api/v1/companyos/bootstrap')) fail('CompanyOS does not load authenticated production records');
+if (!companyRuntime.includes('/api/v1/companyos/memory')) fail('CompanyOS authorized memory is missing');
+if (!companyRuntime.includes('idempotency-key')) fail('CompanyOS mutations are not issued with idempotency keys');
+if (companyRuntime.includes('sessionStorage') || companyRuntime.includes('localStorage')) fail('CompanyOS production shell contains browser-only simulated persistence');
 
 if (failures.length) {
   console.error(`Production bundle validation FAILED\n- ${failures.join('\n- ')}`);
