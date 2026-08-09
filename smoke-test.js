@@ -71,6 +71,14 @@ if(!fail.length){
  if(!companyOS.includes('cos120ToolParking')||!companyOS.includes('parking.append(legacyNode)'))fail.push('CompanyOS tool switching does not preserve mounted production modules');
  if(!companyOS.includes('data-cos-memory-query')||!companyOS.includes('/api/v1/companyos/memory'))fail.push('CompanyOS authorized assistant is not integrated');
  if(!read('companyos-v120.css').includes('.cos120-assistant-prompts button{width:100%'))fail.push('CompanyOS assistant prompt actions collapse at desktop widths');
+ if(!companyOS.includes('function conversations()')||!companyOS.includes("item.type==='conversation'")||!companyOS.includes('data-cos-conversations'))fail.push('CompanyOS active conversations are not derived from persisted company records');
+ if(!companyOS.includes('function openConversationSearch()')||!companyOS.includes("openCreate(button.dataset.cosCreate)"))fail.push('CompanyOS conversation actions are not connected to real search and creation flows');
+ if(!companyOS.includes('function goToday()')||!companyOS.includes("[data-cos-dock=\"today\"]"))fail.push('CompanyOS Today dock action is not connected');
+ if(companyOS.includes('cos120-spark'))fail.push('Company Pulse still renders a decorative trend without real trend data');
+ if(!companyOS.includes('cos120-healthbar')||!companyOS.includes('pulse.changedAt'))fail.push('Company Pulse does not expose its real health calculation and freshness');
+ const companyOSCss=read('companyos-v120.css');
+ if(!companyOSCss.includes('.cos120-dock{left:18px;right:18px')||!companyOSCss.includes('.cos120-conversations'))fail.push('CompanyOS responsive dock or conversation rail styling is missing');
+ if(!companyOSWorker.includes("const buyerFacing=company.organization_status==='verified'")||!companyOSWorker.includes('cases:buyerFacing?Number(cases?.open||0):null')||!companyOSWorker.includes('buyerData:buyerFacing'))fail.push('CompanyOS bootstrap does not preserve the buyer-case verification boundary');
  const companyToolSource=companyOS.match(/const tools=\[([\s\S]*?)\n  \];/)?.[1]||'';
  const companyToolIds=[...companyToolSource.matchAll(/\['([A-Za-z][A-Za-z0-9]*)',t\(/g)].map(match=>match[1]);
  const companyToolGroupSource=companyOS.match(/const toolGroups=\[([\s\S]*?)\n  \];/)?.[1]||'';
