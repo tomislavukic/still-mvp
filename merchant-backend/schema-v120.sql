@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS companyos_relationships(id TEXT PRIMARY KEY,public_id
 CREATE TABLE IF NOT EXISTS companyos_events(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,object_public_id TEXT NOT NULL,event_type TEXT NOT NULL,title TEXT NOT NULL,details_json TEXT,occurred_at TEXT NOT NULL,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS companyos_documents(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,object_public_id TEXT NOT NULL,title TEXT NOT NULL,document_type TEXT NOT NULL,mime_type TEXT,external_url TEXT,reference TEXT,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS companyos_work_objects(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,title TEXT NOT NULL,subtitle TEXT,status TEXT NOT NULL DEFAULT 'active',reference TEXT,data_json TEXT,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS platform_audit_events(id TEXT PRIMARY KEY,request_id TEXT NOT NULL,organization_id TEXT,member_id TEXT,action TEXT NOT NULL,method TEXT NOT NULL,path TEXT NOT NULL,status INTEGER NOT NULL,duration_ms INTEGER NOT NULL,details_json TEXT,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS platform_audit_events(id TEXT PRIMARY KEY,request_id TEXT NOT NULL,actor_role TEXT NOT NULL,action TEXT NOT NULL,method TEXT NOT NULL,path TEXT NOT NULL,status INTEGER NOT NULL,outcome TEXT NOT NULL,ip_hash TEXT,user_agent TEXT,metadata_json TEXT NOT NULL DEFAULT '{}',created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS companyos_rate_limits(bucket TEXT PRIMARY KEY,count INTEGER NOT NULL,expires_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_companyos_situations_org ON companyos_situations(organization_id,status,updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_companyos_links_situation ON companyos_situation_links(situation_id,created_at);
@@ -14,5 +14,5 @@ CREATE INDEX IF NOT EXISTS idx_companyos_relationships_to ON companyos_relations
 CREATE INDEX IF NOT EXISTS idx_companyos_events_object ON companyos_events(organization_id,object_type,object_public_id,occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_companyos_documents_object ON companyos_documents(organization_id,object_type,object_public_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_companyos_work_objects_org ON companyos_work_objects(organization_id,object_type,updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_platform_audit_org ON platform_audit_events(organization_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_platform_audit_created ON platform_audit_events(created_at DESC);
 PRAGMA optimize;

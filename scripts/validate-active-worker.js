@@ -18,6 +18,8 @@ const requiredCapabilities = [
   'sameOrigin(request)',
   'platformAudit',
   'rateLimit',
+  "json_extract(metadata_json,'$.organizationId')",
+  "outcome=status>=500?'error':status>=400?'denied':'success'",
 ];
 
 for (const capability of requiredCapabilities) {
