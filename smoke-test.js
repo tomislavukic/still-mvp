@@ -62,6 +62,9 @@ if(!fail.length){
  if(!companyOSWorker.includes("json_extract(metadata_json,'$.organizationId')")||!companyOSWorker.includes('actor_role'))fail.push('CompanyOS request audit is not compatible with the existing production audit schema');
  if(companyOS.includes('sessionStorage')||companyOS.includes('localStorage'))fail.push('live CompanyOS shell uses browser-only simulated persistence');
  if(!companyOS.includes("if(window.__stillOrganization)mount({organization:window.__stillOrganization})"))fail.push('CompanyOS does not mount when the authenticated loader finishes before the shell runtime');
+ ['cos120-dashboard','cos120-attention','cos120-record-rail','cos120-record-main','cos120-side','cos120-object-rail','cos120-dock'].forEach(region=>{if(!companyOS.includes(region))fail.push(`CompanyOS cockpit is missing structural region ${region}`)});
+ if(!companyOS.includes('state.notifications.slice(0,5)'))fail.push('CompanyOS activity rail is not derived from live notification data');
+ if(!companyOS.includes("detail?.events||[]"))fail.push('CompanyOS object timeline is not derived from attributable events');
  if(!companyOS.includes('authorized-deterministic-retrieval')&&!companyOSWorker.includes('authorized-deterministic-retrieval'))fail.push('Company Memory does not disclose deterministic authorized retrieval');
  if(!read('company-authenticated-loader-v82.js').includes('company-passport-studio-v83.js'))fail.push('company passport studio is missing from authenticated workspace');
  if(!worker.includes("'/api/v1/ownership/connect'"))fail.push('buyer-company passport connection route is missing');

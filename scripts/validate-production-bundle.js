@@ -216,6 +216,10 @@ if (!companyRuntime.includes('/api/v1/companyos/bootstrap')) fail('CompanyOS doe
 if (!companyRuntime.includes('/api/v1/companyos/memory')) fail('CompanyOS authorized memory is missing');
 if (!companyRuntime.includes('idempotency-key')) fail('CompanyOS mutations are not issued with idempotency keys');
 if (companyRuntime.includes('sessionStorage') || companyRuntime.includes('localStorage')) fail('CompanyOS production shell contains browser-only simulated persistence');
+for (const region of ['cos120-dashboard', 'cos120-record-rail', 'cos120-record-main', 'cos120-side', 'cos120-object-rail', 'cos120-dock']) {
+  if (!companyRuntime.includes(region)) fail(`CompanyOS production cockpit is missing ${region}`);
+}
+if (!companyRuntime.includes('state.notifications.slice(0,5)')) fail('CompanyOS production activity is not sourced from authenticated notifications');
 
 if (failures.length) {
   console.error(`Production bundle validation FAILED\n- ${failures.join('\n- ')}`);
