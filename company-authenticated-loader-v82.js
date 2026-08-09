@@ -16,6 +16,7 @@
     'company-rewards-v75.js',
     'company-control-center-v101.js',
     'company-inventory-live-v110.js',
+    'company-intelligence-v128.js',
     'companyos-v120.js'
   ];
   let loading;

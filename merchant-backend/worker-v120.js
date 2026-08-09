@@ -12,10 +12,18 @@ const publicId=prefix=>`${prefix}-${crypto.randomUUID().replaceAll('-','').slice
 const clean=(value,max=1000)=>typeof value==='string'?value.trim().slice(0,max):'';
 const safeJson=(value,fallback={})=>{try{return JSON.parse(value||'')}catch{return fallback}};
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{...JSON_HEADERS,...headers}});
+const BUSINESS_TYPES=new Set(['retail','services','mixed','manufacturer','rental','subscription','professional','other']);
+const MAX_DOCUMENT_BYTES=10*1024*1024;
+const MAX_EXTRACTED_CHARS=150000;
 let schemaReady;
 
 async function sha(value){
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+}
+
+async function shaBytes(value){
+  const digest=await crypto.subtle.digest('SHA-256',value);
   return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
 }
 
@@ -52,6 +60,8 @@ async function ensureSchema(env){
       `CREATE TABLE IF NOT EXISTS companyos_relationships(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,from_type TEXT NOT NULL,from_public_id TEXT NOT NULL,to_type TEXT NOT NULL,to_public_id TEXT NOT NULL,relationship TEXT NOT NULL,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,UNIQUE(organization_id,from_type,from_public_id,to_type,to_public_id,relationship))`,
       `CREATE TABLE IF NOT EXISTS companyos_events(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,object_public_id TEXT NOT NULL,event_type TEXT NOT NULL,title TEXT NOT NULL,details_json TEXT,occurred_at TEXT NOT NULL,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL)`,
       `CREATE TABLE IF NOT EXISTS companyos_documents(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,object_public_id TEXT NOT NULL,title TEXT NOT NULL,document_type TEXT NOT NULL,mime_type TEXT,external_url TEXT,reference TEXT,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`,
+      `CREATE TABLE IF NOT EXISTS organization_setup_profiles(organization_id TEXT PRIMARY KEY,business_type TEXT NOT NULL DEFAULT 'mixed',team_size TEXT,offers_products INTEGER NOT NULL DEFAULT 0,offers_services INTEGER NOT NULL DEFAULT 0,fulfillment_modes TEXT,operating_region TEXT,preferred_currency TEXT,launch_goal TEXT,internal_notes TEXT,updated_at TEXT NOT NULL)`,
+      `CREATE TABLE IF NOT EXISTS companyos_knowledge_documents(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,title TEXT NOT NULL,document_type TEXT NOT NULL,source_name TEXT NOT NULL,mime_type TEXT NOT NULL,file_hash TEXT NOT NULL,extraction_format TEXT NOT NULL,extracted_text TEXT NOT NULL,tokens INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'ready',mapping_json TEXT NOT NULL DEFAULT '{}',object_type TEXT,object_public_id TEXT,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(organization_id,file_hash))`,
       `CREATE TABLE IF NOT EXISTS companyos_work_objects(id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,organization_id TEXT NOT NULL,object_type TEXT NOT NULL,title TEXT NOT NULL,subtitle TEXT,status TEXT NOT NULL DEFAULT 'active',reference TEXT,data_json TEXT,created_by_member_id TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`,
       `CREATE TABLE IF NOT EXISTS platform_audit_events(id TEXT PRIMARY KEY,request_id TEXT NOT NULL,actor_role TEXT NOT NULL,action TEXT NOT NULL,method TEXT NOT NULL,path TEXT NOT NULL,status INTEGER NOT NULL,outcome TEXT NOT NULL,ip_hash TEXT,user_agent TEXT,metadata_json TEXT NOT NULL DEFAULT '{}',created_at TEXT NOT NULL)`,
       `CREATE TABLE IF NOT EXISTS companyos_rate_limits(bucket TEXT PRIMARY KEY,count INTEGER NOT NULL,expires_at TEXT NOT NULL)`,
@@ -61,6 +71,8 @@ async function ensureSchema(env){
       `CREATE INDEX IF NOT EXISTS idx_companyos_relationships_to ON companyos_relationships(organization_id,to_type,to_public_id)`,
       `CREATE INDEX IF NOT EXISTS idx_companyos_events_object ON companyos_events(organization_id,object_type,object_public_id,occurred_at DESC)`,
       `CREATE INDEX IF NOT EXISTS idx_companyos_documents_object ON companyos_documents(organization_id,object_type,object_public_id,created_at DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_companyos_knowledge_org ON companyos_knowledge_documents(organization_id,created_at DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_companyos_knowledge_object ON companyos_knowledge_documents(organization_id,object_type,object_public_id)`,
       `CREATE INDEX IF NOT EXISTS idx_companyos_work_objects_org ON companyos_work_objects(organization_id,object_type,updated_at DESC)`,
       `CREATE INDEX IF NOT EXISTS idx_platform_audit_created ON platform_audit_events(created_at DESC)`,
       `DELETE FROM companyos_rate_limits WHERE expires_at<datetime('now')`,
@@ -219,12 +231,13 @@ async function companyPulse(env,company,situations,objects){
 }
 
 async function bootstrap(env,company){
-  const [objects,situations,members,notifications,verification]=await Promise.all([
+  const [objects,situations,members,notifications,verification,businessSetup]=await Promise.all([
     livingObjects(env,company,35),
     derivedSituations(env,company),
     safeAll(env,`SELECT id,email,role,status FROM merchant_members WHERE organization_id=? AND status='active' ORDER BY email`,[company.organization_id]),
     safeAll(env,`SELECT id,title,body,severity,created_at,read_at FROM notifications WHERE scope_type='organization' AND scope_id=? ORDER BY created_at DESC LIMIT 20`,[company.organization_id]),
-    safeFirst(env,`SELECT status,review_note,updated_at FROM merchant_verification_requests WHERE organization_id=?`,[company.organization_id])
+    safeFirst(env,`SELECT status,review_note,updated_at FROM merchant_verification_requests WHERE organization_id=?`,[company.organization_id]),
+    safeFirst(env,`SELECT business_type,team_size,offers_products,offers_services,fulfillment_modes,operating_region,preferred_currency,launch_goal,updated_at FROM organization_setup_profiles WHERE organization_id=?`,[company.organization_id])
   ]);
   const pulse=await companyPulse(env,company,situations,objects);
   return json({
@@ -232,6 +245,7 @@ async function bootstrap(env,company){
     organization:{id:company.organization_id,name:company.organization_name,slug:company.organization_slug,status:company.organization_status},
     member:{id:company.member_id,email:company.email,role:company.role},
     verification:verification||{status:company.organization_status==='verified'?'approved':'draft'},
+    businessSetup:businessSetup?{...businessSetup,offers_products:Boolean(businessSetup.offers_products),offers_services:Boolean(businessSetup.offers_services),complete:BUSINESS_TYPES.has(businessSetup.business_type)}:{business_type:null,complete:false},
     permissions:{write:canWrite(company),manage:canManage(company),buyerFacing:company.organization_status==='verified',financial:company.organization_status==='verified'&&['owner','admin','manager'].includes(company.role)},
     situations:situations.slice(0,60),
     livingObjects:objects.sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).slice(0,160),
@@ -329,6 +343,81 @@ async function createDocument(request,env,company){
   return json({ok:true,publicId:pid},201);
 }
 
+function documentMapping(text,filename){
+  const source=`${filename}\n${text}`.slice(0,70000),lower=source.toLocaleLowerCase();
+  const rules=[
+    {category:'invoice',tool:'orders',terms:['invoice','račun','faktura','total','ukupno']},
+    {category:'warranty',tool:'warranty',terms:['warranty','jamstvo','garancija','warranty period']},
+    {category:'service',tool:'repairs',terms:['service report','servis','repair','popravak','maintenance']},
+    {category:'agreement',tool:'agreements',terms:['contract','agreement','ugovor','renewal','obnova']},
+    {category:'inventory',tool:'inventory',terms:['stock','inventory','zaliha','sku','warehouse']},
+    {category:'supplier',tool:'supply',terms:['purchase order','supplier','dobavljač','narudžbenica']},
+    {category:'identity',tool:'verification',terms:['company register','sudski registar','vat id','oib','registration number']}
+  ];
+  let best={category:'general',tool:'dailyOperations',score:0};
+  for(const rule of rules){const score=rule.terms.reduce((sum,term)=>sum+(lower.includes(term)?1:0),0);if(score>best.score)best={category:rule.category,tool:rule.tool,score}}
+  const fields={};
+  const reference=source.match(/(?:invoice|račun|faktura|order|narudžba|contract|ugovor|reference|broj)\s*(?:no\.?|number|br\.?|#|:)\s*([A-Z0-9][A-Z0-9/_-]{2,40})/i);
+  const dateMatch=source.match(/\b(20\d{2}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])|(?:0?[1-9]|[12]\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]20\d{2})\b/);
+  const amount=source.match(/(?:total|ukupno|amount|iznos)\s*[:\s]?\s*(?:EUR|€|USD|GBP)?\s*([0-9]{1,9}(?:[.,][0-9]{2})?)\s*(EUR|€|USD|GBP)?/i);
+  const expiry=source.match(/(?:expires?|expiry|valid until|vrijedi do|istječe|obnova)\s*[:\s]?\s*(20\d{2}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])|(?:0?[1-9]|[12]\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]20\d{2})/i);
+  if(reference)fields.reference=reference[1];
+  if(dateMatch)fields.date=dateMatch[1];
+  if(amount){fields.amount=amount[1].replace(',','.');fields.currency=(amount[2]||(/€|EUR/i.test(amount[0])?'EUR':'')).replace('€','EUR')}
+  if(expiry)fields.expiryDate=expiry[1];
+  return{category:best.category,suggestedTool:best.tool,confidence:best.score>=3?'high':best.score>=1?'medium':'low',fields,evidence:'deterministic-document-classification-v1'};
+}
+
+function knowledgeRow(row,full=false){
+  const result={publicId:row.public_id,title:row.title,documentType:row.document_type,sourceName:row.source_name,mimeType:row.mime_type,format:row.extraction_format,tokens:Number(row.tokens||0),status:row.status,mapping:safeJson(row.mapping_json),objectType:row.object_type,objectId:row.object_public_id,createdAt:row.created_at,updatedAt:row.updated_at};
+  if(full)result.extractedText=row.extracted_text;
+  else result.excerpt=String(row.extracted_text||'').replace(/\s+/g,' ').slice(0,280);
+  return result;
+}
+
+async function listKnowledge(env,company){
+  const rows=await safeAll(env,`SELECT public_id,title,document_type,source_name,mime_type,extraction_format,extracted_text,tokens,status,mapping_json,object_type,object_public_id,created_at,updated_at FROM companyos_knowledge_documents WHERE organization_id=? AND status<>'deleted' ORDER BY created_at DESC LIMIT 100`,[company.organization_id]);
+  return json({documents:rows.map(row=>knowledgeRow(row)),storage:'extracted-text-only',binaryRetained:false});
+}
+
+async function knowledgeDetail(env,company,id){
+  const row=await safeFirst(env,`SELECT * FROM companyos_knowledge_documents WHERE organization_id=? AND public_id=? AND status<>'deleted'`,[company.organization_id,id]);
+  return row?json({document:knowledgeRow(row,true),storage:'extracted-text-only',binaryRetained:false}):json({error:'not_found'},404);
+}
+
+async function importKnowledge(request,env,company){
+  if(!canWrite(company))return json({error:'forbidden'},403);
+  if(!env.AI?.toMarkdown)return json({error:'document_ai_not_configured'},503);
+  const form=await request.formData().catch(()=>null),file=form?.get('file');
+  if(!form||!file||typeof file.arrayBuffer!=='function')return json({error:'file_required'},422);
+  if(form.get('consent')!=='true')return json({error:'processing_consent_required'},422);
+  if(file.size<1||file.size>MAX_DOCUMENT_BYTES)return json({error:'file_size_not_supported',maxBytes:MAX_DOCUMENT_BYTES},413);
+  const daily=await safeFirst(env,`SELECT COUNT(*) count FROM companyos_knowledge_documents WHERE organization_id=? AND created_at>=datetime('now','-1 day')`,[company.organization_id]);
+  if(Number(daily?.count||0)>=30)return json({error:'daily_document_limit',limit:30},429,{'retry-after':'86400'});
+  const storage=await safeFirst(env,`SELECT COUNT(*) count,COALESCE(SUM(length(extracted_text)),0) chars FROM companyos_knowledge_documents WHERE organization_id=? AND status<>'deleted'`,[company.organization_id]);
+  if(Number(storage?.count||0)>=250||Number(storage?.chars||0)>=5000000)return json({error:'knowledge_storage_limit'},413);
+  const buffer=await file.arrayBuffer(),hash=await shaBytes(buffer);
+  const existing=await safeFirst(env,`SELECT * FROM companyos_knowledge_documents WHERE organization_id=? AND file_hash=? AND status<>'deleted'`,[company.organization_id,hash]);
+  if(existing)return json({ok:true,deduplicated:true,document:knowledgeRow(existing,true)});
+  const sourceName=clean(file.name||'document',180),mime=clean(file.type||'application/octet-stream',120);
+  let converted;
+  try{converted=await env.AI.toMarkdown({name:sourceName,blob:new Blob([buffer],{type:mime})},{conversionOptions:{output:{format:'text'},pdf:{metadata:false}}})}
+  catch(error){console.error('companyos_document_conversion_error',error);return json({error:'document_conversion_failed'},422)}
+  const result=Array.isArray(converted)?converted[0]:converted;
+  if(!result||result.error)return json({error:'document_conversion_failed',detail:clean(result?.error,200)||undefined},422);
+  const extracted=String(result.data||'').trim().slice(0,MAX_EXTRACTED_CHARS);
+  if(!extracted)return json({error:'no_text_extracted'},422);
+  const title=clean(form.get('title'),180)||sourceName.replace(/\.[^.]+$/,'');
+  const mapping=documentMapping(extracted,sourceName),pid=publicId('KDOC'),timestamp=now();
+  const objectType=clean(form.get('objectType'),40),objectId=clean(form.get('objectId'),120);
+  if((objectType||objectId)&&(!validObjectType(objectType)||!objectId))return json({error:'invalid_object_link'},422);
+  if(objectType){const objects=await livingObjects(env,company,150);if(!objects.some(item=>item.type===objectType&&item.id===objectId))return json({error:'object_not_found'},404)}
+  const statements=[env.DB.prepare(`INSERT INTO companyos_knowledge_documents(id,public_id,organization_id,title,document_type,source_name,mime_type,file_hash,extraction_format,extracted_text,tokens,status,mapping_json,object_type,object_public_id,created_by_member_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(uid('ckd_'),pid,company.organization_id,title,mapping.category,sourceName,mime,hash,clean(result.format,40)||'text',extracted,Number(result.tokens||0),'ready',JSON.stringify(mapping),objectType||null,objectId||null,company.member_id,timestamp,timestamp)];
+  if(objectType){const documentId=publicId('DOC');statements.push(env.DB.prepare(`INSERT INTO companyos_documents(id,public_id,organization_id,object_type,object_public_id,title,document_type,mime_type,external_url,reference,created_by_member_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,NULL,?,?,?,?)`).bind(uid('cod_'),documentId,company.organization_id,objectType,objectId,title,mapping.category,mime,`knowledge:${pid}`,company.member_id,timestamp,timestamp));statements.push(env.DB.prepare(`INSERT INTO companyos_events(id,public_id,organization_id,object_type,object_public_id,event_type,title,details_json,occurred_at,created_by_member_id,created_at) VALUES(?,?,?,?,?,'document.ocr_completed',?,?,?, ?,?)`).bind(uid('coe_'),publicId('EVT'),company.organization_id,objectType,objectId,title,JSON.stringify({knowledgeDocumentId:pid,documentType:mapping.category,detectedFields:Object.keys(mapping.fields)}),timestamp,company.member_id,timestamp))}
+  await env.DB.batch(statements);
+  return json({ok:true,deduplicated:false,document:{publicId:pid,title,documentType:mapping.category,sourceName,mimeType:mime,format:clean(result.format,40)||'text',tokens:Number(result.tokens||0),status:'ready',mapping,objectType:objectType||null,objectId:objectId||null,createdAt:timestamp,extractedText:extracted},storage:'extracted-text-only',binaryRetained:false},201);
+}
+
 async function createWorkObject(request,env,company){
   if(!canWrite(company))return json({error:'forbidden'},403);
   const body=await request.json().catch(()=>null);
@@ -370,14 +459,15 @@ async function memory(env,company,query){
   const q=clean(query,120);
   if(q.length<2)return json({query:q,results:[],answer:null});
   const term=`%${q}%`,org=company.organization_id;
-  const [ops,merchant,notes,knowledge,events]=await Promise.all([
+  const [ops,merchant,notes,knowledge,extractedKnowledge,events]=await Promise.all([
     safeAll(env,`SELECT action title,entity_type kind,entity_id reference,details_json body,created_at FROM ops_audit_log WHERE organization_id=? AND (action LIKE ? OR entity_type LIKE ? OR entity_id LIKE ? OR details_json LIKE ?) ORDER BY created_at DESC LIMIT 30`,[org,term,term,term,term]),
     safeAll(env,`SELECT event_type title,'case_event' kind,COALESCE(case_id,'') reference,payload_json body,created_at FROM merchant_audit_events WHERE organization_id=? AND (event_type LIKE ? OR payload_json LIKE ?) ORDER BY created_at DESC LIMIT 30`,[org,term,term]),
     safeAll(env,`SELECT 'Internal note' title,'note' kind,case_id reference,body,created_at FROM merchant_internal_notes WHERE organization_id=? AND body LIKE ? ORDER BY created_at DESC LIMIT 30`,[org,term]),
     safeAll(env,`SELECT title,'knowledge' kind,topic reference,body,updated_at created_at FROM merchant_knowledge WHERE organization_id=? AND active=1 AND (title LIKE ? OR topic LIKE ? OR body LIKE ?) ORDER BY updated_at DESC LIMIT 30`,[org,term,term,term]),
+    safeAll(env,`SELECT title,'document_knowledge' kind,public_id reference,extracted_text body,created_at FROM companyos_knowledge_documents WHERE organization_id=? AND status<>'deleted' AND (title LIKE ? OR source_name LIKE ? OR extracted_text LIKE ? OR mapping_json LIKE ?) ORDER BY created_at DESC LIMIT 30`,[org,term,term,term,term]),
     safeAll(env,`SELECT title,event_type kind,object_public_id reference,details_json body,occurred_at created_at FROM companyos_events WHERE organization_id=? AND (title LIKE ? OR event_type LIKE ? OR object_public_id LIKE ? OR details_json LIKE ?) ORDER BY occurred_at DESC LIMIT 30`,[org,term,term,term,term])
   ]);
-  const results=[...ops,...merchant,...notes,...knowledge,...events].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).slice(0,60).map(row=>({...row,body:typeof row.body==='string'&&row.body.startsWith('{')?safeJson(row.body):row.body}));
+  const results=[...ops,...merchant,...notes,...knowledge,...extractedKnowledge,...events].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).slice(0,60).map(row=>({...row,body:typeof row.body==='string'&&row.body.startsWith('{')?safeJson(row.body):row.body}));
   return json({query:q,results,answer:results.length?`Found ${results.length} authorized company-memory records related to “${q}”.`:null,method:'authorized-deterministic-retrieval',generatedAt:now()});
 }
 
@@ -398,6 +488,7 @@ function actionFor(request,path){
   if(path==='/api/v1/companyos/relationships')return 'companyos.relationship.create';
   if(path==='/api/v1/companyos/events')return 'companyos.event.create';
   if(path==='/api/v1/companyos/documents')return 'companyos.document.create';
+  if(path.startsWith('/api/v1/companyos/knowledge'))return request.method==='GET'?'companyos.knowledge.read':'companyos.knowledge.import';
   return 'companyos.unknown';
 }
 
@@ -423,13 +514,18 @@ async function route(request,env,company,path,url){
   if(path==='/api/v1/companyos/relationships'&&request.method==='POST')return createRelationship(request,env,company);
   if(path==='/api/v1/companyos/events'&&request.method==='POST')return createEvent(request,env,company);
   if(path==='/api/v1/companyos/documents'&&request.method==='POST')return createDocument(request,env,company);
+  if(path==='/api/v1/companyos/knowledge'&&request.method==='GET')return listKnowledge(env,company);
+  if(path==='/api/v1/companyos/knowledge/import'&&request.method==='POST')return importKnowledge(request,env,company);
+  match=path.match(/^\/api\/v1\/companyos\/knowledge\/([^/]+)$/);
+  if(match&&request.method==='GET')return knowledgeDetail(env,company,decodeURIComponent(match[1]));
   return json({error:'not_found'},404);
 }
 
 export default{
   async fetch(request,env,ctx){
     const url=new URL(request.url),path=url.pathname;
-    if(!path.startsWith('/api/v1/companyos/'))return app.fetch(request,env,ctx);
+    const verificationSubmission=path==='/api/v1/merchant/verification'&&request.method==='POST';
+    if(!path.startsWith('/api/v1/companyos/')&&!verificationSubmission)return app.fetch(request,env,ctx);
     if(!env.DB)return json({error:'database_not_configured'},503);
     const requestId=crypto.randomUUID(),started=Date.now();
     let company=null,response;
@@ -439,7 +535,10 @@ export default{
       if(!company)response=json({error:'unauthorized'},401);
       else if(!['GET','HEAD'].includes(request.method)&&!sameOrigin(request))response=json({error:'origin_not_allowed'},403);
       else if(!await rateLimit(env,company,request))response=json({error:'rate_limited'},429,{'retry-after':'60'});
-      else response=await route(request,env,company,path,url);
+      else if(verificationSubmission){
+        const setup=await safeFirst(env,`SELECT business_type FROM organization_setup_profiles WHERE organization_id=?`,[company.organization_id]);
+        response=BUSINESS_TYPES.has(setup?.business_type)?await app.fetch(request,env,ctx):json({error:'business_setup_required',required:['businessType']},422);
+      }else response=await route(request,env,company,path,url);
     }catch(error){
       console.error('companyos_error',error);
       response=json({error:'internal_error',requestId},500);
