@@ -236,6 +236,8 @@ if (productionToolIds.length < 33) fail(`CompanyOS production tool catalogue is 
 if (!companyRuntime.includes('openUnavailableTool') || !companyRuntime.includes('state.permissions.buyerFacing')) fail('CompanyOS verification-gated tool context is missing');
 const workbenchRuntime = read('public/company-workbench-v72.js');
 if (!workbenchRuntime.includes("document.readyState==='loading'") || !workbenchRuntime.includes('else shell()')) fail('Company workbench cannot mount from the authenticated loader');
+if (!workbenchRuntime.includes("$('#cos120ToolParking')") || !workbenchRuntime.includes('still:companyos-ready')) fail('Company workbench is not attached to the active CompanyOS shell');
+if (!companyRuntime.includes("new CustomEvent('still:companyos-ready'")) fail('CompanyOS production runtime does not release dependent production tools');
 
 if (failures.length) {
   console.error(`Production bundle validation FAILED\n- ${failures.join('\n- ')}`);
