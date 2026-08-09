@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "market": "IT",
+  "locale": "it-IT",
+  "labels": [
+    "Italian",
+    "talijanskih"
+  ],
+  "migratedFrom": "retailer-reliability.js",
+  "retailerCount": 5,
+  "retailers": [
+    {
+      "id": "mediaworld",
+      "name": "MediaWorld",
+      "market": "IT",
+      "locale": "it-IT",
+      "policyUrl": "https://www.mediaworld.it/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "unieuro",
+      "name": "Unieuro",
+      "market": "IT",
+      "locale": "it-IT",
+      "policyUrl": "https://www.unieuro.it/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "euronics",
+      "name": "Euronics Italia",
+      "market": "IT",
+      "locale": "it-IT",
+      "policyUrl": "https://www.euronics.it/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "decathlon",
+      "name": "Decathlon Italia",
+      "market": "IT",
+      "locale": "it-IT",
+      "policyUrl": "https://www.decathlon.it/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "ikea",
+      "name": "IKEA Italia",
+      "market": "IT",
+      "locale": "it-IT",
+      "policyUrl": "https://www.ikea.com/it/it/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    }
+  ]
+}

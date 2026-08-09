@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "market": "US",
+  "locale": "en-US",
+  "labels": [
+    "U.S.",
+    "američkih"
+  ],
+  "migratedFrom": "retailer-reliability.js",
+  "retailerCount": 6,
+  "retailers": [
+    {
+      "id": "apple",
+      "name": "Apple",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://www.apple.com/shop/help/returns_refund",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "bestbuy",
+      "name": "Best Buy",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://www.bestbuy.com/site/help-topics/return-exchange-policy/pcmcat260800050014.c",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "target",
+      "name": "Target",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://www.target.com/help/articles/returns-exchanges/returns",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "walmart",
+      "name": "Walmart",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://www.walmart.com/help/article/walmart-standard-return-policy/42847219eb5e4a0f8b84c6f2b1a2f8c4",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "costco",
+      "name": "Costco",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://customerservice.costco.com/app/answers/answer_view/a_id/1191",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "ikea",
+      "name": "IKEA",
+      "market": "US",
+      "locale": "en-US",
+      "policyUrl": "https://www.ikea.com/us/en/customer-service/returns-claims/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    }
+  ]
+}
