@@ -44,7 +44,6 @@
           <h2>${authenticated ? t('Your workspace is ready.', 'Tvoj radni prostor je spreman.') : t('Bring after-sale support into Still.', 'Dovedite podršku nakon prodaje u Still.')}</h2>
           <p>${authenticated ? t('Continue to the authenticated workspace below. Verification controls buyer-facing actions, while allowed setup and internal tools remain available.', 'Nastavi do prijavljenog radnog prostora ispod. Verifikacija kontrolira radnje prema kupcima, dok su dopušteno postavljanje i interni alati i dalje dostupni.') : t('Sign in to an existing company or create a workspace below. Public access is positioned as Early Access; real availability is controlled by the existing company account and verification flow.', 'Prijavite se u postojeću tvrtku ili izradite radni prostor ispod. Javni pristup predstavljen je kao rani pristup; stvarnu dostupnost kontroliraju postojeći račun tvrtke i postupak verifikacije.')}</p>
           <a href="#companyPortalV46">${authenticated ? t('Open company tools', 'Otvori poslovne alate') : t('Request Early Access', 'Zatraži rani pristup')}</a>
-          <button type="button" id="bv114Explore">${t('Explore the existing workspace preview', 'Istraži postojeći pregled radnog prostora')} →</button>
         </section>
       </div>`;
   }
@@ -59,18 +58,8 @@
     if (footer) footer.textContent = t('Still for Business · Early Access', 'Still za tvrtke · Rani pristup');
   }
 
-  function openPreview() {
-    const preview = $('#companyToolsPreviewV97');
-    if (!preview) return setTimeout(openPreview, 100);
-    preview.hidden = false;
-    preview.classList.add('bv114-preview-open');
-    preview.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-  }
-
   function applyAccessState() {
     document.querySelectorAll('#companyInventoryLiveV110').forEach(element => element.classList.toggle('bv114-authenticated', authenticated));
-    if (authenticated) $('#companyToolsPreviewV97')?.classList.add('bv114-preview-open');
-    document.querySelectorAll('.cpv97-entry').forEach(entry => entry.style.setProperty('display', 'none', 'important'));
   }
 
   function render() {
@@ -86,7 +75,6 @@
     }
     root.innerHTML = shell();
     updateHeader();
-    $('#bv114Explore')?.addEventListener('click', openPreview);
     applyAccessState();
   }
 
