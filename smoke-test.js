@@ -78,6 +78,7 @@ if(!fail.length){
  if(!companyOS.includes('cos120-healthbar')||!companyOS.includes('pulse.changedAt'))fail.push('Company Pulse does not expose its real health calculation and freshness');
  const companyOSCss=read('companyos-v120.css');
  if(!companyOSCss.includes('.cos120-dock{left:18px;right:18px')||!companyOSCss.includes('.cos120-conversations'))fail.push('CompanyOS responsive dock or conversation rail styling is missing');
+ if(!companyOSCss.includes('/* Live visual QA corrections */')||!companyOS.includes("sourceLabel(object.source)"))fail.push('CompanyOS live visual QA corrections are missing');
  if(!companyOSWorker.includes("const buyerFacing=company.organization_status==='verified'")||!companyOSWorker.includes('cases:buyerFacing?Number(cases?.open||0):null')||!companyOSWorker.includes('buyerData:buyerFacing'))fail.push('CompanyOS bootstrap does not preserve the buyer-case verification boundary');
  const companyToolSource=companyOS.match(/const tools=\[([\s\S]*?)\n  \];/)?.[1]||'';
  const companyToolIds=[...companyToolSource.matchAll(/\['([A-Za-z][A-Za-z0-9]*)',t\(/g)].map(match=>match[1]);
