@@ -11,7 +11,14 @@
     if($('#businessWorkbenchV72'))return;
     root=document.createElement('section');root.id='businessWorkbenchV72';root.className='bw72';
     root.innerHTML=`<header class="bw72-head"><div><span class="bw72-kicker">${t('DNEVNI RAD','DAILY OPERATIONS')}</span><h2>${t('Što danas traži pažnju?','What needs attention today?')}</h2><p>${t('Jedan red prioriteta za slučajeve, zadatke, odobrenja i kupce.','One priority queue for cases, tasks, approvals and customers.')}</p></div><div class="bw72-head-actions"><small data-updated></small><button data-refresh>${t('Osvježi','Refresh')}</button></div></header><div class="bw72-mode" role="group" aria-label="${t('Način prikaza','View mode')}"><button data-mode="manager">${t('Voditelj','Manager')}</button><button data-mode="focus">${t('Moj fokus','My focus')}</button></div><section class="bw72-brief" data-brief aria-live="polite"><div class="bw72-loading">${t('Priprema dnevnog pregleda…','Preparing the daily brief…')}</div></section><nav class="bw72-tabs" aria-label="Business workspace"><button class="active" data-tab="today">${t('Danas','Today')}</button><button data-tab="tasks">${t('Zadaci','Tasks')} <em data-count="tasks">0</em></button><button data-tab="approvals">${t('Odobrenja','Approvals')} <em data-count="approvals">0</em></button><button data-tab="customers">${t('Kupci','Customers')}</button><button data-tab="products">${t('Proizvodi','Products')}</button><button data-tab="branches">${t('Poslovnice','Branches')}</button></nav><div data-view class="bw72-view"></div>`;
-    const anchor=$('#for-retailers')||document.querySelector('main');anchor.parentNode.insertBefore(root,anchor);root.addEventListener('click',click);load();
+    const parking=$('#cos120ToolParking');
+    if(parking)parking.append(root);
+    else{
+      const anchor=$('#for-retailers')||document.querySelector('main');
+      if(!anchor?.parentNode)return;
+      anchor.parentNode.insertBefore(root,anchor);
+    }
+    root.addEventListener('click',click);load();
   }
 
   async function load(){
@@ -83,4 +90,5 @@
   addEventListener('change',async e=>{const s=e.target.closest('[data-task-status]');if(!s)return;try{await api('/api/v1/business/tasks/'+encodeURIComponent(s.dataset.taskStatus),{method:'POST',body:JSON.stringify({status:s.value})});await load();render('tasks')}catch(x){alert(x.message)}});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',shell);else shell();
   window.addEventListener('still:company-authenticated',shell);
+  window.addEventListener('still:companyos-ready',shell);
 })();

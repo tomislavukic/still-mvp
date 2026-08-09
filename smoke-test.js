@@ -78,6 +78,8 @@ if(!fail.length){
  if(!companyOS.includes('openUnavailableTool')||!companyOS.includes('state.permissions.buyerFacing'))fail.push('CompanyOS does not explain verification-gated tools in context');
  const workbench=read('company-workbench-v72.js');
  if(!workbench.includes("document.readyState==='loading'")||!workbench.includes('else shell()'))fail.push('Company workbench cannot mount after authenticated dynamic loading');
+ if(!workbench.includes("$('#cos120ToolParking')")||!workbench.includes("still:companyos-ready"))fail.push('Company workbench is not mounted inside the active CompanyOS lifecycle');
+ if(!companyOS.includes("new CustomEvent('still:companyos-ready'"))fail.push('CompanyOS does not release dependent production tools after its shell is ready');
  if(!companyOS.includes('authorized-deterministic-retrieval')&&!companyOSWorker.includes('authorized-deterministic-retrieval'))fail.push('Company Memory does not disclose deterministic authorized retrieval');
  if(!read('company-authenticated-loader-v82.js').includes('company-passport-studio-v83.js'))fail.push('company passport studio is missing from authenticated workspace');
  if(!worker.includes("'/api/v1/ownership/connect'"))fail.push('buyer-company passport connection route is missing');
