@@ -78,4 +78,5 @@
   document.addEventListener('click',event=>{if(event.target.closest('[data-cos-legacy-close]'))closeLegacy()});
   async function mount(detail){if(!detail?.organization||!document.body.classList.contains('business-page'))return;try{await load()}catch(error){console.error('[Still] CompanyOS failed to load.',error);toast?.(t('CompanyOS could not load authorized company data.','CompanyOS nije mogao učitati ovlaštene podatke tvrtke.'))}}
   window.addEventListener('still:company-authenticated',event=>mount(event.detail));
+  if(window.__stillOrganization)mount({organization:window.__stillOrganization});
 })();
