@@ -18,3 +18,46 @@ for(const page of ['index.html','company.html']){const target=path.join(out,page
 const socialIndex=path.join(out,'index.html');let social=fs.readFileSync(socialIndex,'utf8');social=storageOwnershipMeta(social);fs.writeFileSync(socialIndex,social);
 function upsertMeta(html,pattern,tag){return pattern.test(html)?html.replace(pattern,tag):html.replace('</head>',tag+'</head>')}
 function storageOwnershipMeta(html){let x=html.replace(/<title>[\s\S]*?<\/title>/i,'<title>Still · Everything you own.</title>');x=upsertMeta(x,/<meta[^>]+name=["']description["'][^>]*>/i,'<meta name="description" content="Everything you own, in one trusted place. Keep receipts, warranties, manuals, service history, reminders and important details together.">');x=upsertMeta(x,/<meta[^>]+property=["']og:title["'][^>]*>/i,'<meta property="og:title" content="Still · Everything you own.">');x=upsertMeta(x,/<meta[^>]+property=["']og:description["'][^>]*>/i,'<meta property="og:description" content="One trusted place for receipts, warranties, manuals, service history and reminders.">');x=upsertMeta(x,/<meta[^>]+property=["']og:image["'][^>]*>/i,'<meta property="og:image" content="https://still-mvp.tomislav-ukic-tu.workers.dev/og-v85.png">');x=upsertMeta(x,/<meta[^>]+property=["']og:image:width["'][^>]*>/i,'<meta property="og:image:width" content="1200">');x=upsertMeta(x,/<meta[^>]+property=["']og:image:height["'][^>]*>/i,'<meta property="og:image:height" content="630">');x=upsertMeta(x,/<meta[^>]+property=["']og:image:alt["'][^>]*>/i,'<meta property="og:image:alt" content="Still — Everything you own.">');x=upsertMeta(x,/<meta[^>]+name=["']twitter:card["'][^>]*>/i,'<meta name="twitter:card" content="summary_large_image">');return upsertMeta(x,/<meta[^>]+name=["']twitter:image["'][^>]*>/i,'<meta name="twitter:image" content="https://still-mvp.tomislav-ukic-tu.workers.dev/og-v85.png">')}
+
+
+/* STILL_PROTECTION_BUILD_COPY_V1 */
+;(() => {
+  const protectionFs = require('fs');
+  const protectionPath = require('path');
+
+  const source = protectionPath.join(
+    __dirname,
+    'buyer',
+    'protection'
+  );
+
+  const destination = protectionPath.join(
+    __dirname,
+    'public',
+    'buyer',
+    'protection'
+  );
+
+  if (!protectionFs.existsSync(source)) {
+    throw new Error(
+      'Protection source directory is missing: ' + source
+    );
+  }
+
+  protectionFs.mkdirSync(destination, {
+    recursive: true
+  });
+
+  protectionFs.cpSync(
+    source,
+    destination,
+    {
+      recursive: true,
+      force: true
+    }
+  );
+
+  console.log(
+    'Protection Center assets copied to production bundle.'
+  );
+})();

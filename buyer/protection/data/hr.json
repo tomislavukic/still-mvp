@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "market": "HR",
+  "locale": "hr-HR",
+  "labels": [
+    "Croatian",
+    "hrvatskih"
+  ],
+  "migratedFrom": "retailer-reliability.js",
+  "retailerCount": 14,
+  "retailers": [
+    {
+      "id": "hgspot",
+      "name": "HGSPOT",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.hgspot.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "instar",
+      "name": "Instar Informatika",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.instar-informatika.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "sancta",
+      "name": "Sancta Domenica",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.sancta-domenica.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "pevex",
+      "name": "PEVEX",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.pevex.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "emmezetta",
+      "name": "Emmezeta",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.emmezeta.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "harveynorman",
+      "name": "Harvey Norman Hrvatska",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.harveynorman.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "bauhaus",
+      "name": "BAUHAUS Hrvatska",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.bauhaus.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "lesnina",
+      "name": "Lesnina XXXL",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.xxxlesnina.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "adm",
+      "name": "ADM Računala",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.adm.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "protis",
+      "name": "Protis",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.protis.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "svijetmedija",
+      "name": "Svijet Medija",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.svijet-medija.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "vacom",
+      "name": "Vacom",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://vacom.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "mikronis",
+      "name": "Mikronis",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.mikronis.hr/",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    },
+    {
+      "id": "ronis",
+      "name": "Ronis",
+      "market": "HR",
+      "locale": "hr-HR",
+      "policyUrl": "https://www.ronis.hr/hr",
+      "sourceType": "legacy-official-retailer-source",
+      "verificationStatus": "unverified",
+      "verifiedAt": null
+    }
+  ]
+}

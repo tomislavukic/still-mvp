@@ -3,7 +3,18 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
-const ignoredDirectories = new Set(['.git', '.wrangler', 'node_modules', 'public']);
+const ignoredDirectories = new Set([
+  '.git',
+  '.wrangler',
+  'node_modules',
+  'public',
+  'archive',
+  'dist',
+  'build',
+  'coverage',
+  '.next',
+  '.cache'
+]);
 
 function javascriptFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true })

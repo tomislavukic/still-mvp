@@ -252,9 +252,95 @@
     if (footer) footer.classList.add('sp114-footer');
   }
 
-  function start() {
+  
+/* STILL_PROTECTION_RUNTIME_V1 */
+function initializeStillProtection() {
+  if (window.StillProtection) {
+    window.dispatchEvent(
+      new CustomEvent('still:protection-ready')
+    );
+    return Promise.resolve(window.StillProtection);
+  }
+
+  if (window.__stillProtectionLoading) {
+    return window.__stillProtectionLoading;
+  }
+
+  window.__stillProtectionLoading = new Promise(
+    (resolve, reject) => {
+      const existing = document.querySelector(
+        'script[data-still-protection-runtime]'
+      );
+
+      if (existing) {
+        existing.addEventListener(
+          'load',
+          () => resolve(window.StillProtection || null),
+          { once: true }
+        );
+
+        existing.addEventListener(
+          'error',
+          reject,
+          { once: true }
+        );
+
+        return;
+      }
+
+      const script = document.createElement('script');
+
+      script.src =
+        '/buyer/protection/browser/ProtectionBrowserService.js';
+
+      script.defer = true;
+
+      script.dataset.stillProtectionRuntime = '1';
+
+      script.addEventListener(
+        'load',
+        () => {
+          if (!window.StillProtection) {
+            reject(
+              new Error(
+                'Protection runtime loaded without StillProtection.'
+              )
+            );
+            return;
+          }
+
+          window.dispatchEvent(
+            new CustomEvent('still:protection-ready')
+          );
+
+          resolve(window.StillProtection);
+        },
+        { once: true }
+      );
+
+      script.addEventListener(
+        'error',
+        () => reject(
+          new Error('Unable to load Protection runtime.')
+        ),
+        { once: true }
+      );
+
+      document.head.appendChild(script);
+    }
+  ).catch(error => {
+    console.error('[Still Protection]', error);
+    window.__stillProtectionLoading = null;
+    return null;
+  });
+
+  return window.__stillProtectionLoading;
+}
+
+function start() {
     if (!$('#ownershipPlatformV83')) return setTimeout(start, 80);
     render();
+    initializeStillProtection();
     observer = new MutationObserver(() => { registerTools(); moveBuyerAccount(); });
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener('hashchange', () => { const tool = toolFromHash(); if (tool) openTool(tool, false); });
