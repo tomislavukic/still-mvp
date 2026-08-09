@@ -55,6 +55,7 @@ const companyScripts = [
   'electronic-shelf-labels-v106.js',
   'company-intelligence-v107.js',
   'still-business-v114.js',
+  'company-intelligence-v128.js',
   'companyos-v120.js',
 ];
 
@@ -67,6 +68,7 @@ const companyStyles = [
   'electronic-shelf-labels-v106.css',
   'still-v114.css',
   'companyos-v120.css',
+  'company-intelligence-v128.css',
 ];
 
 const retiredDemoAssets = [

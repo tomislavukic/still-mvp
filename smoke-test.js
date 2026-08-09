@@ -54,7 +54,9 @@ if(!fail.length){
  if(!companyLoader.includes("window.__stillOrganization"))fail.push('authenticated organization context is not exposed to progressive access');
  if(!read('company-portal-v46.js').includes("still:company-authenticated"))fail.push('company portal does not release authenticated feature modules');
  if(!companyLoader.includes('companyos-v120.js'))fail.push('live CompanyOS shell is not loaded after authentication');
+ if(!companyLoader.includes('company-intelligence-v128.js'))fail.push('adaptive business profile and document intelligence are not loaded after authentication');
  const companyOS=read('companyos-v120.js');
+ const companyIntelligence=read('company-intelligence-v128.js');
  const companyOSWorker=read('merchant-backend/worker-v120.js');
  ['/api/v1/companyos/bootstrap','/api/v1/companyos/memory','/api/v1/companyos/situations','/api/v1/companyos/events','/api/v1/companyos/documents'].forEach(route=>{if(!companyOS.includes(route))fail.push(`CompanyOS client is missing real route ${route}`)});
  ['companyos_situations','companyos_relationships','companyos_events','companyos_documents','companyos_work_objects','platform_audit_events','companyos_rate_limits'].forEach(table=>{if(!companyOSWorker.includes(table))fail.push(`CompanyOS schema is missing ${table}`)});
@@ -85,6 +87,14 @@ if(!fail.length){
  const companyToolGroupSource=companyOS.match(/const toolGroups=\[([\s\S]*?)\n  \];/)?.[1]||'';
  companyToolIds.forEach(id=>{if(!companyToolGroupSource.includes(`'${id}'`))fail.push(`CompanyOS tool is not assigned to a visible group: ${id}`)});
  if(companyToolIds.length<33)fail.push(`CompanyOS tool catalogue is incomplete (${companyToolIds.length}/33)`);
+ if(!companyToolIds.includes('documents'))fail.push('CompanyOS document intelligence is not part of the visible tool catalogue');
+ ['retail','services','manufacturer','rental','subscription','professional'].forEach(type=>{if(!companyIntelligence.includes(`${type}:`))fail.push(`CompanyOS is missing adaptive priorities for ${type} businesses`)});
+ if(!companyIntelligence.includes('/api/v1/business/setup')||!companyIntelligence.includes('REQUIRED BEFORE VERIFICATION'))fail.push('business type is not required and persisted before verification');
+ if(!companyIntelligence.includes('/api/v1/companyos/knowledge/import')||!companyIntelligence.includes('Review before anything is applied.'))fail.push('reviewable document OCR workflow is not integrated');
+ if(!companyOSWorker.includes("error:'business_setup_required'")||!companyOSWorker.includes("verificationSubmission"))fail.push('verification submission is not protected by a server-side business setup gate');
+ ['companyos_knowledge_documents','env.AI.toMarkdown','MAX_DOCUMENT_BYTES','file_hash','extracted-text-only'].forEach(capability=>{if(!companyOSWorker.includes(capability))fail.push(`document intelligence backend is missing ${capability}`)});
+ if(!companyOSWorker.includes("'document_knowledge' kind")||!companyOSWorker.includes('authorized-deterministic-retrieval'))fail.push('extracted document knowledge is not searchable through authorized company memory');
+ if(!read('wrangler.jsonc').includes('"binding": "AI"'))fail.push('Workers AI binding is not configured for document OCR');
  if(!companyOS.includes('openUnavailableTool')||!companyOS.includes('state.permissions.buyerFacing'))fail.push('CompanyOS does not explain verification-gated tools in context');
  const workbench=read('company-workbench-v72.js');
  const workbenchWorker=read('merchant-backend/worker-v72.js');
