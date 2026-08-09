@@ -4,11 +4,20 @@ const chain = activeWorkerChain();
 const source = chain.map(worker => worker.source).join('\n');
 const requiredCapabilities = [
   'platform_audit_events',
-  'OPERATIONS_REVIEWER_TOKEN',
-  'OPERATIONS_SUPPORT_TOKEN',
-  'OPERATIONS_READONLY_TOKEN',
-  '/api/v1/admin/audit',
-  'request.complete',
+  '/api/v1/companyos/bootstrap',
+  '/api/v1/companyos/search',
+  '/api/v1/companyos/memory',
+  '/api/v1/companyos/audit',
+  'companyos_situations',
+  'companyos_relationships',
+  'companyos_events',
+  'companyos_documents',
+  'companyos_work_objects',
+  "cookie(request,'still_company')",
+  'organization_id=?',
+  'sameOrigin(request)',
+  'platformAudit',
+  'rateLimit',
 ];
 
 for (const capability of requiredCapabilities) {

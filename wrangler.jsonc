@@ -2,8 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v108.js",
-  // Active Worker adds real organization-scoped inventory operations.
+  "main": "merchant-backend/worker-v120.js",
+  // Active Worker adds the authenticated CompanyOS orchestration layer while
+  // preserving every existing API through the delegated Worker chain.
   "keep_vars": true,
   "observability": {
     "enabled": true,
