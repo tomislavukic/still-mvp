@@ -102,6 +102,7 @@ function object({id,type,title,subtitle='',status='active',updatedAt=null,source
 
 async function livingObjects(env,company,limitPerType=50){
   const org=company.organization_id;
+  const buyerFacing=company.organization_status==='verified';
   const queries=await Promise.all([
     safeAll(env,`SELECT public_id,sku,name,kind,active,updated_at FROM ops_products WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
     safeAll(env,`SELECT public_id,name,code,active,updated_at FROM ops_locations WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
@@ -122,7 +123,7 @@ async function livingObjects(env,company,limitPerType=50){
     safeAll(env,`SELECT e.public_id,sc.name title,e.status,e.customer_name,e.updated_at FROM service_engagements e JOIN service_catalog sc ON sc.id=e.service_id WHERE e.organization_id=? ORDER BY e.updated_at DESC LIMIT ?`,[org,limitPerType]),
     safeAll(env,`SELECT id,title,contract_type,status,renewal_date,updated_at FROM service_contracts WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
     safeAll(env,`SELECT public_id,title,category,status,updated_at FROM business_assets WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
-    safeAll(env,`SELECT public_id,product_name title,case_type,status,updated_at FROM consumer_cases WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
+    buyerFacing?safeAll(env,`SELECT public_id,product_name title,case_type,status,updated_at FROM consumer_cases WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]):Promise.resolve([]),
     safeAll(env,`SELECT id,name,city,status,updated_at FROM merchant_branches WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
     safeAll(env,`SELECT id,title,status,priority,updated_at FROM merchant_tasks WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
     safeAll(env,`SELECT id,title,status,promised_at updated_at FROM merchant_commitments WHERE organization_id=? ORDER BY updated_at DESC LIMIT ?`,[org,limitPerType]),
@@ -163,6 +164,7 @@ async function livingObjects(env,company,limitPerType=50){
 
 async function derivedSituations(env,company){
   const org=company.organization_id;
+  const buyerFacing=company.organization_status==='verified';
   const [lowStock,lateOrders,repairs,renewals,tasks,approvals,cases,states]=await Promise.all([
     safeAll(env,`SELECT p.public_id,p.name,p.reorder_level,COALESCE(SUM(b.quantity-b.reserved),0) available FROM ops_products p LEFT JOIN ops_stock_balances b ON b.product_id=p.id WHERE p.organization_id=? AND p.active=1 GROUP BY p.id HAVING available<=p.reorder_level ORDER BY available LIMIT 30`,[org]),
     safeAll(env,`SELECT po.public_id,po.expected_on,s.name supplier_name FROM ops_purchase_orders po JOIN ops_suppliers s ON s.id=po.supplier_id WHERE po.organization_id=? AND po.status NOT IN ('received','cancelled') AND po.expected_on<? ORDER BY po.expected_on LIMIT 30`,[org,today()]),
@@ -170,7 +172,7 @@ async function derivedSituations(env,company){
     safeAll(env,`SELECT public_id,title,renewal_on FROM ops_agreements WHERE organization_id=? AND status='active' AND renewal_on BETWEEN ? AND date(?,'+30 day') ORDER BY renewal_on LIMIT 30`,[org,today(),today()]),
     safeAll(env,`SELECT id,title,priority,due_at FROM merchant_tasks WHERE organization_id=? AND status IN ('open','doing') AND due_at<? ORDER BY due_at LIMIT 30`,[org,now()]),
     safeAll(env,`SELECT id,action_type,amount,currency,created_at FROM merchant_approval_requests WHERE organization_id=? AND status='pending' ORDER BY created_at LIMIT 30`,[org]),
-    safeAll(env,`SELECT public_id,product_name,status,updated_at FROM consumer_cases WHERE organization_id=? AND status NOT IN ('resolved','closed','rejected') AND updated_at<datetime('now','-48 hours') ORDER BY updated_at LIMIT 30`,[org]),
+    buyerFacing?safeAll(env,`SELECT public_id,product_name,status,updated_at FROM consumer_cases WHERE organization_id=? AND status NOT IN ('resolved','closed','rejected') AND updated_at<datetime('now','-48 hours') ORDER BY updated_at LIMIT 30`,[org]):Promise.resolve([]),
     safeAll(env,`SELECT derived_id,status,assigned_member_id,note,updated_at FROM companyos_situation_states WHERE organization_id=?`,[org])
   ]);
   const stateMap=new Map(states.map(row=>[row.derived_id,row]));
@@ -194,21 +196,23 @@ async function derivedSituations(env,company){
 
 async function companyPulse(env,company,situations,objects){
   const org=company.organization_id;
+  const buyerFacing=company.organization_status==='verified';
   const [inventory,orders,services,cases,tasks,revenue]=await Promise.all([
     safeFirst(env,`SELECT COALESCE(SUM(quantity),0) units,COALESCE(SUM(reserved),0) reserved FROM ops_stock_balances WHERE organization_id=?`,[org]),
     safeFirst(env,`SELECT COUNT(*) total,SUM(CASE WHEN status NOT IN ('completed','cancelled','refunded') THEN 1 ELSE 0 END) open FROM commerce_orders WHERE organization_id=?`,[org]),
     safeFirst(env,`SELECT COUNT(*) total,SUM(CASE WHEN status NOT IN ('completed','cancelled') THEN 1 ELSE 0 END) open FROM service_engagements WHERE organization_id=?`,[org]),
-    safeFirst(env,`SELECT COUNT(*) total,SUM(CASE WHEN status NOT IN ('resolved','closed','rejected') THEN 1 ELSE 0 END) open FROM consumer_cases WHERE organization_id=?`,[org]),
+    buyerFacing?safeFirst(env,`SELECT COUNT(*) total,SUM(CASE WHEN status NOT IN ('resolved','closed','rejected') THEN 1 ELSE 0 END) open FROM consumer_cases WHERE organization_id=?`,[org]):Promise.resolve(null),
     safeFirst(env,`SELECT COUNT(*) total,SUM(CASE WHEN status IN ('open','doing') THEN 1 ELSE 0 END) open FROM merchant_tasks WHERE organization_id=?`,[org]),
     safeFirst(env,`SELECT COALESCE(SUM(amount_cents),0) cents FROM commerce_orders WHERE organization_id=? AND status IN ('paid','confirmed','fulfilled','completed')`,[org])
   ]);
   const critical=situations.filter(item=>item.severity==='critical').length;
   const high=situations.filter(item=>item.severity==='high').length;
-  const pressure=Math.min(100,critical*20+high*8+Number(tasks?.open||0)*2+Number(cases?.open||0)*3);
+  const pressure=Math.min(100,critical*20+high*8+Number(tasks?.open||0)*2+(buyerFacing?Number(cases?.open||0)*3:0));
   return{
     health:Math.max(0,100-pressure),
     status:pressure>=60?'needs_attention':pressure>=25?'watch':'healthy',
-    summary:{situations:situations.length,critical,high,objects:objects.length,inventoryUnits:Number(inventory?.units||0),reservedUnits:Number(inventory?.reserved||0),orders:Number(orders?.open||0),services:Number(services?.open||0),cases:Number(cases?.open||0),tasks:Number(tasks?.open||0),recognizedOrderValueCents:Number(revenue?.cents||0)},
+    summary:{situations:situations.length,critical,high,objects:objects.length,inventoryUnits:Number(inventory?.units||0),reservedUnits:Number(inventory?.reserved||0),orders:Number(orders?.open||0),services:Number(services?.open||0),cases:buyerFacing?Number(cases?.open||0):null,tasks:Number(tasks?.open||0),recognizedOrderValueCents:Number(revenue?.cents||0)},
+    buyerData:buyerFacing,
     changedAt:now(),
     methodology:'deterministic-company-data-v1'
   };
