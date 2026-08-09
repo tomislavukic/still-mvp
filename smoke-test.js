@@ -59,6 +59,7 @@ if(!fail.length){
  ['/api/v1/companyos/bootstrap','/api/v1/companyos/memory','/api/v1/companyos/situations','/api/v1/companyos/events','/api/v1/companyos/documents'].forEach(route=>{if(!companyOS.includes(route))fail.push(`CompanyOS client is missing real route ${route}`)});
  ['companyos_situations','companyos_relationships','companyos_events','companyos_documents','companyos_work_objects','platform_audit_events','companyos_rate_limits'].forEach(table=>{if(!companyOSWorker.includes(table))fail.push(`CompanyOS schema is missing ${table}`)});
  ["cookie(request,'still_company')",'organization_id=?','sameOrigin(request)','platformAudit','rateLimit'].forEach(boundary=>{if(!companyOSWorker.includes(boundary))fail.push(`CompanyOS security boundary is missing ${boundary}`)});
+ if(!companyOSWorker.includes("json_extract(metadata_json,'$.organizationId')")||!companyOSWorker.includes('actor_role'))fail.push('CompanyOS request audit is not compatible with the existing production audit schema');
  if(companyOS.includes('sessionStorage')||companyOS.includes('localStorage'))fail.push('live CompanyOS shell uses browser-only simulated persistence');
  if(!companyOS.includes("if(window.__stillOrganization)mount({organization:window.__stillOrganization})"))fail.push('CompanyOS does not mount when the authenticated loader finishes before the shell runtime');
  if(!companyOS.includes('authorized-deterministic-retrieval')&&!companyOSWorker.includes('authorized-deterministic-retrieval'))fail.push('Company Memory does not disclose deterministic authorized retrieval');
