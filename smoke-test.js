@@ -1034,5 +1034,74 @@ if(!fail.length){
 }
 
 
+
+// BuyerOS Protection V153
+{
+  const protectionPath =
+    'buyer/protection/ui/buyeros-protection-v153.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(protectionPath)) {
+    fail.push(
+      'BuyerOS Protection V153 module missing'
+    );
+  } else {
+    const protection =
+      read(protectionPath);
+
+    [
+      'StillBuyerOSProtectionV153',
+      'overview',
+      'attention',
+      'documents',
+      'serviceHistory',
+      'timeline',
+      'thingGraph',
+      'protectionPriority',
+      'protectionKind',
+      'still:buyeros-protection-ready'
+    ].forEach(capability => {
+      if (!protection.includes(capability)) {
+        fail.push(
+          `BuyerOS Protection V153 missing ${capability}`
+        );
+      }
+    });
+
+    [
+      'localStorage.setItem',
+      'sessionStorage.setItem',
+      'fetch(',
+      'XMLHttpRequest',
+      'MutationObserver'
+    ].forEach(forbidden => {
+      if (protection.includes(forbidden)) {
+        fail.push(
+          `BuyerOS Protection V153 contains forbidden ${forbidden}`
+        );
+      }
+    });
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-protection-v153.js'
+    ) ||
+    !coordinator.includes(
+      'loadProtectionV153();'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Protection V153'
+    );
+  }
+}
+
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
