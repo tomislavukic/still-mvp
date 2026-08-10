@@ -1,9 +1,6 @@
 (() => {
   'use strict';
 
-  const OWNERSHIP_KEY = 'still-ownership-passports-v83';
-  const DOCUMENTS_KEY = 'still-buyeros-documents-v132';
-
   const PANEL_ID = 'buyerOSIntelligenceV148';
   const STYLE_ID = 'buyerOSIntelligenceV148Style';
 
@@ -28,203 +25,148 @@
       })[char]
     );
 
-  function readArray(key) {
-    try {
-      const value =
-        JSON.parse(
-          localStorage.getItem(key) || '[]'
-        );
-
-      return Array.isArray(value)
-        ? value
-        : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function things() {
-    return readArray(OWNERSHIP_KEY);
-  }
-
-  function documents() {
-    return readArray(DOCUMENTS_KEY);
-  }
-
   function normalize(value) {
     return String(value ?? '')
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      )
       .toLowerCase()
       .trim();
   }
 
-  function dateValue(value) {
-    if (!value) return null;
+  function tools() {
+    const api =
+      window.StillBuyerOSToolsV149;
 
-    const date =
-      new Date(
-        String(value).length <= 10
-          ? `${String(value).slice(0,10)}T12:00:00`
-          : value
+    if (
+      !api ||
+      typeof api.execute !==
+        'function'
+    ) {
+      throw new Error(
+        'BuyerOS Tool Layer V149 is unavailable'
       );
-
-    return Number.isNaN(date.valueOf())
-      ? null
-      : date;
-  }
-
-  function daysUntil(value) {
-    const target = dateValue(value);
-
-    if (!target) return null;
-
-    const now = new Date();
-    now.setHours(12,0,0,0);
-    target.setHours(12,0,0,0);
-
-    return Math.ceil(
-      (target - now) / 86400000
-    );
-  }
-
-  function relatedThing(doc) {
-    const all = things();
-
-    if (doc.thingId) {
-      const hit = all.find(
-        item => item.id === doc.thingId
-      );
-
-      if (hit) return hit;
     }
 
-    if (doc.relatedThingId) {
-      const hit = all.find(
-        item =>
-          item.id === doc.relatedThingId
+    return api;
+  }
+
+  async function executeTool(
+    name,
+    args = {}
+  ) {
+    const response =
+      await tools().execute(
+        name,
+        args
       );
 
-      if (hit) return hit;
+    if (
+      !response ||
+      response.ok !== true
+    ) {
+      throw new Error(
+        response?.error?.message ||
+        `BuyerOS tool failed: ${name}`
+      );
     }
 
-    const title =
-      normalize(doc.relatedThing);
-
-    if (!title) return null;
-
-    return all.find(
-      item =>
-        normalize(item.title) === title
-    ) || null;
+    return response.data;
   }
 
-  function docsFor(item) {
-    return documents().filter(
-      doc => relatedThing(doc)?.id === item.id
+  async function things(
+    filters = {}
+  ) {
+    return executeTool(
+      'list_things',
+      {
+        limit:250,
+        ...filters
+      }
     );
   }
 
-  function serviceEvents() {
-    return things().flatMap(item =>
-      Array.isArray(item.serviceHistory)
-        ? item.serviceHistory.map(event => ({
-            ...event,
-            thingId:item.id,
-            thingTitle:
-              item.title ||
-              t('Untitled thing','Stvar bez naziva')
-          }))
-        : []
+  async function documents() {
+    return executeTool(
+      'get_documents'
     );
   }
 
-  function attentionItems() {
-    const output = [];
+  async function findThings(query) {
+    const result =
+      await executeTool(
+        'search_things',
+        {
+          query,
+          limit:20
+        }
+      );
 
-    things().forEach(item => {
-      const warranty =
-        daysUntil(item.warrantyUntil);
-
-      const returns =
-        daysUntil(item.returnBy);
-
-      const renewal =
-        daysUntil(item.renewalAt);
-
-      if (
-        warranty !== null &&
-        warranty >= 0 &&
-        warranty <= 30
-      ) {
-        output.push({
-          type:'warranty',
-          thing:item,
-          days:warranty
-        });
-      }
-
-      if (
-        returns !== null &&
-        returns >= 0 &&
-        returns <= 14
-      ) {
-        output.push({
-          type:'return',
-          thing:item,
-          days:returns
-        });
-      }
-
-      if (
-        renewal !== null &&
-        renewal >= 0 &&
-        renewal <= 30
-      ) {
-        output.push({
-          type:'renewal',
-          thing:item,
-          days:renewal
-        });
-      }
-    });
-
-    return output.sort(
-      (a,b) => a.days - b.days
+    return result.map(
+      entry =>
+        entry.thing
     );
   }
 
-  function findThings(query) {
-    const needle =
-      normalize(query);
+  async function docsFor(item) {
+    if (!item?.id) {
+      return [];
+    }
 
-    if (!needle) return [];
+    return executeTool(
+      'get_documents',
+      {
+        thingId:item.id
+      }
+    );
+  }
 
-    return things()
-      .filter(item => {
-        const haystack =
-          normalize([
-            item.title,
-            item.brand,
-            item.manufacturer,
-            item.model,
-            item.serialNumber,
-            item.serial,
-            item.business,
-            item.store,
-            item.kind,
-            item.notes
-          ]
-            .filter(Boolean)
-            .join(' '));
+  async function serviceEvents() {
+    return executeTool(
+      'get_service_history'
+    );
+  }
 
-        return haystack.includes(needle);
+  async function attentionItems() {
+    const entries =
+      await executeTool(
+        'get_attention',
+        {
+          horizonDays:30
+        }
+      );
+
+    return entries.map(
+      entry => ({
+        type:
+          entry.type,
+
+        days:
+          entry.days,
+
+        date:
+          entry.date,
+
+        thing:{
+          id:
+            entry.thingId,
+
+          title:
+            entry.thingTitle ||
+            t(
+              'Untitled thing',
+              'Stvar bez naziva'
+            )
+        }
       })
-      .slice(0,20);
+    );
   }
 
-  function interpret(query) {
-    const q = normalize(query);
+  async function interpret(query) {
+    const q =
+      normalize(query);
 
     if (!q) {
       return {
@@ -233,131 +175,194 @@
       };
     }
 
-    if (
-      /koliko.*stvari|how many.*things|how many.*items/.test(q)
-    ) {
+    try {
+      if (
+        /koliko.*stvari|how many.*things|how many.*items/.test(q)
+      ) {
+        const result =
+          await executeTool(
+            'count_things'
+          );
+
+        return {
+          type:'count',
+          count:
+            result.total
+        };
+      }
+
+      if (
+        /pretplat|subscription/.test(q)
+      ) {
+        return {
+          type:'things',
+
+          label:t(
+            'Subscriptions',
+            'Pretplate'
+          ),
+
+          items:
+            await things({
+              kind:'subscription'
+            })
+        };
+      }
+
+      if (
+        /serijski|serial/.test(q)
+      ) {
+        return {
+          type:'things',
+
+          label:t(
+            'Things with serial numbers',
+            'Stvari sa serijskim brojem'
+          ),
+
+          items:
+            await things({
+              hasSerial:true
+            })
+        };
+      }
+
+      if (
+        /nema.*jamstv|bez.*jamstv|without warranty|no warranty/.test(q)
+      ) {
+        return {
+          type:'things',
+
+          label:t(
+            'Things without warranty information',
+            'Stvari bez podataka o jamstvu'
+          ),
+
+          items:
+            await things({
+              missingWarranty:true
+            })
+        };
+      }
+
+      if (
+        /istjec|istič|uskoro|expires|expiring|renew|obnov/.test(q)
+      ) {
+        return {
+          type:'attention',
+          items:
+            await attentionItems()
+        };
+      }
+
+      if (
+        /racun|račun|receipt|invoice|dokument/.test(q)
+      ) {
+        const words =
+          q
+            .replace(
+              /racun|račun|receipt|invoice|dokument|document/g,
+              ''
+            )
+            .trim();
+
+        if (!words) {
+          const allDocuments =
+            await documents();
+
+          return {
+            type:'documents',
+
+            items:
+              allDocuments.map(
+                doc => ({
+                  item:{
+                    id:
+                      doc.linkedThingId ||
+                      null,
+
+                    title:
+                      doc.linkedThingTitle ||
+                      ''
+                  },
+
+                  doc
+                })
+              )
+          };
+        }
+
+        const candidates =
+          await findThings(
+            words
+          );
+
+        const groups =
+          await Promise.all(
+            candidates.map(
+              async item => {
+                const linked =
+                  await docsFor(item);
+
+                return linked.map(
+                  doc => ({
+                    item,
+                    doc
+                  })
+                );
+              }
+            )
+          );
+
+        return {
+          type:'documents',
+          items:
+            groups.flat()
+        };
+      }
+
+      if (
+        /servis|service|repair|maintenance/.test(q)
+      ) {
+        return {
+          type:'services',
+          items:
+            await serviceEvents()
+        };
+      }
+
+      const found =
+        await findThings(q);
+
+      if (found.length) {
+        return {
+          type:'things',
+
+          label:t(
+            'Matching things',
+            'Pronađene stvari'
+          ),
+
+          items:found
+        };
+      }
+
       return {
-        type:'count',
-        count:things().length
+        type:'unknown',
+        items:[]
+      };
+    } catch (error) {
+      console.error(
+        'BuyerOS Intelligence tool query failed',
+        error
+      );
+
+      return {
+        type:'unknown',
+        items:[],
+        error:true
       };
     }
-
-    if (
-      /pretplat|subscription/.test(q)
-    ) {
-      return {
-        type:'things',
-        label:t(
-          'Subscriptions',
-          'Pretplate'
-        ),
-        items:things().filter(
-          item =>
-            normalize(item.kind) ===
-            'subscription'
-        )
-      };
-    }
-
-    if (
-      /serijski|serial/.test(q)
-    ) {
-      return {
-        type:'things',
-        label:t(
-          'Things with serial numbers',
-          'Stvari sa serijskim brojem'
-        ),
-        items:things().filter(
-          item =>
-            item.serialNumber ||
-            item.serial
-        )
-      };
-    }
-
-    if (
-      /nema.*jamstv|bez.*jamstv|without warranty|no warranty/.test(q)
-    ) {
-      return {
-        type:'things',
-        label:t(
-          'Things without warranty information',
-          'Stvari bez podataka o jamstvu'
-        ),
-        items:things().filter(
-          item =>
-            !item.warrantyUntil
-        )
-      };
-    }
-
-    if (
-      /istjec|istič|uskoro|expires|expiring|renew|obnov/.test(q)
-    ) {
-      return {
-        type:'attention',
-        items:attentionItems()
-      };
-    }
-
-    if (
-      /racun|račun|receipt|invoice|dokument/.test(q)
-    ) {
-      const words =
-        q
-          .replace(
-            /racun|račun|receipt|invoice|dokument|document/g,
-            ''
-          )
-          .trim();
-
-      const candidates =
-        words
-          ? findThings(words)
-          : things();
-
-      const items =
-        candidates.flatMap(item =>
-          docsFor(item).map(doc => ({
-            item,
-            doc
-          }))
-        );
-
-      return {
-        type:'documents',
-        items
-      };
-    }
-
-    if (
-      /servis|service|repair|maintenance/.test(q)
-    ) {
-      return {
-        type:'services',
-        items:serviceEvents()
-      };
-    }
-
-    const found =
-      findThings(q);
-
-    if (found.length) {
-      return {
-        type:'things',
-        label:t(
-          'Matching things',
-          'Pronađene stvari'
-        ),
-        items:found
-      };
-    }
-
-    return {
-      type:'unknown',
-      items:[]
-    };
   }
 
   function installStyles() {
@@ -790,10 +795,26 @@
     const result =
       $('[data-v148-result]', panel);
 
-    const run = query => {
+    const run = async query => {
+      result.innerHTML = `
+        <article class="bos148-card">
+          <b>
+            ${esc(
+              t(
+                'Checking your BuyerOS…',
+                'Provjeravam tvoj BuyerOS…'
+              )
+            )}
+          </b>
+        </article>
+      `;
+
+      const answer =
+        await interpret(query);
+
       result.innerHTML =
         resultHTML(
-          interpret(query)
+          answer
         );
     };
 

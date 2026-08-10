@@ -1016,6 +1016,72 @@
   }
 
   register(
+    'list_things',
+    'List BuyerOS ownership records using read-only filters.',
+    args => {
+      const limit =
+        clampInteger(
+          args?.limit,
+          100,
+          1,
+          250
+        );
+
+      const kind =
+        normalize(
+          args?.kind
+        );
+
+      const hasSerial =
+        args?.hasSerial === true;
+
+      const missingWarranty =
+        args?.missingWarranty === true;
+
+      return things()
+        .filter(item => {
+          if (
+            kind &&
+            normalize(
+              item.kind
+            ) !== kind
+          ) {
+            return false;
+          }
+
+          if (
+            hasSerial &&
+            !(
+              clean(
+                item.serialNumber
+              ) ||
+              clean(
+                item.serial
+              )
+            )
+          ) {
+            return false;
+          }
+
+          if (
+            missingWarranty &&
+            clean(
+              item.warrantyUntil
+            )
+          ) {
+            return false;
+          }
+
+          return true;
+        })
+        .slice(
+          0,
+          limit
+        );
+    }
+  );
+
+  register(
     'count_things',
     'Count ownership records currently stored in BuyerOS.',
     () => {
