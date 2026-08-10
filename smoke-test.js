@@ -560,5 +560,71 @@ if(!fail.length){
   }
 }
 
+
+// BuyerOS Household Family V144
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-household-family-v144.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Household Family V144 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'HOUSEHOLD_KEY',
+      'FAMILY_KEY',
+      'thingsForMember',
+      'householdThings',
+      'itemMatchesMember',
+      'createFamilyView',
+      'createHouseholdView',
+      '#buyeros-household',
+      '#buyeros-family',
+      '#buyeros-thing',
+      'still:ownership-updated'
+    ].forEach(capability => {
+      if (
+        !module.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS Household Family V144 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Household Family V144 fabricates random data'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-household-family-v144.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Household Family V144'
+    );
+  }
+}
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
