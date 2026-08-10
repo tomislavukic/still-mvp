@@ -950,5 +950,89 @@ if(!fail.length){
 }
 
 
+
+// BuyerOS Ownership Graph V152
+{
+  const graphPath =
+    'buyer/protection/ui/buyeros-ownership-graph-v152.js';
+
+  const toolsPath =
+    'buyer/protection/ui/buyeros-tools-v149.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(graphPath)) {
+    fail.push(
+      'BuyerOS Ownership Graph V152 module missing'
+    );
+  } else {
+    const graph = read(graphPath);
+
+    [
+      'StillBuyerOSGraphV152',
+      'resolveThingForDocument',
+      'resolveOwnerForThing',
+      'resolveHouseholdForThing',
+      'canonicalThing',
+      'canonicalDocument',
+      'graphForThing',
+      'still:buyeros-graph-ready'
+    ].forEach(capability => {
+      if (!graph.includes(capability)) {
+        fail.push(
+          `BuyerOS V152 Graph missing ${capability}`
+        );
+      }
+    });
+
+    [
+      'localStorage.setItem',
+      'sessionStorage.setItem',
+      'fetch(',
+      'XMLHttpRequest',
+      'MutationObserver'
+    ].forEach(forbidden => {
+      if (graph.includes(forbidden)) {
+        fail.push(
+          `BuyerOS V152 Graph contains forbidden ${forbidden}`
+        );
+      }
+    });
+  }
+
+  const tools = read(toolsPath);
+
+  if (
+    !tools.includes(
+      'StillBuyerOSGraphV152'
+    ) ||
+    !tools.includes(
+      'resolveThingForDocument'
+    )
+  ) {
+    fail.push(
+      'BuyerOS V149 tools are not connected to V152 graph'
+    );
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-ownership-graph-v152.js'
+    ) ||
+    !coordinator.includes(
+      'loadGraphV152();'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Graph V152'
+    );
+  }
+}
+
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');

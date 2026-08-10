@@ -448,6 +448,31 @@ function loadActionsV151() {
   document.head.appendChild(script);
 }
 
+function loadGraphV152() {
+  if (
+    document.querySelector(
+      'script[data-buyeros-graph-v152]'
+    )
+  ) {
+    return;
+  }
+
+  const script =
+    document.createElement('script');
+
+  script.src =
+    'buyer/protection/ui/buyeros-ownership-graph-v152.js';
+
+  script.defer = true;
+
+  script.dataset.buyerosGraphV152 =
+    'true';
+
+  document.head.appendChild(
+    script
+  );
+}
+
 function loadToolsV149() {
   if (window.StillBuyerOSToolsV149) {
     return Promise.resolve(window.StillBuyerOSToolsV149);
@@ -530,6 +555,7 @@ function loadIntelligenceV148() {
     loadBulkImportV146();
     loadImportReviewV147();
 loadActionsV151();
+    loadGraphV152();
     loadToolsV149()
       .then(() => loadIntelligenceV148())
       .catch(error => console.error('BuyerOS tool/intelligence bridge failed', error));
