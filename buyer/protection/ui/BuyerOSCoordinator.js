@@ -372,6 +372,32 @@
     );
   }
 
+  function loadBulkImportV146() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-bulk-import-v146]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-bulk-import-v146.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosBulkImportV146 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
   function mount() {
     if (mounted || document.body.classList.contains('business-page')) return;
     const anchor = $('#stillPublicV114') || $('#ownershipPlatformV83');
@@ -391,6 +417,7 @@
     loadServicesV143();
     loadHouseholdFamilyV144();
     loadImportV145();
+    loadBulkImportV146();
     loadSearchV139();
   }
 

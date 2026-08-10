@@ -693,5 +693,46 @@ if(!fail.length){
   }
 }
 
+// BuyerOS Bulk Import V146
+{
+  const modulePath = 'buyer/protection/ui/buyeros-bulk-import-v146.js';
+  const coordinatorPath = 'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push('BuyerOS Bulk Import V146 module is missing');
+  } else {
+    const module = read(modulePath);
+
+    [
+      'still-ownership-passports-v83',
+      'parseInput',
+      'tableMode',
+      'simpleLineMode',
+      'splitCSVLine',
+      'buildRecord',
+      'Import into Still',
+      'Bulk import',
+      'still:ownership-updated',
+      'purchaseDate',
+      'warrantyUntil',
+      'serialNumber'
+    ].forEach(capability => {
+      if (!module.includes(capability)) {
+        fail.push(`BuyerOS Bulk Import V146 missing ${capability}`);
+      }
+    });
+
+    if (module.includes('Math.random')) {
+      fail.push('BuyerOS Bulk Import V146 fabricates random ownership data');
+    }
+  }
+
+  const coordinator = read(coordinatorPath);
+
+  if (!coordinator.includes('buyeros-bulk-import-v146.js')) {
+    fail.push('BuyerOS Coordinator does not load Bulk Import V146');
+  }
+}
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
