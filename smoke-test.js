@@ -626,5 +626,72 @@ if(!fail.length){
   }
 }
 
+
+// BuyerOS Ownership Import V145
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-import-v145.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Ownership Import V145 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'still-ownership-passports-v83',
+      'readThings',
+      'writeThings',
+      'formRecord',
+      'data-bos132-add="thing"',
+      'purchaseDate',
+      'warrantyUntil',
+      'returnBy',
+      'renewalAt',
+      'serviceHistory',
+      'still:ownership-updated',
+      'Save & add another'
+    ].forEach(capability => {
+      if (
+        !module.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS Ownership Import V145 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Ownership Import V145 fabricates random ownership data'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-import-v145.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Ownership Import V145'
+    );
+  }
+}
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
