@@ -164,6 +164,162 @@
     document.head.appendChild(script);
   }
 
+  function loadPassportV138() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-passport-v138]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-passport-v138.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosPassportV138 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
+  function loadDocumentsV140() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-documents-v140]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-documents-v140.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosDocumentsV140 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
+  function loadAttentionV141() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-attention-v141]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-attention-v141.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosAttentionV141 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
+  function loadSearchV139() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-search-v139]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-search-v139.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosSearchV139 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
+  function loadTimelineV142() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-timeline-v142]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-timeline-v142.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosTimelineV142 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
+  function loadServicesV143() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-services-v143]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-services-v143.js';
+
+    script.defer = true;
+
+    script.dataset
+      .buyerosServicesV143 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
   function mount() {
     if (mounted || document.body.classList.contains('business-page')) return;
     const anchor = $('#stillPublicV114') || $('#ownershipPlatformV83');
@@ -176,6 +332,12 @@
     mounted = true;
     bind();
     loadExperienceV137();
+    loadPassportV138();
+    loadDocumentsV140();
+    loadAttentionV141();
+    loadTimelineV142();
+    loadServicesV143();
+    loadSearchV139();
   }
 
   window.addEventListener('still:ownership-updated', refresh);

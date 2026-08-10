@@ -217,5 +217,348 @@ if(!fail.length){
  if(!read('pricing-v114.js').includes('Still Free')||!read('pricing-v114.js').includes('Still+')||!read('pricing-v114.js').includes('Still for Business'))fail.push('pricing hierarchy is incomplete');
  if(!read('sitemap.xml').includes('/pricing.html'))fail.push('pricing page is missing from sitemap');
 }
+
+// BuyerOS Product Passport V138
+{
+  const passportPath='buyer/protection/ui/buyeros-passport-v138.js';
+  const coordinatorPath='buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if(!fs.existsSync(passportPath)){
+    fail.push('BuyerOS V138 Product Passport module is missing');
+  }
+
+  const passport=read(passportPath);
+
+  [
+    'Product identity',
+    'Protection summary',
+    'Passport completion',
+    'Passport documents',
+    'Related in your Still',
+    'Print / Save PDF'
+  ].forEach(x=>{
+    if(!passport.includes(x))
+      fail.push(`Missing ${x}`);
+  });
+
+  const coordinator=read(coordinatorPath);
+
+  if(!coordinator.includes('buyeros-passport-v138.js')){
+    fail.push('Coordinator does not load V138');
+  }
+}
+
+
+// BuyerOS Universal Search V139
+{
+  const searchPath =
+    'buyer/protection/ui/buyeros-search-v139.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(searchPath)) {
+    fail.push(
+      'BuyerOS Universal Search V139 module is missing'
+    );
+  } else {
+    const search =
+      read(searchPath);
+
+    [
+      'scoreItem',
+      'searchableText',
+      'thingDocs',
+      'serviceHistory',
+      'data-v139-index',
+      'still:ownership-updated',
+      '#buyeros-thing',
+      'metaKey',
+      'ctrlKey'
+    ].forEach(capability => {
+      if (
+        !search.includes(capability)
+      ) {
+        fail.push(
+          `BuyerOS V139 search missing ${capability}`
+        );
+      }
+    });
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-search-v139.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Universal Search V139'
+    );
+  }
+}
+
+
+// BuyerOS Documents V140
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-documents-v140.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Documents V140 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'relatedThing',
+      'linkedDocuments',
+      'documentType',
+      'documentStats',
+      'data-v140-open-thing',
+      'Needs linking',
+      '#buyeros-documents',
+      '#buyeros-thing',
+      'still:ownership-updated'
+    ].forEach(capability => {
+      if (
+        !module.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS Documents V140 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Documents V140 fabricates random data'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-documents-v140.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Documents V140'
+    );
+  }
+}
+
+
+// BuyerOS Attention Center V141
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-attention-v141.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Attention Center V141 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'buildIssues',
+      'daysUntil',
+      'hasReceipt',
+      'hasWarrantyDocument',
+      'Document needs linking',
+      'Warranty ending soon',
+      'Return window closing',
+      'Renewal approaching',
+      'data-v141-index',
+      'still:ownership-updated'
+    ].forEach(capability => {
+      if (
+        !module.includes(capability)
+      ) {
+        fail.push(
+          `BuyerOS Attention V141 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Attention V141 fabricates random information'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-attention-v141.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Attention Center V141'
+    );
+  }
+}
+
+
+// BuyerOS Timeline V142
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-timeline-v142.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Timeline V142 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'buildTimeline',
+      'groupByMonth',
+      'Purchased',
+      'Warranty ends',
+      'Return window ends',
+      'Renewal',
+      'Service event',
+      'Document added',
+      'data-v142-thing',
+      '#buyeros-timeline',
+      '#buyeros-thing',
+      'still:ownership-updated'
+    ].forEach(capability => {
+      if (
+        !module.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS Timeline V142 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Timeline V142 fabricates random timeline data'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-timeline-v142.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Timeline V142'
+    );
+  }
+}
+
+
+// BuyerOS Services V143
+{
+  const modulePath =
+    'buyer/protection/ui/buyeros-services-v143.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push(
+      'BuyerOS Services V143 module is missing'
+    );
+  } else {
+    const module =
+      read(modulePath);
+
+    [
+      'serviceHistory',
+      'ongoingServices',
+      'providerName',
+      'occurredOn',
+      'isPublic',
+      'typeInfo',
+      'groupedHistory',
+      'data-v143-thing',
+      '#buyeros-services',
+      '#buyeros-thing',
+      'still:ownership-updated'
+    ].forEach(capability => {
+      if (
+        !module.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS Services V143 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      module.includes(
+        'Math.random'
+      )
+    ) {
+      fail.push(
+        'BuyerOS Services V143 fabricates random service data'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-services-v143.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Services V143'
+    );
+  }
+}
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
