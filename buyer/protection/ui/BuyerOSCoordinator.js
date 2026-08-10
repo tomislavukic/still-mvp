@@ -3,7 +3,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const isHr = () => $('#language')?.value === 'hr';
   const t = (en, hr) => isHr() ? hr : en;
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;' }[c]));
   let mounted = false;
 
   function passports() {
@@ -153,6 +153,15 @@
     bind();
   }
 
+  function loadExperienceV137() {
+    if (document.querySelector('script[data-still-buyeros-experience-v137]')) return;
+    const script = document.createElement('script');
+    script.src = 'buyer/protection/ui/buyeros-experience-v137.js';
+    script.defer = true;
+    script.dataset.stillBuyerosExperienceV137 = 'true';
+    document.head.appendChild(script);
+  }
+
   function mount() {
     if (mounted || document.body.classList.contains('business-page')) return;
     const anchor = $('#stillPublicV114') || $('#ownershipPlatformV83');
@@ -164,6 +173,7 @@
     document.body.appendChild(wrapper.children[0]);
     mounted = true;
     bind();
+    loadExperienceV137();
   }
 
   window.addEventListener('still:ownership-updated', refresh);
