@@ -2105,6 +2105,15 @@
   function protectionPage() {
     const data = things();
 
+    const protectionModel =
+      window.StillBuyerOSProtectionV153 || null;
+
+    const protectionOverview =
+      protectionModel &&
+      typeof protectionModel.overview === 'function'
+        ? protectionModel.overview()
+        : null;
+
     const active = data.filter(item => {
       const days = daysUntil(item.warrantyUntil);
       return days !== null && days >= 0;
