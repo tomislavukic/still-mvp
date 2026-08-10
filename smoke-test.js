@@ -561,6 +561,40 @@ if(!fail.length){
 }
 
 
+
+// BuyerOS Intelligence V148
+{
+  const modulePath = 'buyer/protection/ui/buyeros-intelligence-v148.js';
+  const coordinatorPath = 'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push('BuyerOS Intelligence V148 module is missing');
+  } else {
+    const module = read(modulePath);
+
+    [
+      'interpret',
+      'findThings',
+      'attentionItems',
+      'serviceEvents',
+      'docsFor',
+      'What is expiring soon?',
+      'Which things have no warranty?',
+      'How many things do I have?'
+    ].forEach(capability => {
+      if (!module.includes(capability)) {
+        fail.push(`BuyerOS Intelligence V148 missing ${capability}`);
+      }
+    });
+  }
+
+  const coordinator = read(coordinatorPath);
+
+  if (!coordinator.includes('buyeros-intelligence-v148.js')) {
+    fail.push('BuyerOS Coordinator does not load Intelligence V148');
+  }
+}
+
 // BuyerOS Household Family V144
 {
   const modulePath =
