@@ -346,6 +346,31 @@
     );
   }
 
+  function loadOnboardingV154() {
+    if (
+      document.querySelector(
+        'script[data-buyeros-onboarding-v154]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'buyer/protection/ui/buyeros-onboarding-v154.js';
+
+    script.defer = true;
+
+    script.dataset.buyerosOnboardingV154 =
+      'true';
+
+    document.head.appendChild(
+      script
+    );
+  }
+
   function loadImportV145() {
     if (
       document.querySelector(
@@ -578,6 +603,7 @@ function loadIntelligenceV148() {
     loadHouseholdFamilyV144();
     loadImportV145();
     loadBulkImportV146();
+    loadOnboardingV154();
     loadImportReviewV147();
 loadActionsV151();
     loadGraphV152();

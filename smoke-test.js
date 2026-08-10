@@ -1103,5 +1103,78 @@ if(!fail.length){
 }
 
 
+
+// BuyerOS Unified Onboarding V154
+{
+  const onboardingPath =
+    'buyer/protection/ui/buyeros-onboarding-v154.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(onboardingPath)) {
+    fail.push(
+      'BuyerOS Unified Onboarding V154 module missing'
+    );
+  } else {
+    const source =
+      read(onboardingPath);
+
+    [
+      'StillBuyerOSOnboardingV154',
+      'Bring into Still',
+      "'single'",
+      "'document'",
+      "'import'",
+      'data-v154-launch',
+      'data-v154-method',
+      'data-bos132-add="thing"',
+      'data-bos132-add="document"',
+      'data-v146-launch',
+      'still:buyeros-onboarding-selection'
+    ].forEach(capability => {
+      if (
+        !source.includes(
+          capability
+        )
+      ) {
+        fail.push(
+          `BuyerOS V154 missing ${capability}`
+        );
+      }
+    });
+
+    if (
+      source.includes('localStorage.setItem') ||
+      source.includes('sessionStorage.setItem') ||
+      source.includes('fetch(') ||
+      source.includes('XMLHttpRequest') ||
+      source.includes('MutationObserver') ||
+      source.includes('Math.random')
+    ) {
+      fail.push(
+        'BuyerOS V154 owns forbidden storage/network/observer authority'
+      );
+    }
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-onboarding-v154.js'
+    ) ||
+    !coordinator.includes(
+      'loadOnboardingV154();'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Onboarding V154'
+    );
+  }
+}
+
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
