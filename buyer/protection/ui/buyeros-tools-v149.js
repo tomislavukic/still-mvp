@@ -63,6 +63,10 @@
     );
   }
 
+  function graphV152() {
+    return window.StillBuyerOSGraphV152 || null;
+  }
+
   function clean(value) {
     return String(
       value ?? ''
@@ -377,6 +381,19 @@
   }
 
   function relatedThing(doc) {
+    const graph =
+      graphV152();
+
+    if (
+      graph &&
+      typeof graph.resolveThingForDocument ===
+        'function'
+    ) {
+      return graph.resolveThingForDocument(
+        doc
+      );
+    }
+
     const all =
       things();
 

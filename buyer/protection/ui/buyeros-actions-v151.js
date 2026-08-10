@@ -50,6 +50,10 @@
       'notes'
     ]);
 
+  function graphV152() {
+    return window.StillBuyerOSGraphV152 || null;
+  }
+
   function clean(value) {
     return String(
       value ?? ''
