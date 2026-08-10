@@ -897,5 +897,58 @@ if(!fail.length){
 }
 
 
+
+// BuyerOS Actions V151
+{
+  const actionPath =
+    'buyer/protection/ui/buyeros-actions-v151.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(actionPath)) {
+    fail.push(
+      'BuyerOS Actions V151 module missing'
+    );
+  } else {
+    const source =
+      read(actionPath);
+
+    [
+      'StillBuyerOSActionsV151',
+      "'update_thing'",
+      "'add_service'",
+      "'link_document'",
+      "'delete_thing'",
+      'confirmationToken',
+      'CONFIRMATION_REQUIRED',
+      'auditLog',
+      'still:buyeros-actions-ready'
+    ].forEach(capability => {
+      if (
+        !source.includes(capability)
+      ) {
+        fail.push(
+          `BuyerOS Actions V151 missing ${capability}`
+        );
+      }
+    });
+  }
+
+  const coordinator =
+    read(coordinatorPath);
+
+  if (
+    !coordinator.includes(
+      'buyeros-actions-v151.js'
+    )
+  ) {
+    fail.push(
+      'BuyerOS Coordinator does not load Actions V151'
+    );
+  }
+}
+
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
