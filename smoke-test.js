@@ -805,5 +805,97 @@ if(!fail.length){
   }
 }
 
+
+// BuyerOS Intelligence Tool Bridge V150
+{
+  const intelligencePath =
+    'buyer/protection/ui/buyeros-intelligence-v148.js';
+
+  const toolsPath =
+    'buyer/protection/ui/buyeros-tools-v149.js';
+
+  const coordinatorPath =
+    'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  const intelligence =
+    read(intelligencePath);
+
+  const tools =
+    read(toolsPath);
+
+  const coordinator =
+    read(coordinatorPath);
+
+  [
+    'StillBuyerOSToolsV149',
+    'executeTool',
+    "'list_things'",
+    "'search_things'",
+    "'count_things'",
+    "'get_documents'",
+    "'get_service_history'",
+    "'get_attention'"
+  ].forEach(capability => {
+    if (
+      !intelligence.includes(
+        capability
+      )
+    ) {
+      fail.push(
+        `BuyerOS V150 Intelligence bridge missing ${capability}`
+      );
+    }
+  });
+
+  [
+    'localStorage',
+    'sessionStorage',
+    'OWNERSHIP_KEY',
+    'DOCUMENTS_KEY'
+  ].forEach(forbidden => {
+    if (
+      intelligence.includes(
+        forbidden
+      )
+    ) {
+      fail.push(
+        `BuyerOS V150 Intelligence still accesses ${forbidden}`
+      );
+    }
+  });
+
+  if (
+    !tools.includes(
+      "'list_things'"
+    )
+  ) {
+    fail.push(
+      'BuyerOS V149 is missing list_things required by V150'
+    );
+  }
+
+  const toolsLoad =
+    coordinator.indexOf(
+      'loadToolsV149()'
+    );
+
+  const intelligenceLoad =
+    coordinator.indexOf(
+      'loadIntelligenceV148()'
+    );
+
+  if (
+    toolsLoad < 0 ||
+    intelligenceLoad < 0 ||
+    toolsLoad >
+      intelligenceLoad
+  ) {
+    fail.push(
+      'BuyerOS V150 must load Tools before Intelligence'
+    );
+  }
+}
+
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');

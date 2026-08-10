@@ -424,7 +424,56 @@
     );
   }
 
-  function loadIntelligenceV148() {
+
+function loadToolsV149() {
+  if (window.StillBuyerOSToolsV149) {
+    return Promise.resolve(window.StillBuyerOSToolsV149);
+  }
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(
+      'script[data-buyeros-tools-v149]'
+    );
+
+    if (existing) {
+      if (window.StillBuyerOSToolsV149) {
+        resolve(window.StillBuyerOSToolsV149);
+        return;
+      }
+
+      window.addEventListener(
+        'still:buyeros-tools-ready',
+        () => resolve(window.StillBuyerOSToolsV149),
+        { once: true }
+      );
+
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'buyer/protection/ui/buyeros-tools-v149.js';
+    script.defer = true;
+    script.dataset.buyerosToolsV149 = 'true';
+
+    script.addEventListener('load', () => {
+      if (!window.StillBuyerOSToolsV149) {
+        reject(new Error('BuyerOS Tools V149 loaded without public API'));
+        return;
+      }
+
+      resolve(window.StillBuyerOSToolsV149);
+    });
+
+    script.addEventListener(
+      'error',
+      () => reject(new Error('BuyerOS Tools V149 failed to load'))
+    );
+
+    document.head.appendChild(script);
+  });
+}
+
+function loadIntelligenceV148() {
     if (document.querySelector('script[data-buyeros-intelligence-v148]')) {
       return;
     }
@@ -457,7 +506,9 @@
     loadImportV145();
     loadBulkImportV146();
     loadImportReviewV147();
-    loadIntelligenceV148();
+    loadToolsV149()
+      .then(() => loadIntelligenceV148())
+      .catch(error => console.error('BuyerOS tool/intelligence bridge failed', error));
     loadSearchV139();
   }
 
