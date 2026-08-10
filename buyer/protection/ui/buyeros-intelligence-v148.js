@@ -824,36 +824,43 @@
     });
   }
 
+  let renderScheduled = false;
+
+  function scheduleEnhanceAssistant() {
+    if (renderScheduled) {
+      return;
+    }
+
+    renderScheduled = true;
+
+    requestAnimationFrame(() => {
+      renderScheduled = false;
+      enhanceAssistant();
+    });
+  }
+
   function boot() {
     installStyles();
-    enhanceAssistant();
-
-    const observer =
-      new MutationObserver(
-        enhanceAssistant
-      );
-
-    observer.observe(
-      document.documentElement,
-      {
-        childList:true,
-        subtree:true
-      }
-    );
+    scheduleEnhanceAssistant();
 
     window.addEventListener(
       'hashchange',
-      enhanceAssistant
+      scheduleEnhanceAssistant
     );
 
     window.addEventListener(
       'still:ownership-updated',
-      enhanceAssistant
+      scheduleEnhanceAssistant
     );
 
     window.addEventListener(
       'still:buyeros-data-updated',
-      enhanceAssistant
+      scheduleEnhanceAssistant
+    );
+
+    window.addEventListener(
+      'still:language',
+      scheduleEnhanceAssistant
     );
   }
 
