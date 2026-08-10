@@ -734,5 +734,42 @@ if(!fail.length){
   }
 }
 
+// BuyerOS Import Review V147
+{
+  const modulePath = 'buyer/protection/ui/buyeros-import-review-v147.js';
+  const coordinatorPath = 'buyer/protection/ui/BuyerOSCoordinator.js';
+
+  if (!fs.existsSync(modulePath)) {
+    fail.push('BuyerOS Import Review V147 module is missing');
+  } else {
+    const module = read(modulePath);
+
+    [
+      'analyse',
+      'compare',
+      'Same serial number',
+      'Same brand and model',
+      'Possible duplicates found',
+      'Import anyway',
+      'data-v146-import',
+      'still-ownership-passports-v83'
+    ].forEach(capability => {
+      if (!module.includes(capability)) {
+        fail.push(`BuyerOS Import Review V147 missing ${capability}`);
+      }
+    });
+
+    if (module.includes('Math.random')) {
+      fail.push('BuyerOS Import Review V147 fabricates random matching data');
+    }
+  }
+
+  const coordinator = read(coordinatorPath);
+
+  if (!coordinator.includes('buyeros-import-review-v147.js')) {
+    fail.push('BuyerOS Coordinator does not load Import Review V147');
+  }
+}
+
 if(fail.length){console.error('Still? smoke tests FAILED\n- '+fail.join('\n- '));process.exit(1)}
 console.log('Still? smoke tests passed');
