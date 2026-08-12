@@ -140,10 +140,10 @@
               <label>${t('Private notes', 'Privatne bilješke')}<textarea name="notes" maxlength="1200" placeholder="${t('Condition, scope, included accessories, promised result…', 'Stanje, opseg, uključena oprema, obećani rezultat…')}"></textarea></label>
             </details>
             <button class="op83-primary" type="submit">${t('Add to Still', 'Dodaj u Still')}</button>
-            <small>${t('Found it. Saved locally first; account sync is optional.', 'Pronađeno. Najprije se sprema lokalno; sinkronizacija računa nije obavezna.')}</small>
+            <small id="op83PassportMessage">${t('Buyer sign-in keeps this Thing private and available on every device.', 'Prijava kupca čuva ovu stvar privatno i dostupno na svakom uređaju.')}</small>
           </form>
           <div class="op83-card op83-passport-panel">
-            <div class="op83-panel-tools"><div><h3>${t('Your passports', 'Tvoje putovnice')}</h3><small>${t('Products, services and commitments together.', 'Proizvodi, usluge i obećanja zajedno.')}</small></div><div><button type="button" class="op83-text" data-op83-sync>${t('Sync account', 'Sinkroniziraj račun')}</button><button type="button" class="op83-text" data-op83-export>${t('Export', 'Izvezi')}</button></div></div>
+            <div class="op83-panel-tools"><div><h3>${t('Your passports', 'Tvoje putovnice')}</h3><small>${t('Products, services and commitments together.', 'Proizvodi, usluge i obećanja zajedno.')}</small></div><div><button type="button" class="op83-text" data-op83-sync>${t('Import browser records', 'Uvezi zapise preglednika')}</button><button type="button" class="op83-text" data-op83-export>${t('Export', 'Izvezi')}</button></div></div>
             <div id="passportListV83" class="op83-passport-list"></div>
             <div class="op83-connect-box"><b>${t('Connect a company-issued passport', 'Poveži putovnicu koju je izdala tvrtka')}</b><p>${t('Enter the code a verified company shared with you. Connection requires buyer sign-in and your explicit action.', 'Unesi kod koji ti je podijelila verificirana tvrtka. Povezivanje zahtijeva prijavu kupca i tvoju izričitu radnju.')}</p><form id="connectFormV83"><input name="code" required maxlength="30" placeholder="STILL-XXXX-XXXX"><button>${t('Connect', 'Poveži')}</button></form><small id="connectMessageV83"></small></div>
           </div>
@@ -211,32 +211,47 @@
     });
   }
 
-  function addPassport(event) {
+  async function addPassport(event) {
     event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    const message = $('#op83PassportMessage');
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    const passport = {
-      id: `local_${crypto.randomUUID()}`,
-      kind: data.kind,
-      title: data.title.trim(),
-      business: data.business.trim(),
-      reference: data.reference.trim(),
-      purchasedOn: data.purchasedOn,
-      returnBy: data.returnBy,
-      warrantyUntil: data.warrantyUntil,
-      renewalAt: data.renewalAt,
-      nextActionAt: data.nextActionAt,
-      notes: data.notes.trim(),
-      connection: 'buyer-owned',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    passports.unshift(passport);
-    write(passports);
-    event.currentTarget.reset();
-    renderPassports();
-    renderTimeline();
-    updateCounts();
-    $('#passportListV83')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    button.disabled = true;
+    if (message) message.textContent = t('Saving privately…', 'Privatno spremanje…');
+    try {
+      const result = await api('/api/v1/world/things', { method: 'POST', body: JSON.stringify(data) });
+      const item = result.thing;
+      const passport = {
+        id: item.publicId,
+        publicId: item.publicId,
+        kind: item.kind,
+        title: item.title,
+        business: item.businessName || '',
+        reference: item.reference || '',
+        purchasedOn: item.purchaseDate || '',
+        returnBy: item.returnBy || '',
+        warrantyUntil: item.warrantyUntil || '',
+        renewalAt: item.renewalAt || '',
+        nextActionAt: item.nextActionAt || '',
+        notes: item.notes || '',
+        connection: 'buyer-owned',
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt
+      };
+      passports = [passport, ...passports.filter(existing => existing.publicId !== passport.publicId)];
+      write(passports);
+      form.reset();
+      renderPassports();
+      renderTimeline();
+      updateCounts();
+      if (message) message.textContent = t('Saved to your private World.', 'Spremljeno u tvoj privatni Svijet.');
+      window.StillWorld?.open('things');
+    } catch (error) {
+      if (message) message.textContent = error.status === 401 ? t('Sign in as a buyer to save this Thing.', 'Prijavi se kao kupac za spremanje ove stvari.') : t('This Thing could not be saved. Review the fields and try again.', 'Stvar nije spremljena. Provjeri polja i pokušaj ponovno.');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function passportEvents(passport) {
@@ -582,32 +597,14 @@
     const button = event.currentTarget;
     const original = button.textContent;
     button.disabled = true;
-    button.textContent = t('Syncing…', 'Sinkronizacija…');
-    try {
-      const remote = await api('/api/v1/ownership/passports');
-      const localUnsynced = passports.filter(item => !item.publicId);
-      for (const item of localUnsynced) {
-        try {
-          const created = await api('/api/v1/ownership/passports', { method: 'POST', body: JSON.stringify(item) });
-          item.publicId = created.passport.publicId;
-          item.id = created.passport.publicId;
-        } catch {}
-      }
-      const refreshed = await api('/api/v1/ownership/passports');
-      const remoteItems = (refreshed.passports || remote.passports || []).map(fromRemote);
-      const remoteIds = new Set(remoteItems.map(item => item.publicId));
-      passports = [...remoteItems, ...passports.filter(item => !item.publicId || !remoteIds.has(item.publicId))];
-      write(passports);
-      renderPassports();
-      renderTimeline();
-      updateCounts();
-      button.textContent = t('Synced ✓', 'Sinkronizirano ✓');
-    } catch (error) {
-      button.textContent = error.status === 401 ? t('Sign in to sync', 'Prijavi se za sinkronizaciju') : t('Sync unavailable', 'Sinkronizacija nije dostupna');
-    } finally {
-      button.disabled = false;
-      setTimeout(() => { button.textContent = original; }, 2800);
-    }
+    button.textContent = t('Importing…', 'Uvoz…');
+    if (window.StillWorld) {
+      await window.StillWorld.runMigration(true);
+      window.StillWorld.open('things');
+      button.textContent = t('Import checked ✓', 'Uvoz provjeren ✓');
+    } else button.textContent = t('World is still loading', 'Svijet se još učitava');
+    button.disabled = false;
+    setTimeout(() => { button.textContent = original; }, 2800);
   }
 
   async function connectPassport(event) {

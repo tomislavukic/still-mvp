@@ -36,3 +36,4 @@ class RetailerDirectory {
 }
 
 module.exports = RetailerDirectory;
+

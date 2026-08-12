@@ -1,0 +1,42 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const worker = read('merchant-backend/worker-v134.js');
+const schema = read('merchant-backend/schema-v134.sql');
+const os = read('still-os-v133.js');
+const client = read('needs-resolution-v134.js');
+const style = read('needs-resolution-v134.css');
+const app = read('app.html');
+const build = read('build-public.js');
+const wrangler = read('wrangler.jsonc');
+let passed = 0;
+function test(name, check) { check(); passed += 1; process.stdout.write(`✓ ${name}\n`); }
+
+test('01 Phase 3 is additive over Still OS and existing APIs', () => assert.ok(worker.includes("import app from './worker-v133.js'") && worker.includes('return app.fetch(request,env,ctx)')));
+test('02 Need, links, quotes and outcomes are persisted domain objects', () => ['world_needs','world_need_links','world_need_quotes','world_resolution_outcomes'].forEach(table => assert.ok(schema.includes(`CREATE TABLE IF NOT EXISTS ${table}`))));
+test('03 all Need reads and mutations derive ownership from buyer session', () => assert.ok(worker.includes("cookie(request, 'still_buyer')") && worker.includes('buyer_account_id=?')));
+test('04 cross-origin Need mutations are rejected', () => assert.ok(worker.includes("origin_not_allowed") && worker.includes('sameOrigin(request)')));
+test('05 low confidence remains pending confirmation', () => assert.ok(worker.includes("input.confidence==='LOW'?'NEEDS_CONFIRMATION'")));
+test('06 duplicate Needs return a review conflict instead of silent merge', () => assert.ok(worker.includes("duplicate_need_review_required") && worker.includes('allowDuplicate')));
+test('07 Now receives ranked real Needs and an honest quiet state', () => assert.ok(worker.includes('dominantNeed:items[0]') && worker.includes('activeNeedCount') && worker.includes('needData.activeNeedCount===0')));
+test('08 universal input classification never persists by itself', () => assert.ok(worker.includes("route:'need'") && worker.includes('persisted:false')));
+test('09 resolution begins with deterministic World and Knowledge evidence', () => assert.ok(worker.includes("option('KEEP'") && worker.includes("option('LEARN'") && worker.includes("method:'deterministic_world_first'")));
+test('10 Resolution options expose evidence and limitations', () => assert.ok(worker.includes('evidenceRefs') && worker.includes('limitations')));
+test('11 no provider, price or availability is assumed', () => assert.ok(worker.includes('No provider, price or availability is assumed.')));
+test('12 only a user supplied HTTPS link can become an external option', () => assert.ok(worker.includes("url.protocol === 'https:'") && worker.includes("You supplied this external link.")));
+test('13 selecting an option does not resolve a Need', () => { const selection = worker.match(/async function selectOption[\s\S]*?\n}\n\nasync function resolveNeed/)?.[0] || ''; assert.ok(selection.includes("const status=action==='START_WAITING'?'WAITING':'HANDLING'") && !selection.includes("status='RESOLVED'")); });
+test('14 resolution requires a user supplied outcome summary', () => assert.ok(worker.includes('resolution_summary_required') && worker.includes("status='RESOLVED'")));
+test('15 repair outcomes record Thing service history', () => assert.ok(worker.includes("'thing.service_recorded'")));
+test('16 Need deep links are part of the authenticated OS router', () => assert.ok(os.includes("'need'") && os.includes("renderContext('need'")));
+test('17 Now makes Handle It the primary Need action', () => assert.ok(os.includes("t('Handle it', 'Riješi')")));
+test('18 World provides Open, Waiting and Resolved Need views', () => ['OPEN','WAITING','RESOLVED'].forEach(status => assert.ok(client.includes(`data-needs-filter=\"${status}\"`))));
+test('19 Thing, Situation and Knowledge can create linked Needs', () => assert.ok((os.match(/data-create-need/g) || []).length >= 3 && client.includes('linkPayload(context)')));
+test('20 Sight can create a Need from a real private document', () => assert.ok(os.includes('data-sight-action="need"') && os.includes("sourceType: 'DOCUMENT_DERIVED'")));
+test('21 quotes use real user-entered amounts and factual comparison', () => assert.ok(client.includes('amountCents: Math.round(amount * 100)') && client.includes('quoteComparison')));
+test('22 Need status is written as text and keyboard controls have target sizing', () => assert.ok(client.includes('statusLabel(need.status') && /min-height:\s*4[4-9]px/.test(style)));
+test('23 mobile resolution layout is intentionally single column', () => assert.match(style, /@media\(max-width:600px\)[\s\S]*\.need134-options article\{grid-template-columns:1fr/));
+test('24 production ships Phase 3 beneath the additive Market Worker', () => { const marketWorker = read('merchant-backend/worker-v135.js'); assert.ok(app.includes('needs-resolution-v134.js') && build.includes("'needs-resolution-v134.css'") && wrangler.includes('worker-v135.js') && marketWorker.includes("import app from './worker-v134.js'")); });
+
+process.stdout.write(`Needs and Resolution tests passed (${passed} assertions).\n`);

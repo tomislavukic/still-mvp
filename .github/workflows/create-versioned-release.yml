@@ -94,9 +94,18 @@ jobs:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
+
+          notes_file="docs/releases/v${RELEASE_VERSION}.md"
+          notes_args=(--generate-notes)
+
+          if [ -f "$notes_file" ]; then
+            notes_args=(--notes-file "$notes_file")
+          fi
+
           gh release create "$RELEASE_TAG" \
             --target "$GITHUB_SHA" \
-            --title "Still MVP ${RELEASE_TAG}" \
-            --generate-notes
+            --title "Still ${RELEASE_TAG} · Everything you own" \
+            "${notes_args[@]}"
 
-          echo "Published Still MVP ${RELEASE_VERSION}"
+          echo "Published Still ${RELEASE_VERSION}"

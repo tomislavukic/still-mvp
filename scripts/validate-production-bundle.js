@@ -21,6 +21,7 @@ const buyerScripts = [
   'relationship-dashboard-v103.js',
   'contact-profile-v104.js',
   'still-public-v114.js',
+  'world-foundation-v131.js',
 ];
 
 const buyerStyles = [
@@ -42,6 +43,7 @@ const buyerStyles = [
   'relationship-dashboard-v103.css',
   'brand-alignment-v104.css',
   'still-v114.css',
+  'world-foundation-v131.css',
 ];
 
 const companyScripts = [
@@ -119,6 +121,7 @@ function assertManifestIncludes(list, file, label) {
 const indexHtml = read('public/index.html');
 const companyHtml = read('public/company.html');
 const pricingHtml = read('public/pricing.html');
+const appHtml = read('public/app.html');
 const manifestText = read('public/build.json');
 let manifest = {};
 
@@ -130,6 +133,23 @@ try {
 
 const bundle = manifest.productionBundle;
 if (!Number.isInteger(bundle) || bundle < 1) fail('public/build.json has no valid productionBundle');
+
+for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css']) {
+  assertFileExists(`public/${file}`);
+  assertManifestIncludes(manifest.files, file, 'production file manifest');
+}
+for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css']) {
+  assertManifestIncludes(manifest.authenticatedApp, file, 'authenticated Still OS manifest');
+}
+if (bundle) {
+  assertVersionedReference(appHtml, 'public/app.html', 'still-os-v133.js', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'still-os-v133.css', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'needs-resolution-v134.js', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'needs-resolution-v134.css', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'still-market-v135.js', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'still-market-v135.css', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'theme.js', bundle);
+}
 
 for (const file of buyerScripts) {
   assertFileExists(`public/${file}`);
@@ -191,7 +211,7 @@ for (const file of manifest.companyScripts || []) {
   if (bundle) assertVersionedReference(companyHtml, 'public/company.html', file, bundle);
 }
 
-for (const [page, html] of [['public/index.html', indexHtml], ['public/company.html', companyHtml], ['public/pricing.html', pricingHtml]]) {
+for (const [page, html] of [['public/index.html', indexHtml], ['public/app.html', appHtml], ['public/company.html', companyHtml], ['public/pricing.html', pricingHtml]]) {
   const metaBuild = html.match(/<meta\s+name=["']still-build["']\s+content=["']([^"']+)["']/i)?.[1];
   if (String(metaBuild) !== String(bundle)) fail(`${page} still-build metadata does not match productionBundle`);
   for (const match of html.matchAll(/(?:src|href)=["'][^"']+\?v=([^"']+)["']/gi)) {
@@ -212,7 +232,44 @@ if (!pricingHtml.includes('pricing-v114.js') || !pricingHtml.includes('still-v11
 const consumerRuntime = read('public/still-public-v114.js');
 if (!consumerRuntime.includes('Everything you own.') || !consumerRuntime.includes('One trusted place.')) fail('consumer proposition is missing from production runtime');
 if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("openTool('ownership')")) fail('consumer CTAs are not connected to the real ownership workflow');
-if (!consumerRuntime.includes("t('Planned', 'Planirano')")) fail('unavailable consumer capabilities are not truthfully labelled');
+if (!consumerRuntime.includes("t('PLANNED', 'PLANIRANO')") || !consumerRuntime.includes('Still+')) fail('unavailable premium consumer capabilities are not truthfully labelled');
+const worldRuntime = read('public/world-foundation-v131.js');
+for (const capability of ['/api/v1/world/bootstrap','/api/v1/world/things','/api/v1/world/receipts/capture','/api/v1/world/knowledge','/api/v1/world/situations','/api/v1/world/open-loops']) {
+  if (!worldRuntime.includes(capability)) fail(`World Foundation production runtime is missing ${capability}`);
+}
+if (!worldRuntime.includes("source: 'authenticated_world'") || !worldRuntime.includes('still-ownership-passports-v83')) fail('World Foundation does not migrate and replace browser-only ownership state');
+const osRuntime = read('public/still-os-v133.js');
+for (const route of ['/api/v1/world/now','/api/v1/world/context/','/api/v1/world/input/route','/api/v1/world/receipts/capture','/api/v1/world/documents','/api/v1/world/knowledge','/api/v1/world/relationships']) {
+  if (!osRuntime.includes(route)) fail(`Still OS production runtime is missing ${route}`);
+}
+for (const area of ['Now','World','Market','Discover','Together']) {
+  if (!osRuntime.includes(area)) fail(`Still OS navigation is missing ${area}`);
+}
+if (!osRuntime.includes("'replaceState' : 'pushState'") || !osRuntime.includes("addEventListener('popstate'")) fail('Still OS deep-link navigation is not shipped');
+if (!osRuntime.includes('confirmInput(values.content') || !osRuntime.includes('data-route-form')) fail('Still OS universal input does not require destination confirmation');
+if (!osRuntime.includes('/api/v1/world/receipts/capture') || !osRuntime.includes('/api/v1/world/documents')) fail('Still Sight does not reuse canonical receipt and document services');
+const phase2Worker = read('merchant-backend/worker-v133.js');
+if (!phase2Worker.includes("import app from './worker-v131.js'") || !phase2Worker.includes("path.startsWith('/app/')")) fail('active Still OS Worker does not preserve Phase 1 or authenticated app routing');
+if (!phase2Worker.includes("path === '/api/v1/world/input/route'") || !phase2Worker.includes('/api\\/v1\\/world\\/context')) fail('active Still OS Worker lacks context or input services');
+const resolutionRuntime = read('public/needs-resolution-v134.js');
+for (const capability of ['/api/v1/world/needs','/context','/quotes','/resolve','/api/v1/world/resolution-outcomes']) {
+  if (!resolutionRuntime.includes(capability)) fail(`Needs resolution runtime is missing ${capability}`);
+}
+if (!resolutionRuntime.includes('Real options from your World') || !resolutionRuntime.includes('Still does not verify provider quality')) fail('Needs resolution workspace lacks truthful option and quote language');
+const phase3Worker = read('merchant-backend/worker-v134.js');
+if (!phase3Worker.includes("import app from './worker-v133.js'") || !phase3Worker.includes('deterministic_world_first')) fail('active Phase 3 Worker does not preserve Still OS or deterministic resolution');
+for (const capability of ['world_needs','world_need_quotes','world_resolution_outcomes','duplicate_need_review_required','thing.service_recorded']) {
+  if (!phase3Worker.includes(capability)) fail(`active Phase 3 Worker is missing ${capability}`);
+}
+const marketRuntime = read('public/still-market-v135.js');
+for (const capability of ['/api/v1/market/bootstrap','/api/v1/market/listings','/api/v1/market/wanted','/api/v1/market/offers','/api/v1/market/deals/','/api/v1/market/transfers/']) {
+  if (!marketRuntime.includes(capability)) fail(`Still Market production runtime is missing ${capability}`);
+}
+const marketWorker = read('merchant-backend/worker-v135.js');
+if (!marketWorker.includes("import app from './worker-v134.js'") || !marketWorker.includes('privacy_filter_applied')) fail('active Market Worker does not preserve Phase 3 or privacy-filtered transfer');
+for (const capability of ['market_listings','market_wanted','market_offers','market_deals','market_transfers','EXTERNAL_MANUAL']) {
+  if (!marketWorker.includes(capability)) fail(`active Market Worker is missing ${capability}`);
+}
 const companyRuntime = read('public/companyos-v120.js');
 if (!companyRuntime.includes('/api/v1/companyos/bootstrap')) fail('CompanyOS does not load authenticated production records');
 if (!companyRuntime.includes('/api/v1/companyos/memory')) fail('CompanyOS authorized memory is missing');

@@ -159,3 +159,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleMount, { once: true });
   else scheduleMount();
 })();
+
