@@ -202,7 +202,12 @@
   }
 
   function toolFromHash() {
-    return ({ '#buyeros-home': 'ownership', '#worldFoundationV131': 'ownership', '#ownershipHubV83': 'ownership', '#timelineV83': 'timeline', '#checker': 'protection', '#lifecyclePlatformV95': 'lifecycle', '#passportCommerceV92': 'commerce', '#decisionLabV83': 'decision', '#buyerRewardsV76': 'rewards' })[location.hash];
+    return ({ '#worldFoundationV131': 'ownership', '#ownershipHubV83': 'ownership', '#timelineV83': 'timeline', '#checker': 'protection', '#lifecyclePlatformV95': 'lifecycle', '#passportCommerceV92': 'commerce', '#decisionLabV83': 'decision', '#buyerRewardsV76': 'rewards' })[location.hash];
+  }
+
+  function normalizeLegacyWorkspaceHash() {
+    if (!/^#buyeros-(?:home|things|thing|protection|timeline|documents|services|household|family|search|assistant)$/.test(location.hash)) return;
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
   }
 
   function moveBuyerAccount() {
@@ -341,6 +346,7 @@ function initializeStillProtection() {
 }
 
 function start() {
+    normalizeLegacyWorkspaceHash();
     if (!$('#ownershipPlatformV83')) return setTimeout(start, 80);
     render();
     initializeStillProtection();

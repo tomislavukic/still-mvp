@@ -224,6 +224,8 @@ if (!/<meta\s+name=["']description["'][^>]+content=["'][^"']*own[^"']*["']/i.tes
 if (!/<meta\s+property=["']og:title["'][^>]+Everything you own\./i.test(indexHtml)) fail('BuyerOS Open Graph title is not ownership-first');
 if (!/<meta\s+name=["']twitter:card["'][^>]+summary_large_image/i.test(indexHtml)) fail('BuyerOS Twitter card metadata is missing');
 if ((manifest.runtime || []).includes('buyer-auth-routes-v79.js')) fail('obsolete global buyer auth shim is shipped');
+if ((manifest.runtime || []).includes('buyeros-workspace-v132.js')) fail('obsolete local-only BuyerOS workspace is shipped');
+if (indexHtml.includes('buyeros-workspace-v132.js') || indexHtml.includes('BuyerOSCoordinator.js')) fail('obsolete BuyerOS dashboard is active on the public homepage');
 if (!indexHtml.includes('still-public-v114.js')) fail('consumer-first public experience is not shipped');
 if (!indexHtml.includes('still-v114.css')) fail('consumer-first visual system is not shipped');
 if (!companyHtml.includes('still-business-v114.js')) fail('Still for Business public experience is not shipped');
