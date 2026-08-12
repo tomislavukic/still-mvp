@@ -416,10 +416,44 @@
   async function openProfile() {
     try {
       const data = state.relationship || await api('/api/v1/buyer-dashboard'); state.relationship = data;
-      const profile = data.profile || data.buyer || {}, name = profile.display_name || profile.name || state.now?.owner?.name || t('Still member', 'Član Still-a');
+      const profile = data.profile || data.buyer || {}, name = profile.displayName || profile.display_name || profile.name || state.now?.owner?.name || t('Still member', 'Član Still-a');
       const migration = state.migration.status === 'complete' ? t(`${state.migration.imported} imported · ${state.migration.skipped} already accounted for`, `${state.migration.imported} uvezeno · ${state.migration.skipped} već obrađeno`) : state.migration.status === 'failed' ? t('Migration needs attention. Your server records remain safe.', 'Migraciju treba provjeriti. Zapisi na poslužitelju ostaju sigurni.') : t('No browser records need migration.', 'Nijedan zapis iz preglednika ne treba migraciju.');
-      openDialog(t('Your profile', 'Tvoj profil'), `<section class="sos133-profile"><div class="sos133-profile-id"><span>${esc(name.charAt(0).toLocaleUpperCase())}</span><div><h2>${esc(name)}</h2><p>${esc(profile.email || '')}</p></div></div><dl><div><dt>${t('Privacy', 'Privatnost')}</dt><dd>${t('Your World is private and owner-scoped.', 'Tvoj Svijet je privatan i ograničen na vlasnika.')}</dd></div><div><dt>${t('Connected data', 'Povezani podaci')}</dt><dd>${t('Only existing passport and case relationships are shown in Together.', 'U Zajedno se prikazuju samo postojeći odnosi putovnica i slučajeva.')}</dd></div><div><dt>${t('Migration', 'Migracija')}</dt><dd>${esc(migration)}</dd></div></dl><div class="sos133-profile-links"><a href="/#buyerRewardsV76">${t('Rewards and reputation', 'Nagrade i reputacija')}</a><a href="/">${t('Public Still website', 'Javna stranica Still')}</a></div></section>`);
+      const picture = profile.pictureUrl ? `<img src="${esc(profile.pictureUrl)}" alt="">` : esc(name.charAt(0).toLocaleUpperCase());
+      const upload = data.capabilities?.profileMediaUploads ? `<label class="sos133-profile-photo">${t('Profile picture', 'Slika profila')}<input type="file" name="photo" accept="image/png,image/jpeg,image/webp"><small>${t('JPEG, PNG or WebP. Still prepares a private square image before upload.', 'JPEG, PNG ili WebP. Still priprema privatnu kvadratnu sliku prije prijenosa.')}</small></label>` : '';
+      const dialog = openDialog(t('Your profile', 'Tvoj profil'), `<section class="sos133-profile"><div class="sos133-profile-id"><span>${picture}</span><div><h2>${esc(name)}</h2><p>${esc(profile.email || '')}</p></div></div><form class="sos133-profile-form" data-profile-form><label>${t('Display name', 'Ime za prikaz')}<input name="displayName" required minlength="2" maxlength="180" value="${esc(name)}"></label><label>${t('Short profile description', 'Kratak opis profila')}<textarea name="bio" maxlength="600" placeholder="${t('A little context for businesses you intentionally connect with.', 'Kratak kontekst za tvrtke s kojima se namjerno povežeš.')}">${esc(profile.bio || '')}</textarea></label><label class="sos133-profile-share"><input type="checkbox" name="shareWithConnectedBusinesses" ${profile.shareWithConnectedBusinesses === false ? '' : 'checked'}><span><b>${t('Share my profile with connected businesses', 'Dijeli moj profil s povezanim tvrtkama')}</b><small>${t('Only businesses already connected through a Passport or case can see it.', 'Mogu ga vidjeti samo tvrtke već povezane Putovnicom ili slučajem.')}</small></span></label>${upload}<button class="primary">${t('Save profile', 'Spremi profil')}</button><p class="sos133-profile-status" data-profile-status role="status"></p></form><dl><div><dt>${t('Private World', 'Privatni Svijet')}</dt><dd>${t('Your records remain private and owner-scoped.', 'Tvoji zapisi ostaju privatni i ograničeni na vlasnika.')}</dd></div><div><dt>${t('Migration', 'Migracija')}</dt><dd>${esc(migration)}</dd></div></dl><div class="sos133-profile-links"><a href="/app/together" data-nav>${t('Connected businesses', 'Povezane tvrtke')}</a><a href="/">${t('Public Still website', 'Javna stranica Still')}</a></div></section>`);
+      dialog.querySelector('[data-profile-form]').addEventListener('submit', async event => {
+        event.preventDefault();
+        const form = event.currentTarget, button = form.querySelector('button'), status = form.querySelector('[data-profile-status]'), photo = form.elements.photo?.files?.[0];
+        button.disabled = true; status.textContent = t('Saving…', 'Spremanje…');
+        try {
+          const saved = await api('/api/v1/buyer-profile', { method: 'POST', body: JSON.stringify({ displayName: form.elements.displayName.value, bio: form.elements.bio.value, shareWithConnectedBusinesses: form.elements.shareWithConnectedBusinesses.checked }) });
+          if (photo) {
+            const blob = await profileImageBlob(photo);
+            await api('/api/v1/buyer-profile/photo', { method: 'POST', headers: { 'content-type': 'image/webp' }, body: blob });
+          }
+          state.relationship = null;
+          if (state.now?.owner && saved.profile?.displayName) state.now.owner.name = saved.profile.displayName;
+          updateChrome(route().space);
+          status.textContent = t('Profile saved.', 'Profil je spremljen.');
+          setStatus(t('Profile saved.', 'Profil je spremljen.'));
+        } catch (error) { status.textContent = error.message; setStatus(error.message, true); }
+        finally { button.disabled = false; }
+      });
     } catch (error) { setStatus(error.message, true); }
+  }
+
+  async function profileImageBlob(file) {
+    if (!file || !/^image\/(?:png|jpeg|webp)$/.test(file.type)) throw new Error(t('Choose a JPEG, PNG or WebP image.', 'Odaberi JPEG, PNG ili WebP sliku.'));
+    const url = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => { const node = new Image(); node.onload = () => resolve(node); node.onerror = reject; node.src = url; });
+      const size = 320, canvas = document.createElement('canvas'), context = canvas.getContext('2d'); canvas.width = size; canvas.height = size;
+      const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight), width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+      context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', .84));
+      if (!blob || blob.size > 350000) throw new Error(t('The image is too large.', 'Slika je prevelika.'));
+      return blob;
+    } finally { URL.revokeObjectURL(url); }
   }
 
   async function performSearch(query) {

@@ -18,8 +18,6 @@ const buyerScripts = [
   'design-clarity-v84.js',
   'progressive-forms-v88.js',
   'flow-feedback-v89.js',
-  'relationship-dashboard-v103.js',
-  'contact-profile-v104.js',
   'still-public-v114.js',
   'world-foundation-v131.js',
 ];
@@ -40,7 +38,6 @@ const buyerStyles = [
   'flow-feedback-v89.css',
   'visual-details-v90.css',
   'rewards-visible-v91.css',
-  'relationship-dashboard-v103.css',
   'brand-alignment-v104.css',
   'still-v114.css',
   'world-foundation-v131.css',
@@ -233,7 +230,10 @@ if (!companyHtml.includes('companyos-v120.css')) fail('live CompanyOS visual sys
 if (!pricingHtml.includes('pricing-v114.js') || !pricingHtml.includes('still-v114.css')) fail('pricing hierarchy is not shipped');
 const consumerRuntime = read('public/still-public-v114.js');
 if (!consumerRuntime.includes('Everything you own.') || !consumerRuntime.includes('One trusted place.')) fail('consumer proposition is missing from production runtime');
-if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("openTool('ownership')")) fail('consumer CTAs are not connected to the real ownership workflow');
+if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("enterStill('/app/world')")) fail('consumer CTAs are not connected to the authenticated Still ownership workflow');
+if (manifest.runtime?.some(file => ['relationship-dashboard-v103.js','contact-profile-v104.js','buyer-auth-layout-v78.js'].includes(file))) fail('authenticated profile/dashboard modules are shipped in the public landing runtime');
+if (consumerRuntime.includes('stillAccountMountV114') || consumerRuntime.includes('data-still-tool')) fail('private account or legacy tool controls are mounted in the public landing story');
+if (!consumerRuntime.includes('placeBuyerAuth()') || !read('public/still-v114.css').includes('sp114-auth-overlay')) fail('top-level buyer sign-in overlay is not shipped');
 if (!consumerRuntime.includes("t('PLANNED', 'PLANIRANO')") || !consumerRuntime.includes('Still+')) fail('unavailable premium consumer capabilities are not truthfully labelled');
 const worldRuntime = read('public/world-foundation-v131.js');
 for (const capability of ['/api/v1/world/bootstrap','/api/v1/world/things','/api/v1/world/receipts/capture','/api/v1/world/knowledge','/api/v1/world/situations','/api/v1/world/open-loops']) {
@@ -243,6 +243,9 @@ if (!worldRuntime.includes("source: 'authenticated_world'") || !worldRuntime.inc
 const osRuntime = read('public/still-os-v133.js');
 for (const route of ['/api/v1/world/now','/api/v1/world/context/','/api/v1/world/input/route','/api/v1/world/receipts/capture','/api/v1/world/documents','/api/v1/world/knowledge','/api/v1/world/relationships']) {
   if (!osRuntime.includes(route)) fail(`Still OS production runtime is missing ${route}`);
+}
+for (const route of ['/api/v1/buyer-dashboard','/api/v1/buyer-profile','/api/v1/buyer-profile/photo']) {
+  if (!osRuntime.includes(route)) fail(`authenticated Still profile management is missing ${route}`);
 }
 for (const area of ['Now','World','Market','Discover','Together']) {
   if (!osRuntime.includes(area)) fail(`Still OS navigation is missing ${area}`);

@@ -57,5 +57,13 @@ test('32 the landing introduction connects every current Still space truthfully'
   ['/app/world','/app/market','/app/together','data-still-destination'].forEach(capability => assert.ok(publicExperience.includes(capability)));
   assert.ok(publicExperience.includes('Still does not invent a provider, price, deadline, company update or transaction.'));
 });
+test('33 private profile maintenance is available only in authenticated Still', () => {
+  assert.ok(client.includes('/api/v1/buyer-profile') && client.includes('/api/v1/buyer-profile/photo'));
+  assert.ok(!publicExperience.includes('stillAccountMountV114') && !publicExperience.includes('data-still-tool'));
+});
+test('34 public buyer sign-in is a top-level overlay rather than a bottom-page module', () => {
+  assert.ok(publicExperience.includes('placeBuyerAuth()'));
+  assert.ok(style.includes('font-family:Inter'));
+});
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);
