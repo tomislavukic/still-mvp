@@ -10,6 +10,7 @@ async function request(path, { cookie = firstCookie, method = 'GET', body, heade
   const response = await fetch(`${origin}${path}`, {
     method,
     body,
+    signal: AbortSignal.timeout(15000),
     headers: { ...(cookie ? { cookie } : {}), ...(!['GET', 'HEAD'].includes(method) ? { origin } : {}), ...headers }
   });
   const data = await response.json().catch(() => ({}));
@@ -17,7 +18,7 @@ async function request(path, { cookie = firstCookie, method = 'GET', body, heade
 }
 
 async function htmlRequest(path, { cookie = firstCookie } = {}) {
-  const response = await fetch(`${origin}${path}`, { headers: cookie ? { cookie } : {}, redirect: 'manual' });
+  const response = await fetch(`${origin}${path}`, { headers: cookie ? { cookie } : {}, redirect: 'manual', signal: AbortSignal.timeout(15000) });
   return { status: response.status, text: await response.text(), headers: response.headers };
 }
 
