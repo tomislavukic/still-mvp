@@ -20,7 +20,11 @@ function test(name, check) {
 
 test('01 Phase 2 is additive over the real Phase 1 Worker', () => assert.ok(worker.includes("import app from './worker-v131.js'")));
 test('02 authenticated app routes are Worker-first', () => assert.ok(wrangler.includes('"/app", "/app/*"') && worker.includes("path.startsWith('/app/')")));
-test('03 signed-out app requests are routed to buyer sign-in', () => assert.ok(worker.includes("Response.redirect(new URL('/?signin=1'")));
+test('03 signed-out app requests preserve their safe deep link through buyer sign-in', () => {
+  assert.ok(worker.includes("signIn.searchParams.set('signin', '1')"));
+  assert.ok(worker.includes("signIn.searchParams.set('returnTo', `${requested.pathname}${requested.search}`)"));
+  assert.ok(buyerAuth.includes('safeOsDestination(returnTo)'));
+});
 test('04 Now is deterministic and exposes quiet state', () => assert.ok(worker.includes("method: 'deterministic_priority'") && worker.includes('quietState: attentionItems.length === 0')));
 test('05 adaptive context remains owner-scoped', () => assert.ok(worker.includes('WHERE k.buyer_account_id=?') && worker.includes('WHERE buyer_account_id=? AND ((from_type=?')));
 test('06 universal routing never persists a classification', () => assert.ok(worker.includes('persisted: false') && !worker.includes('simulated')));

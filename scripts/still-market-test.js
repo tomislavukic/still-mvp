@@ -21,6 +21,10 @@ test('02 active deployment entry points to Market Worker', () => assert.ok(wrang
 test('03 canonical listings reference Thing passports', () => assert.ok(schema.includes('thing_passport_id TEXT NOT NULL') && worker.includes('thing_passport_id')));
 test('04 one open listing per Thing is enforced by D1', () => assert.ok(schema.includes('CREATE UNIQUE INDEX IF NOT EXISTS idx_market_one_open_listing')));
 test('05 ownership is checked before listing creation', () => assert.ok(worker.includes('thing_not_owned') && worker.includes('ownerThing(env,buyer.buyer_account_id')));
+test('05b legacy owned passports are backfilled before Market eligibility is evaluated', () => {
+  assert.ok(worker.includes("'legacy_market_backfill'"));
+  assert.ok(worker.includes("thing.lifecycle_state&&thing.lifecycle_state!=='OWNED'"));
+});
 test('06 unsupported and non-owned Things are rejected', () => assert.ok(worker.includes('thing_not_market_eligible') && worker.includes('ALLOWED_CATEGORIES')));
 test('07 structured condition disclosures are persisted', () => ['condition_grade','known_defects','functional_issues','cosmetic_issues','included_accessories_json'].forEach(field => assert.ok(schema.includes(field))));
 test('08 condition avoids fake AI or professional assessment', () => assert.ok(worker.includes('aiAssessment:null') && worker.includes('professionalInspection:false')));

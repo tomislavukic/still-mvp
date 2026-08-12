@@ -20,10 +20,17 @@
   let root = null;
   let googleLoadPromise = null;
   const osPath = '/app';
+  const safeOsDestination = value => {
+    try {
+      const target = new URL(value || osPath, location.origin);
+      if (target.origin !== location.origin || !/^\/app(?:\/|$)/.test(target.pathname)) return osPath;
+      return `${target.pathname}${target.search}${target.hash}`;
+    } catch { return osPath; }
+  };
   const osDestination = () => {
     try {
       const saved = sessionStorage.getItem('still-post-auth-destination');
-      return saved?.startsWith('/app') ? saved : osPath;
+      return safeOsDestination(saved);
     } catch { return osPath; }
   };
 
@@ -77,7 +84,12 @@
 
     render();
     root.removeAttribute('aria-busy');
-    const requestedSignIn = new URLSearchParams(location.search).get('signin') === '1';
+    const parameters = new URLSearchParams(location.search);
+    const requestedSignIn = parameters.get('signin') === '1';
+    const returnTo = parameters.get('returnTo');
+    if (requestedSignIn && returnTo) {
+      try { sessionStorage.setItem('still-post-auth-destination', safeOsDestination(returnTo)); } catch {}
+    }
     if (requestedSignIn && me.authenticated) return location.assign(osDestination());
     if (requestedSignIn && !me.authenticated) {
       const panel = $('[data-panel]', root), trigger = $('[data-open]', root);

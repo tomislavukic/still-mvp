@@ -270,7 +270,13 @@ async function routeInput(request, env) {
 
 async function serveStillOS(request, env) {
   const buyer = await buyerSession(request, env);
-  if (!buyer) return Response.redirect(new URL('/?signin=1', request.url), 302);
+  if (!buyer) {
+    const requested = new URL(request.url);
+    const signIn = new URL('/', requested.origin);
+    signIn.searchParams.set('signin', '1');
+    signIn.searchParams.set('returnTo', `${requested.pathname}${requested.search}`);
+    return Response.redirect(signIn, 302);
+  }
   if (!env.ASSETS) return new Response('Still OS assets are unavailable.', { status: 503 });
   const assetUrl = new URL('/app.html', request.url);
   const response = await env.ASSETS.fetch(new Request(assetUrl, { method: request.method, headers: request.headers }));

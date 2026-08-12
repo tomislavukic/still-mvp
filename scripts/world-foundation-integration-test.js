@@ -39,7 +39,10 @@ const integrationRun = (async () => {
   await check('signed-out Still OS deep links redirect to the real buyer sign-in', async () => {
     const result = await htmlRequest('/app/thing/not-owned', { cookie: '' });
     assert.equal(result.status, 302);
-    assert.equal(new URL(result.headers.get('location')).pathname, '/');
+    const destination = new URL(result.headers.get('location'));
+    assert.equal(destination.pathname, '/');
+    assert.equal(destination.searchParams.get('signin'), '1');
+    assert.equal(destination.searchParams.get('returnTo'), '/app/thing/not-owned');
   });
   await check('authenticated Still OS deep links serve the production shell', async () => {
     const result = await htmlRequest('/app/world');
@@ -422,6 +425,14 @@ const integrationRun = (async () => {
     assert.equal(deleted.status, 200);
   });
 
+  await check('Market 00 legacy owned Passport is backfilled and can enter Market', async () => {
+    const listing = await request('/api/v1/market/listings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ thingId: 'STP-WORLD-LEGACY', category: 'tools', askingPriceCents: 2500, currency: 'EUR', conditionGrade: 'GOOD', pickupAvailable: true }) });
+    assert.equal(listing.status, 201);
+    const thing = await request('/api/v1/world/things/STP-WORLD-LEGACY');
+    assert.equal(thing.status, 200);
+    assert.equal(thing.data.thing.lifecycleState, 'OWNED');
+    assert.equal((await request(`/api/v1/market/listings/${listing.data.listing.publicId}/withdraw`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).status, 200);
+  });
   await check('Market 01 user prepares a canonical owned Thing for listing', async () => {
     const updated = await request(`/api/v1/world/things/${receiptThingId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: `Fixture Camera ${suffix}`, kind: 'product', category: 'photography', manufacturer: 'Fixture Optics', model: `FC-${suffix}`, notes: 'Seller-only calibration and home location.' }) });
     assert.equal(updated.status, 200);

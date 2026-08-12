@@ -45,6 +45,10 @@ VALUES('opp_world_fixture','STP-WORLD-FIXTURE','ba_world_test_one','buyer','prod
 INSERT OR REPLACE INTO world_thing_profiles(passport_id,buyer_account_id,thing_type,lifecycle_state,source,review_status,created_at,updated_at)
 VALUES('opp_world_fixture','ba_world_test_one','product','OWNED','test_fixture','CONFIRMED','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
 
+-- Represents a real product Passport created before World profiles existed.
+INSERT OR REPLACE INTO ownership_passports(id,public_id,buyer_account_id,created_by,kind,title,status,created_at,updated_at)
+VALUES('opp_world_legacy_fixture','STP-WORLD-LEGACY','ba_world_test_one','buyer','product','Legacy owned product','connected','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
+
 INSERT OR REPLACE INTO world_receipts(id,public_id,buyer_account_id,merchant,purchase_date,currency,total_cents,raw_ocr_text,processing_status,source_image_key,source_mime_type,source_file_name,source_file_hash,source_file_bytes,confidence_json,created_at,updated_at)
 VALUES('wrc_world_fixture','RCP-WORLD-FIXTURE','ba_world_test_one','Fixture Store','2026-08-12','EUR',30000,'Fixture Camera 200.00 EUR\nFixture Existing Thing 100.00 EUR','NEEDS_REVIEW','test/fixture.jpg','image/jpeg','fixture.jpg','world-fixture-hash',128,'{"merchant":1,"purchaseDate":1,"total":1}','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
 
