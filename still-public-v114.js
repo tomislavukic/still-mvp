@@ -6,8 +6,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[character]);
-  const TOOL_IDS = ['worldFoundationV131', 'ownershipHubV83', 'timelineV83', 'checker', 'lifecyclePlatformV95', 'passportCommerceV92', 'decisionLabV83', 'buyerRewardsV76'];
-  let activeTool = '';
+  const LEGACY_PUBLIC_HASHES = /^#(?:buyeros-(?:home|things|thing|protection|timeline|documents|services|household|family|search|assistant)|worldFoundationV131|ownershipHubV83|timelineV83|checker|lifecyclePlatformV95|passportCommerceV92|decisionLabV83|buyerRewardsV76)$/;
   let observer;
 
   function readPassports() {
@@ -48,7 +47,7 @@
       ];
       return `<div class="sp114-example-note">${t('Example collection · your Still stays empty until you add something.', 'Primjer zbirke · tvoj Still ostaje prazan dok nešto ne dodaš.')}</div><div class="sp114-things-row">${examples.map(([en, mark], index) => `<button type="button" data-still-start><span>${mark}</span><b>${t(en, ['Prijenosno računalo', 'Perilica rublja', 'Televizor', 'Automobil', 'Slušalice', 'Dokumenti doma'][index])}</b><small>${t('Bring it into Still', 'Dodaj u Still')}</small></button>`).join('')}</div>`;
     }
-    return `<div class="sp114-example-note">${t('From this browser', 'Iz ovog preglednika')} · ${passports.length} ${t(passports.length === 1 ? 'thing' : 'things', passports.length === 1 ? 'stvar' : 'stvari')}</div><div class="sp114-things-row">${passports.slice(0, 6).map(item => `<button type="button" data-still-tool="ownership"><span>${kindMark(item.kind)}</span><b>${esc(item.title || t('Untitled thing', 'Stvar bez naziva'))}</b><small>${esc(item.business || kindName(item.kind))}</small></button>`).join('')}</div>`;
+    return `<div class="sp114-example-note">${t('From this browser', 'Iz ovog preglednika')} · ${passports.length} ${t(passports.length === 1 ? 'thing' : 'things', passports.length === 1 ? 'stvar' : 'stvari')}</div><div class="sp114-things-row">${passports.slice(0, 6).map(item => `<button type="button" data-still-start data-still-destination="/app/world"><span>${kindMark(item.kind)}</span><b>${esc(item.title || t('Untitled thing', 'Stvar bez naziva'))}</b><small>${esc(item.business || kindName(item.kind))}</small></button>`).join('')}</div>`;
   }
 
   function realMemory(passports) {
@@ -139,13 +138,13 @@
       </section>
 
       <section class="sp114-section sp114-memory" id="still-remembers">
-        <div class="sp114-memory-copy"><span class="sp114-kicker">${t('STILL REMEMBERS', 'STILL PAMTI')}</span><h2>${t('The right detail, before you need it.', 'Pravi detalj, prije nego što ti zatreba.')}</h2><p>${t('Dates and changes become a quiet timeline instead of another list to maintain.', 'Datumi i promjene postaju mirna vremenska crta, a ne još jedan popis za održavanje.')}</p><button type="button" class="sp114-text-action" data-still-tool="timeline">${t('Open my reminders', 'Otvori moje podsjetnike')} →</button></div>
+        <div class="sp114-memory-copy"><span class="sp114-kicker">${t('STILL REMEMBERS', 'STILL PAMTI')}</span><h2>${t('The right detail, before you need it.', 'Pravi detalj, prije nego što ti zatreba.')}</h2><p>${t('Dates and changes become a quiet timeline instead of another list to maintain.', 'Datumi i promjene postaju mirna vremenska crta, a ne još jedan popis za održavanje.')}</p><button type="button" class="sp114-text-action" data-still-start data-still-destination="/app">${t('Open my reminders', 'Otvori moje podsjetnike')} →</button></div>
         <ol class="sp114-memory-stream">${realMemory(passports)}</ol>
       </section>
 
       <section class="sp114-section sp114-passport" id="passport">
         <div class="sp114-section-copy"><span class="sp114-kicker">${t('EVERYTHING ABOUT ONE THING', 'SVE O JEDNOJ STVARI')}</span><h2>${t('Meet the Passport.', 'Upoznaj Putovnicu.')}</h2><p>${t('A Passport is the living record that keeps a thing understandable throughout its life.', 'Putovnica je živi zapis koji jednu stvar čini razumljivom tijekom cijelog njezina života.')}</p></div>
-        <div class="sp114-passport-detail"><aside><span>${t('EXAMPLE', 'PRIMJER')}</span><strong>Bosch Washer</strong><small>${t('Household appliance', 'Kućanski uređaj')}</small><button type="button" data-still-tool="ownership">${t('Open my Passports', 'Otvori moje Putovnice')} →</button></aside><div><ul><li><b>${t('Documents', 'Dokumenti')}</b><small>${t('Receipts and manuals stay with the thing.', 'Računi i priručnici ostaju uz stvar.')}</small></li><li><b>${t('Warranty', 'Jamstvo')}</b><small>${t('The coverage date is easy to find.', 'Datum pokrića lako je pronaći.')}</small></li><li><b>${t('Timeline', 'Vremenska crta')}</b><small>${t('Purchase, service and next actions in order.', 'Kupnja, servis i sljedeće radnje redom.')}</small></li><li><b>${t('Repairs', 'Popravci')}</b><small>${t('A continuous service history when records exist.', 'Neprekinuta servisna povijest kada zapisi postoje.')}</small></li><li><b>${t('Ownership', 'Vlasništvo')}</b><small>${t('Buyer-owned or issued by a verified business.', 'U vlasništvu kupca ili izdano od verificirane tvrtke.')}</small></li><li><b>${t('QR identity', 'QR identitet')}</b><small>${t('A portable, revocable view.', 'Prenosiv prikaz koji se može opozvati.')}</small></li></ul></div></div>
+        <div class="sp114-passport-detail"><aside><span>${t('EXAMPLE', 'PRIMJER')}</span><strong>Bosch Washer</strong><small>${t('Household appliance', 'Kućanski uređaj')}</small><button type="button" data-still-start data-still-destination="/app/world">${t('Open my Passports', 'Otvori moje Putovnice')} →</button></aside><div><ul><li><b>${t('Documents', 'Dokumenti')}</b><small>${t('Receipts and manuals stay with the thing.', 'Računi i priručnici ostaju uz stvar.')}</small></li><li><b>${t('Warranty', 'Jamstvo')}</b><small>${t('The coverage date is easy to find.', 'Datum pokrića lako je pronaći.')}</small></li><li><b>${t('Timeline', 'Vremenska crta')}</b><small>${t('Purchase, service and next actions in order.', 'Kupnja, servis i sljedeće radnje redom.')}</small></li><li><b>${t('Repairs', 'Popravci')}</b><small>${t('A continuous service history when records exist.', 'Neprekinuta servisna povijest kada zapisi postoje.')}</small></li><li><b>${t('Ownership', 'Vlasništvo')}</b><small>${t('Buyer-owned or issued by a verified business.', 'U vlasništvu kupca ili izdano od verificirane tvrtke.')}</small></li><li><b>${t('QR identity', 'QR identitet')}</b><small>${t('A portable, revocable view.', 'Prenosiv prikaz koji se može opozvati.')}</small></li></ul></div></div>
       </section>
 
       <section class="sp114-section sp114-sharing" id="private-sharing">
@@ -166,9 +165,7 @@
         <div class="sp114-section-copy"><span class="sp114-kicker">${t('ONE CLEAR CONNECTION', 'JEDNA JASNA VEZA')}</span><h2>${t('The thing stays in the middle.', 'Stvar ostaje u sredini.')}</h2><p>${t('The owner controls their information. Businesses only see what is intentionally shared.', 'Vlasnik kontrolira svoje informacije. Tvrtke vide samo ono što je namjerno podijeljeno.')}</p></div><div class="sp114-connection-line"><div><span>01</span><b>${t('Person', 'Osoba')}</b></div><i>↓</i><div class="is-thing"><span>02</span><b>${t('Thing / Passport', 'Stvar / Putovnica')}</b></div><i>↓</i><div><span>03</span><b>${t('Verified business', 'Verificirana tvrtka')}</b></div></div>
       </section>
 
-      <section class="sp114-final" id="start"><span class="sp114-kicker">STILL</span><h2>${t('Already own something?', 'Već nešto posjeduješ?')}</h2><p>${t('You are ready for Still.', 'Spreman si za Still.')}</p><button type="button" class="sp114-primary" data-still-start>${t('Start free', 'Počni besplatno')}</button></section>
-
-      <section class="sp114-workspace-intro" id="still-workspace"><div><span class="sp114-kicker">${t('YOUR STILL', 'TVOJ STILL')}</span><h2>${t('Use the tools when you need them.', 'Upotrijebi alate kada ti trebaju.')}</h2><p>${t('The public story stays simple. Your real ownership, reminders, protection and connected services remain here.', 'Javna priča ostaje jednostavna. Tvoje stvarno vlasništvo, podsjetnici, zaštita i povezane usluge ostaju ovdje.')}</p></div><nav aria-label="${t('Still tools', 'Still alati')}"><button type="button" data-still-tool="ownership">${t('My things', 'Moje stvari')}</button><button type="button" data-still-tool="timeline">${t('Reminders', 'Podsjetnici')}</button><button type="button" data-still-tool="protection">${t('Protection', 'Zaštita')}</button><button type="button" data-still-tool="lifecycle">${t('Service history', 'Servisna povijest')}</button><button type="button" data-still-tool="commerce">${t('Connected offers', 'Povezane ponude')}</button><button type="button" data-still-tool="rewards">${t('Rewards', 'Nagrade')}</button></nav><div id="stillAccountMountV114"></div></section>`;
+      <section class="sp114-final" id="start"><span class="sp114-kicker">STILL</span><h2>${t('Already own something?', 'Već nešto posjeduješ?')}</h2><p>${t('You are ready for Still.', 'Spreman si za Still.')}</p><button type="button" class="sp114-primary" data-still-start>${t('Start free', 'Počni besplatno')}</button></section>`;
   }
 
   function header() {
@@ -195,67 +192,30 @@
     }
   }
 
-  function registerTools() {
-    const mapping = {
-      ownership: 'worldFoundationV131', timeline: 'timelineV83', protection: 'checker', lifecycle: 'lifecyclePlatformV95',
-      commerce: 'passportCommerceV92', decision: 'decisionLabV83', rewards: 'buyerRewardsV76'
-    };
-    TOOL_IDS.forEach(id => {
-      const section = document.getElementById(id);
-      if (section) section.classList.add('still-v114-tool');
-    });
-    document.querySelectorAll('.still-v114-tool').forEach(section => {
-      const open = section.id === mapping[activeTool];
-      section.classList.toggle('is-open', open);
-      section.style.setProperty('display', open ? (section.id === 'checker' ? 'grid' : 'block') : 'none', 'important');
-    });
-    return mapping;
-  }
-
-  function openTool(tool, shouldScroll = true) {
-    activeTool = tool;
-    const mapping = registerTools();
-    const target = document.getElementById(mapping[tool]);
-    if (!target) return setTimeout(() => openTool(tool, shouldScroll), 120);
-    document.body.classList.add('still-v114-workspace-open');
-    if (shouldScroll) setTimeout(() => target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 30);
-    if (tool === 'ownership') setTimeout(() => $('#worldFoundationV131 [data-world-add]')?.focus({ preventScroll: true }), 500);
-  }
-
   function enterStill(destination = '/app') {
     try { sessionStorage.setItem('still-post-auth-destination', destination); } catch {}
     if (window.StillBuyerAuth?.authenticated?.()) return location.assign(destination);
     window.dispatchEvent(new CustomEvent('still:buyer-sign-in'));
   }
 
-  function toolFromHash() {
-    return ({ '#worldFoundationV131': 'ownership', '#ownershipHubV83': 'ownership', '#timelineV83': 'timeline', '#checker': 'protection', '#lifecyclePlatformV95': 'lifecycle', '#passportCommerceV92': 'commerce', '#decisionLabV83': 'decision', '#buyerRewardsV76': 'rewards' })[location.hash];
-  }
-
   function normalizeLegacyWorkspaceHash() {
-    if (!/^#buyeros-(?:home|things|thing|protection|timeline|documents|services|household|family|search|assistant)$/.test(location.hash)) return;
+    if (!LEGACY_PUBLIC_HASHES.test(location.hash)) return;
     history.replaceState(null, '', `${location.pathname}${location.search}`);
   }
 
-  function moveBuyerAccount() {
+  function placeBuyerAuth() {
     const auth = $('#buyerAuthV77,.ba77');
-    const mount = $('#stillAccountMountV114');
-    if (auth && mount && auth.parentElement !== mount) mount.appendChild(auth);
-  }
-
-  function detachBuyerAccount(root) {
-    const auth = $('#buyerAuthV77,.ba77');
-    if (!auth || !root.contains(auth)) return null;
-    auth.remove();
-    return auth;
+    if (!auth) return;
+    auth.classList.remove('ba78-embedded');
+    auth.classList.add('sp114-auth-overlay');
+    if (auth.parentElement !== document.body) document.body.appendChild(auth);
   }
 
   function bind(root) {
     root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => enterStill(button.dataset.stillDestination || '/app')));
-    root.querySelectorAll('[data-still-tool]').forEach(button => button.addEventListener('click', () => openTool(button.dataset.stillTool)));
     root.querySelector('[data-still-scan]')?.addEventListener('click', () => enterStill('/app?sight=receipt'));
-    root.querySelector('[data-world-document]')?.addEventListener('click', () => { openTool('ownership'); window.StillWorld?.openDocuments?.(); });
-    root.querySelector('[data-world-import]')?.addEventListener('click', () => { openTool('ownership'); window.StillWorld?.runMigration?.(true); });
+    root.querySelector('[data-world-document]')?.addEventListener('click', () => enterStill('/app?sight=document'));
+    root.querySelector('[data-world-import]')?.addEventListener('click', () => enterStill('/app/world'));
   }
 
   function render() {
@@ -274,15 +234,11 @@
       const platform = $('#ownershipPlatformV83');
       (platform || $('main')?.firstElementChild)?.insertAdjacentElement(platform ? 'beforebegin' : 'beforebegin', root);
     }
-    const preservedAccount = detachBuyerAccount(root);
+    placeBuyerAuth();
     root.innerHTML = shell();
     header();
     bind(root);
-    registerTools();
-    if (preservedAccount) $('#stillAccountMountV114')?.appendChild(preservedAccount);
-    else moveBuyerAccount();
-    const deepLink = toolFromHash();
-    if (deepLink) openTool(deepLink, false);
+    placeBuyerAuth();
     const footer = document.querySelector('footer');
     if (footer) footer.classList.add('sp114-footer');
   }
@@ -377,9 +333,10 @@ function start() {
     if (!$('#ownershipPlatformV83')) return setTimeout(start, 80);
     render();
     initializeStillProtection();
-    observer = new MutationObserver(() => { registerTools(); moveBuyerAccount(); });
+    observer = new MutationObserver(placeBuyerAuth);
     observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener('hashchange', () => { const tool = toolFromHash(); if (tool) openTool(tool, false); });
+    window.addEventListener('hashchange', normalizeLegacyWorkspaceHash);
+    window.addEventListener('still:buyer-authenticated', () => { const button = $('#stillHeaderStartV114'); if (button) button.textContent = t('Open Still', 'Otvori Still'); });
     window.addEventListener('storage', event => { if (event.key === STORAGE_KEY) render(); });
     window.addEventListener('still:ownership-updated', () => setTimeout(render, 60));
     window.addEventListener('still:commerce-paid', () => setTimeout(render, 60));
