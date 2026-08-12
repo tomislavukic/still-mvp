@@ -58,6 +58,31 @@ async function startServer(port) {
   return child;
 }
 
+async function stopServer(child) {
+  if (!child) return;
+  child.stdout?.removeAllListeners();
+  child.stderr?.removeAllListeners();
+  child.stdout?.destroy();
+  child.stderr?.destroy();
+  if (child.exitCode !== null) return;
+  await new Promise(resolve => {
+    let finished = false;
+    let forceTimer;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(forceTimer);
+      resolve();
+    };
+    child.once('exit', finish);
+    child.kill('SIGTERM');
+    forceTimer = setTimeout(() => {
+      if (child.exitCode === null) child.kill('SIGKILL');
+      finish();
+    }, 5000);
+  });
+}
+
 (async () => {
   let server;
   try {
@@ -66,7 +91,7 @@ async function startServer(port) {
     server = await startServer(port);
     await run(process.execPath, ['scripts/world-foundation-integration-test.js', `http://127.0.0.1:${port}`]);
   } finally {
-    if (server && !server.killed) server.kill('SIGINT');
+    await stopServer(server);
     fs.rmSync(persistPath, { recursive: true, force: true });
   }
 })().catch(error => {
