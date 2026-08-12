@@ -31,6 +31,9 @@ body.pricing-v114 {
 }
 
 .still-v114 .topbar {
+  position: sticky;
+  z-index: 1000;
+  top: 14px;
   width: min(1320px, calc(100% - 48px));
   min-height: 72px;
   margin: 14px auto 0;
@@ -92,8 +95,7 @@ body.pricing-v114 {
 .sp114 [id] { scroll-margin-top: 96px; }
 .sp114-hero,
 .sp114-section,
-.sp114-final,
-.sp114-workspace-intro {
+.sp114-final {
   width: min(1240px, calc(100% - 48px));
   margin-inline: auto;
 }
@@ -287,11 +289,6 @@ body.pricing-v114 {
 .sp114-final { padding: 145px 24px; border-radius: 40px; background: #e5e3f4; text-align: center; }
 .sp114-final p { margin-inline: auto; }
 .sp114-final button { margin-top: 28px; }
-.sp114-workspace-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; padding: 120px 0 65px; }
-.sp114-workspace-intro nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
-.sp114-workspace-intro nav button { min-height: 58px; border: 0; border-radius: 14px; background: var(--still-paper); color: var(--still-ink); font: inherit; font-weight: 680; cursor: pointer; }
-.sp114-workspace-intro nav button:hover { background: var(--still-soft); }
-#stillAccountMountV114 { grid-column: 1 / -1; }
 
 /* The new public story establishes hierarchy; existing product modules remain available through Your Still and deep links. */
 .still-v114 #discoverV83,
@@ -305,6 +302,7 @@ body.pricing-v114 {
 .still-v114 #howConnectsV83,
 .still-v114 #buyerRewardsV76,
 .still-v114 #checker,
+.still-v114 #relationshipDashboardV103,
 .still-v114 #advancedToolsV84,
 .still-v114 #proofV22,
 .still-v114 .trust-strip,
@@ -312,10 +310,7 @@ body.pricing-v114 {
 .still-v114 #saved,
 .still-v114 #recent,
 .still-v114 #how { display: none !important; }
-.still-v114 .still-v114-tool.is-open { display: block !important; width: min(1240px, calc(100% - 48px)); margin: 0 auto 80px !important; scroll-margin-top: 100px; }
-.still-v114 .still-v114-tool:not(.is-open) { display: none !important; }
-.still-v114 #checker.still-v114-tool.is-open { display: grid !important; }
-.still-v114-workspace-open .sp114-workspace-intro { padding-bottom: 28px; }
+.still-v114 .still-v114-tool { display: none !important; }
 .still-v114 .still-v114-tool .op83-card,
 .still-v114 .still-v114-tool .lp95-card { border-color: var(--still-line) !important; box-shadow: none !important; }
 .still-v114 .oo111-actions { grid-template-columns: repeat(4, 1fr); }
@@ -323,6 +318,52 @@ body.pricing-v114 {
 .still-v114 .oo111-link { margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: var(--still-paper); }
 .still-v114 .oo111-link summary { color: var(--still-accent); font-weight: 720; cursor: pointer; }
 .still-v114 .oo111-link form { margin-top: 16px; }
+
+/* Buyer authentication belongs to the top-level landing action, never in the public story. */
+body.still-v114 #buyerAuthV77.sp114-auth-overlay {
+  position: fixed !important;
+  z-index: 30000 !important;
+  inset: 0 auto auto 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  color: var(--still-ink) !important;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+body.still-v114 #buyerAuthV77.sp114-auth-overlay > .ba77-login,
+body.still-v114 #buyerAuthV77.sp114-auth-overlay > .ba77-account,
+body.still-v114 #buyerAuthV77.sp114-auth-overlay > .ba77-quick { display: none !important; }
+body.still-v114 #buyerAuthV77.sp114-auth-overlay .ba77-panel {
+  position: fixed !important;
+  z-index: 30001 !important;
+  top: max(88px, calc(env(safe-area-inset-top) + 76px)) !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: min(430px, calc(100vw - 28px)) !important;
+  max-height: calc(100dvh - 108px) !important;
+  margin: 0 !important;
+  padding: 26px !important;
+  transform: translateX(-50%) !important;
+  overflow: auto !important;
+  border: 1px solid var(--still-line) !important;
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--still-paper) 97%, transparent) !important;
+  color: var(--still-ink) !important;
+  box-shadow: 0 30px 100px rgba(20, 25, 50, .28) !important;
+  backdrop-filter: blur(24px) !important;
+}
+body.still-v114 #buyerAuthV77.sp114-auth-overlay .ba77-panel h3 {
+  margin-top: 10px;
+  color: var(--still-ink);
+  font-size: 30px;
+  font-weight: 720;
+  letter-spacing: -.045em;
+}
+body.still-v114 #buyerAuthV77.sp114-auth-overlay .ba77-panel > p,
+body.still-v114 #buyerAuthV77.sp114-auth-overlay .ba77-trust { color: var(--still-muted); }
+body.still-v114 #buyerAuthV77.sp114-auth-overlay #googleSignInV77 { min-height: 46px; margin: 22px 0 12px; position: relative; z-index: 1; }
 .still-v114 .oo111-message b,
 .still-v114 .oo111-message span { display: block; }
 .still-v114 .oo111-message span { margin-top: 4px; }
@@ -441,7 +482,7 @@ body.pricing-v114 {
   .sp114-current-stage { min-height: 630px; }
   .sp114-action-line { grid-template-columns: 1fr 1fr; }
   .sp114-things-row { grid-template-columns: repeat(3, 1fr); }
-  .sp114-memory, .sp114-sharing, .sp114-plus, .sp114-business, .sp114-workspace-intro { grid-template-columns: 1fr; gap: 58px; }
+  .sp114-memory, .sp114-sharing, .sp114-plus, .sp114-business { grid-template-columns: 1fr; gap: 58px; }
   .sp114-memory-copy { position: static; }
   .bv114-hero { grid-template-columns: 1fr; }
   .bv114-service-line { max-width: 620px; }
@@ -454,7 +495,7 @@ body.pricing-v114 {
   .still-v114 .top-actions .top-currency,
   .still-v114 .top-actions #market { display: none !important; }
   .sp114-header-start { min-height: 42px; padding-inline: 13px; font-size: 13px; }
-  .sp114-hero, .sp114-section, .sp114-final, .sp114-workspace-intro { width: calc(100% - 32px); }
+  .sp114-hero, .sp114-section, .sp114-final { width: calc(100% - 32px); }
   .sp114-hero { gap: 55px; padding: 65px 0 80px; }
   .sp114-hero h1 { font-size: clamp(55px, 16vw, 76px); }
   .sp114-hero h2 { font-size: 28px; }
@@ -500,9 +541,15 @@ body.pricing-v114 {
   .sp114-business { align-items: start; }
   .sp114-connection-line div { padding: 20px; }
   .sp114-final { width: calc(100% - 24px); padding: 90px 18px; border-radius: 28px; }
-  .sp114-workspace-intro nav { grid-template-columns: 1fr; }
   .still-v114 .oo111-actions { grid-template-columns: 1fr; }
   .still-v114 .still-v114-tool.is-open { width: calc(100% - 24px); }
+  body.still-v114 #buyerAuthV77.sp114-auth-overlay .ba77-panel {
+    top: max(72px, calc(env(safe-area-inset-top) + 64px)) !important;
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 82px) !important;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom)) !important;
+    border-radius: 22px !important;
+  }
   .business-v114 .business-top { width: 100%; margin: 0; border-radius: 0; padding: 0 14px; }
   .business-v114 .business-brand small { display: none; }
   .bv114-hero, .bv114-section, .bv114-access { width: calc(100% - 32px); }
