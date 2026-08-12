@@ -50,5 +50,8 @@ test('25 successful buyer authentication enters Still OS', () => assert.ok(buyer
 test('26 public entry actions use the one authenticated environment', () => assert.ok(publicExperience.includes('enterStill()') && publicExperience.includes("enterStill('/app?sight=receipt')")));
 test('27 browser ownership is migrated through the canonical idempotent endpoint', () => assert.ok(client.includes('/api/v1/world/migrations/local-storage') && client.includes('still-ownership-passports-v83')));
 test('28 Sight can create a real linked Situation', () => assert.ok(client.includes('data-sight-action="situation"') && client.includes('documentId: document.publicId')));
+test('29 external entry clicks cannot immediately close buyer sign-in', () => assert.ok(buyerAuth.includes('setTimeout(() => window.StillBuyerAuth.open(), 0)')));
+test('30 obsolete BuyerOS workspace is not an active production runtime', () => assert.ok(!build.includes("'buyeros-workspace-v132.js'") && !build.includes('BuyerOSCoordinator connected to production runtime')));
+test('31 obsolete BuyerOS hashes normalize to the public Still homepage', () => assert.ok(publicExperience.includes('normalizeLegacyWorkspaceHash()') && !publicExperience.includes("'#buyeros-home': 'ownership'")));
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);

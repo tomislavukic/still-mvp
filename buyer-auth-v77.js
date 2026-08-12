@@ -351,7 +351,12 @@
   }
 
   window.StillBuyerAuth = { authenticated: () => Boolean(me?.authenticated), open: () => me?.authenticated ? location.assign(osDestination()) : togglePanel() };
-  window.addEventListener('still:buyer-sign-in', () => window.StillBuyerAuth.open());
+  window.addEventListener('still:buyer-sign-in', () => {
+    // External CTA clicks continue bubbling after this custom event. Opening the
+    // panel on the next task prevents the document-level outside-click handler
+    // from immediately closing the panel again.
+    setTimeout(() => window.StillBuyerAuth.open(), 0);
+  });
 
   document.addEventListener('click', event => {
     if (!root || root.contains(event.target)) return;
