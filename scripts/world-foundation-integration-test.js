@@ -375,7 +375,7 @@ const integrationRun = (async () => {
     assert.equal(result.data.receipt.processingStatus, 'FAILED');
     receiptId = result.data.receipt.publicId;
   });
-  await check('Sight image uses real document ingestion and can become Knowledge', async () => {
+  await check('Sight image uses real document ingestion and can become Knowledge without invented OCR text', async () => {
     const form = new FormData();
     form.append('file', new Blob([Uint8Array.from([0xff, 0xd8, 0xff]), new TextEncoder().encode(`Sight ${suffix}`), Uint8Array.from([0xff, 0xd9])], { type: 'image/jpeg' }), `sight-${suffix}.jpg`);
     form.append('title', `Sight note ${suffix}`);
@@ -384,7 +384,14 @@ const integrationRun = (async () => {
     const uploaded = await request('/api/v1/world/documents', { method: 'POST', body: form });
     assert.ok([201, 422].includes(uploaded.status));
     sightDocumentId = uploaded.data.document.publicId;
-    const saved = await request('/api/v1/world/knowledge', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: `Sight knowledge ${suffix}`, sourceDocumentId: sightDocumentId }) });
+    const knowledgeInput = { title: `Sight knowledge ${suffix}`, sourceDocumentId: sightDocumentId };
+    if (uploaded.status === 422) {
+      const withoutText = await request('/api/v1/world/knowledge', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(knowledgeInput) });
+      assert.equal(withoutText.status, 422);
+      assert.equal(withoutText.data.error, 'invalid_knowledge');
+      knowledgeInput.body = `Buyer supplied context for Sight ${suffix}`;
+    }
+    const saved = await request('/api/v1/world/knowledge', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(knowledgeInput) });
     assert.equal(saved.status, 201);
     sightKnowledgeId = saved.data.knowledge.publicId;
   });
