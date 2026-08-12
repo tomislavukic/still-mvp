@@ -204,7 +204,9 @@ if(!fail.length){
  if(!read('legal-i18n.js').includes('Electronic shelf labels and price updates'))fail.push('electronic shelf-label privacy disclosure is missing');
  if(!read('legal-i18n.js').includes('Lifecycle history, alerts and support'))fail.push('lifecycle privacy disclosure is missing');
  const publicExperience=read('still-public-v114.js');
- ['Everything you own.','One trusted place.','Bring your things into Still.','Meet the Passport.','PRIVATE BY CHOICE','STILL FOR BUSINESS · EARLY ACCESS','data-still-start'].forEach(capability=>{if(!publicExperience.includes(capability))fail.push(`consumer-first public experience is missing ${capability}`)});
+ ['Everything you own.','One trusted place.','Your things are only the beginning.','Know what matters now','Build your private World','Turn proof into understanding','Pass a Thing on with context','Work with businesses intentionally','Bring your things into Still.','Meet the Passport.','PRIVATE BY CHOICE','STILL FOR BUSINESS · EARLY ACCESS','data-still-start'].forEach(capability=>{if(!publicExperience.includes(capability))fail.push(`consumer-first public experience is missing ${capability}`)});
+ ['/app/world','/app/market','/app/together','data-still-destination'].forEach(capability=>{if(!publicExperience.includes(capability))fail.push(`current Still introduction is not connected to ${capability}`)});
+ if(!publicExperience.includes('Still does not invent a provider, price, deadline, company update or transaction.'))fail.push('current Still introduction does not disclose its truthful data boundary');
  if(!publicExperience.includes('enterStill()')||!publicExperience.includes("location.assign(destination)"))fail.push('Start free is not connected to the authenticated Still OS');
  if(!publicExperience.includes("enterStill('/app?sight=receipt')"))fail.push('receipt CTA does not enter the canonical Still Sight receipt flow');
  if(!publicExperience.includes('detachBuyerAccount(root)'))fail.push('buyer account controls are not preserved across public shell renders');

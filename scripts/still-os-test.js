@@ -53,5 +53,9 @@ test('28 Sight can create a real linked Situation', () => assert.ok(client.inclu
 test('29 external entry clicks cannot immediately close buyer sign-in', () => assert.ok(buyerAuth.includes('setTimeout(() => window.StillBuyerAuth.open(), 0)')));
 test('30 obsolete BuyerOS workspace is not an active production runtime', () => assert.ok(!build.includes("'buyeros-workspace-v132.js'") && !build.includes('BuyerOSCoordinator connected to production runtime')));
 test('31 obsolete BuyerOS hashes normalize to the public Still homepage', () => assert.ok(publicExperience.includes('normalizeLegacyWorkspaceHash()') && !publicExperience.includes("'#buyeros-home': 'ownership'")));
+test('32 the landing introduction connects every current Still space truthfully', () => {
+  ['/app/world','/app/market','/app/together','data-still-destination'].forEach(capability => assert.ok(publicExperience.includes(capability)));
+  assert.ok(publicExperience.includes('Still does not invent a provider, price, deadline, company update or transaction.'));
+});
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);

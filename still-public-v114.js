@@ -86,6 +86,7 @@
           <p>${t('Still remembers receipts, warranties, manuals, service history, reminders and the important details—so you do not have to.', 'Still pamti račune, jamstva, priručnike, servisnu povijest, podsjetnike i važne detalje—da ti ne moraš.')}</p>
           <div class="sp114-actions"><button type="button" class="sp114-primary" data-still-start>${t('Start free', 'Počni besplatno')}</button><a class="sp114-secondary" href="#bring-your-things">${t('See how it works', 'Pogledaj kako radi')}</a></div>
           <small>${t('No purchase through Still required. Start with what you already own.', 'Ne moraš kupiti kroz Still. Počni s onime što već posjeduješ.')}</small>
+          <div class="sp114-proofline" aria-label="${t('Still principles', 'Still načela')}"><span>${t('Private by default', 'Privatno po zadanim postavkama')}</span><span>${t('Your records, not invented answers', 'Tvoji zapisi, ne izmišljeni odgovori')}</span><span>${t('You confirm before saving', 'Ti potvrđuješ prije spremanja')}</span></div>
         </div>
         <article class="sp114-passport-object" aria-label="${t('Example ownership Passport for a MacBook Pro', 'Primjer putovnice vlasništva za MacBook Pro')}">
           <header><span>${t('EXAMPLE PASSPORT', 'PRIMJER PUTOVNICE')}</span><b>${t('One thing. Its whole story.', 'Jedna stvar. Cijela njezina priča.')}</b></header>
@@ -93,6 +94,32 @@
           <dl><div><dt>${t('Receipt', 'Račun')}</dt><dd>✓ ${t('kept', 'sačuvan')}</dd></div><div><dt>${t('Warranty', 'Jamstvo')}</dt><dd>${t('timeline ready', 'rok je spreman')}</dd></div><div><dt>${t('Manual', 'Priručnik')}</dt><dd>${t('with the product', 'uz proizvod')}</dd></div><div><dt>${t('Service history', 'Servisna povijest')}</dt><dd>${t('one continuous record', 'jedan neprekinut zapis')}</dd></div></dl>
           <div class="sp114-object-foot"><span>QR</span><p><b>${t('Portable identity', 'Prenosivi identitet')}</b><small>${t('Share only what you choose.', 'Dijeli samo ono što odabereš.')}</small></p><i>→</i></div>
         </article>
+      </section>
+
+      <section class="sp114-section sp114-current" id="inside-still">
+        <div class="sp114-current-intro">
+          <div><span class="sp114-kicker">${t('INTRODUCING STILL NOW', 'UPOZNAJ DANAŠNJI STILL')}</span><h2>${t('Your things are only the beginning.', 'Tvoje stvari tek su početak.')}</h2></div>
+          <p>${t('Still now connects what you own with the proof behind it, what needs attention and the next real step. One private place moves with you from purchase to service, resolution and a future handoff.', 'Still sada povezuje ono što posjeduješ s dokazima, onime što traži pažnju i sljedećim stvarnim korakom. Jedno privatno mjesto prati te od kupnje do servisa, rješavanja i buduće primopredaje.')}</p>
+        </div>
+        <div class="sp114-current-layout">
+          <nav class="sp114-current-map" aria-label="${t('What you can do in Still', 'Što možeš raditi u Still-u')}">
+            <button type="button" data-still-start data-still-destination="/app"><span>01</span><b>${t('Know what matters now', 'Znaj što je važno sada')}</b><small>${t('Real deadlines, open work and a quiet state when nothing needs you.', 'Stvarni rokovi, otvorene obveze i miran prikaz kada ništa ne traži pažnju.')}</small><i>Now →</i></button>
+            <button type="button" data-still-start data-still-destination="/app/world"><span>02</span><b>${t('Build your private World', 'Izgradi svoj privatni Svijet')}</b><small>${t('Things, receipts, documents, knowledge and situations stay connected.', 'Stvari, računi, dokumenti, znanje i situacije ostaju povezani.')}</small><i>World →</i></button>
+            <button type="button" data-still-start data-still-destination="/app?sight=receipt"><span>03</span><b>${t('Turn proof into understanding', 'Pretvori dokaz u razumijevanje')}</b><small>${t('Still can read a supported receipt or document; you review the result before it becomes a record.', 'Still može pročitati podržani račun ili dokument; ti pregledaš rezultat prije nego što postane zapis.')}</small><i>Sight →</i></button>
+            <button type="button" data-still-start data-still-destination="/app/market"><span>04</span><b>${t('Pass a Thing on with context', 'Predaj stvar zajedno s kontekstom')}</b><small>${t('Create a listing from something you own, record offers and transfer its privacy-safe history.', 'Stvori oglas iz stvari koju posjeduješ, zabilježi ponude i prenesi povijest sigurnu za privatnost.')}</small><i>Market →</i></button>
+            <button type="button" data-still-start data-still-destination="/app/together"><span>05</span><b>${t('Work with businesses intentionally', 'Surađuj s tvrtkama namjerno')}</b><small>${t('A connected business sees only what an existing Passport or case allows.', 'Povezana tvrtka vidi samo ono što dopušta postojeća Putovnica ili slučaj.')}</small><i>Together →</i></button>
+          </nav>
+          <article class="sp114-current-stage" aria-label="${t('How the new Still experience works', 'Kako radi novo Still iskustvo')}">
+            <header><span>${t('AVAILABLE IN STILL', 'DOSTUPNO U STILL-U')}</span><b>${t('One continuous ownership story', 'Jedna neprekinuta priča vlasništva')}</b></header>
+            <div class="sp114-stage-focus"><span>NOW</span><h3>${t('The important thing comes first.', 'Važna stvar dolazi prva.')}</h3><p>${t('Still derives attention from dates, Needs and open work already in your private records.', 'Still izvodi pažnju iz datuma, Potreba i otvorenih obveza koje već postoje u tvojim privatnim zapisima.')}</p></div>
+            <ol>
+              <li><span>◇</span><div><b>${t('Your World', 'Tvoj Svijet')}</b><small>${t('Things + proof + context', 'Stvari + dokazi + kontekst')}</small></div><i>connected</i></li>
+              <li><span>→</span><div><b>${t('Handle it', 'Riješi')}</b><small>${t('Evidence + real next action', 'Dokazi + stvarna sljedeća radnja')}</small></div><i>${t('no guesses', 'bez nagađanja')}</i></li>
+              <li><span>↔</span><div><b>${t('Market & Together', 'Tržište i Zajedno')}</b><small>${t('Handoff + selective sharing', 'Primopredaja + selektivno dijeljenje')}</small></div><i>${t('owner-controlled', 'pod kontrolom vlasnika')}</i></li>
+            </ol>
+            <div class="sp114-stage-truth"><span>✓</span><p><b>${t('Truthful by design', 'Istinito po dizajnu')}</b><small>${t('Still does not invent a provider, price, deadline, company update or transaction. Payments and shipping remain outside Still.', 'Still ne izmišlja pružatelja, cijenu, rok, ažuriranje tvrtke ni transakciju. Plaćanje i dostava ostaju izvan Still-a.')}</small></p></div>
+          </article>
+        </div>
       </section>
 
       <section class="sp114-section sp114-bring" id="bring-your-things">
@@ -146,7 +173,7 @@
 
   function header() {
     const nav = $('.topbar .nav');
-    if (nav) nav.innerHTML = `<a href="#features">${t('Features', 'Značajke')}</a><a href="#bring-your-things">${t('How it works', 'Kako radi')}</a><a href="/pricing.html">${t('Pricing', 'Planovi')}</a><a href="/company.html">${t('For Business', 'Za tvrtke')}</a>`;
+    if (nav) nav.innerHTML = `<a href="#inside-still">${t('Inside Still', 'U Still-u')}</a><a href="#bring-your-things">${t('How it works', 'Kako radi')}</a><a href="/pricing.html">${t('Pricing', 'Planovi')}</a><a href="/company.html">${t('For Business', 'Za tvrtke')}</a>`;
     const brand = $('.topbar .brand');
     if (brand) { brand.href = '#features'; brand.textContent = 'Still'; brand.setAttribute('aria-label', 'Still home'); }
     const actions = $('.topbar .top-actions');
@@ -224,7 +251,7 @@
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => enterStill()));
+    root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => enterStill(button.dataset.stillDestination || '/app')));
     root.querySelectorAll('[data-still-tool]').forEach(button => button.addEventListener('click', () => openTool(button.dataset.stillTool)));
     root.querySelector('[data-still-scan]')?.addEventListener('click', () => enterStill('/app?sight=receipt'));
     root.querySelector('[data-world-document]')?.addEventListener('click', () => { openTool('ownership'); window.StillWorld?.openDocuments?.(); });
@@ -236,8 +263,8 @@
     document.body.classList.add('still-v114');
     document.title = t('Still · Everything you own.', 'Still · Sve što posjeduješ.');
     document.querySelector('meta[name="description"]')?.setAttribute('content', t(
-      'Everything you own, in one trusted place. Keep receipts, warranties, manuals, service history, reminders and important details together.',
-      'Sve što posjeduješ na jednom pouzdanom mjestu. Drži račune, jamstva, priručnike, servisnu povijest, podsjetnike i važne detalje zajedno.'
+      'Everything you own, in one trusted place. Keep the proof, know what needs attention, handle the next step and share only what you choose.',
+      'Sve što posjeduješ na jednom pouzdanom mjestu. Sačuvaj dokaze, znaj što traži pažnju, riješi sljedeći korak i dijeli samo ono što odabereš.'
     ));
     let root = $('#stillPublicV114');
     if (!root) {
