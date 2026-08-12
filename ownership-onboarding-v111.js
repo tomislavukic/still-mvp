@@ -3,26 +3,20 @@
   const isHr = () => $('#language')?.value === 'hr';
   const t = (en, hr) => isHr() ? hr : en;
 
-  function passportForm() {
-    return $('#passportFormV83');
+  function message(text, error = false) {
+    const output = $('#oo111Message');
+    if (!output) return;
+    output.textContent = text;
+    output.dataset.error = String(error);
   }
 
-  function scrollToForm() {
-    const form = passportForm();
-    if (!form) return;
-    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => form.querySelector('input[name="title"]')?.focus({ preventScroll: true }), 260);
-  }
-
-  function setField(name, value) {
-    const field = passportForm()?.elements?.namedItem(name);
-    if (!field || value == null || value === '') return;
-    field.value = value;
-    field.dispatchEvent(new Event('change', { bubbles: true }));
+  function withWorld(action) {
+    if (window.StillWorld) return action(window.StillWorld);
+    message(t('Your private World is still loading. Try again in a moment.', 'Tvoj privatni Svijet još se učitava. Pokušaj ponovno za trenutak.'), true);
   }
 
   function cleanHost(hostname) {
-    return hostname.replace(/^www\./i, '').split('.')[0].replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return hostname.replace(/^www\./i, '').split('.')[0].replace(/[-_]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase());
   }
 
   function useProductUrl(raw) {
@@ -31,68 +25,17 @@
       url = new URL(raw.trim());
       if (!/^https?:$/.test(url.protocol)) throw new Error('scheme');
     } catch {
-      const message = $('#oo111Message');
-      if (message) message.textContent = t('Enter a valid http or https product link.', 'Unesi valjanu http ili https poveznicu proizvoda.');
+      message(t('Enter a valid http or https product link.', 'Unesi valjanu http ili https poveznicu proizvoda.'), true);
       return;
     }
-
-    setField('kind', 'product');
-    setField('business', cleanHost(url.hostname));
-    setField('reference', url.toString());
-    const message = $('#oo111Message');
-    if (message) message.textContent = t('Seller and source link prepared. Add the product name, review the fields and save the passport.', 'Prodavatelj i izvorna poveznica su pripremljeni. Dodaj naziv proizvoda, pregledaj polja i spremi putovnicu.');
-    scrollToForm();
-  }
-
-  function bindReceiptResult() {
-    const receiptInput = $('#receiptFile');
-    if (receiptInput && receiptInput.dataset.oo111Bound !== 'true') {
-      receiptInput.dataset.oo111Bound = 'true';
-      receiptInput.addEventListener('change', () => {
-        setTimeout(() => {
-          const item = $('#itemName')?.value?.trim();
-          const store = $('#store')?.selectedOptions?.[0]?.textContent?.trim();
-          const date = $('#purchaseDate')?.value;
-          if (item || store || date) {
-            const message = $('#oo111Message');
-            if (message) {
-              const found = [item, date, store && !/^choose|odaberi/i.test(store) ? store : ''].filter(Boolean);
-              message.replaceChildren();
-              const heading = document.createElement('b');
-              const details = document.createElement('span');
-              const confirm = document.createElement('button');
-              heading.textContent = t('Found it.', 'Pronađeno.');
-              details.textContent = `${t('We found', 'Pronašli smo')}: ${found.join(' · ')}`;
-              confirm.type = 'button';
-              confirm.id = 'oo111ConfirmReceipt';
-              confirm.textContent = t('Add to Still?', 'Dodati u Still?');
-              message.append(heading, details, confirm);
-              confirm.addEventListener('click', () => {
-                if (item) setField('title', item);
-                if (store && !/^choose|odaberi/i.test(store)) setField('business', store);
-                if (date) setField('purchasedOn', date);
-                message.textContent = t('Prepared for your review. Add or change any detail before saving.', 'Pripremljeno za tvoj pregled. Dodaj ili promijeni bilo koji detalj prije spremanja.');
-                scrollToForm();
-              }, { once: true });
-            }
-          }
-        }, 1400);
-      });
-    }
-  }
-
-  function useReceipt() {
-    const scan = $('#scanReceipt');
-    if (!scan) return;
-    bindReceiptResult();
-    scan.click();
+    withWorld(world => world.openAdd({ kind: 'product', businessName: cleanHost(url.hostname), reference: url.toString() }));
   }
 
   function mount() {
     if (document.body.classList.contains('business-page') || $('#ownershipOnboardingV111')) return true;
     const section = $('#ownershipHubV83');
     const head = section?.querySelector('.op83-section-head');
-    if (!section || !head || !passportForm()) return false;
+    if (!section || !head) return false;
 
     const panel = document.createElement('section');
     panel.id = 'ownershipOnboardingV111';
@@ -104,22 +47,23 @@
         <p>${t('Start with one thing. No tutorial and no unnecessary details up front.', 'Počni s jednom stvari. Bez dugog vodiča i nepotrebnih detalja na početku.')}</p>
       </div>
       <div class="oo111-actions">
-        <button type="button" data-oo111="receipt"><b>▦ ${t('Scan', 'Skeniraj')}</b><small>${t('Use the existing receipt scanner.', 'Upotrijebi postojeći skener računa.')}</small></button>
-        <button type="button" disabled><b>↑ ${t('Upload', 'Prenesi')}</b><small>${t('Planned', 'Planirano')}</small></button>
-        <button type="button" disabled><b>↧ ${t('Import', 'Uvezi')}</b><small>${t('Planned', 'Planirano')}</small></button>
+        <button type="button" data-oo111="receipt"><b>▦ ${t('Scan', 'Skeniraj')}</b><small>${t('Upload a receipt to private OCR review.', 'Prenesi račun u privatnu OCR provjeru.')}</small></button>
+        <button type="button" data-oo111="upload"><b>↑ ${t('Upload', 'Prenesi')}</b><small>${t('Store and organize a document.', 'Pohrani i organiziraj dokument.')}</small></button>
+        <button type="button" data-oo111="import"><b>↧ ${t('Import', 'Uvezi')}</b><small>${t('Move existing browser records into your World.', 'Prenesi postojeće zapise preglednika u svoj Svijet.')}</small></button>
         <button type="button" data-oo111="manual"><b>＋ ${t('Add manually', 'Dodaj ručno')}</b><small>${t('Name, type and optional business.', 'Naziv, vrsta i neobavezna tvrtka.')}</small></button>
       </div>
-      <details class="oo111-link"><summary>${t('Use a product link for safe prefill', 'Upotrijebi poveznicu proizvoda za sigurno ispunjavanje')}</summary><form id="oo111UrlForm"><label for="oo111Url">${t('Paste a product link', 'Zalijepi poveznicu proizvoda')}</label><div><input id="oo111Url" type="url" inputmode="url" autocomplete="url" placeholder="https://…"><button type="submit">${t('Use link', 'Upotrijebi')}</button></div><small>${t('Still uses the link only as a source reference and seller hint. It does not scrape or invent product data.', 'Still koristi poveznicu samo kao izvornu referencu i naznaku prodavatelja. Ne dohvaća niti izmišlja podatke o proizvodu.')}</small></form></details>
+      <details class="oo111-link"><summary>${t('Use a product link for safe prefill', 'Upotrijebi poveznicu proizvoda za sigurno ispunjavanje')}</summary><form id="oo111UrlForm"><label for="oo111Url">${t('Paste a product link', 'Zalijepi poveznicu proizvoda')}</label><div><input id="oo111Url" type="url" inputmode="url" autocomplete="url" placeholder="https://…"><button type="submit">${t('Use link', 'Upotrijebi')}</button></div><small>${t('Still stores the link only as a source reference and seller hint. It does not scrape or invent product data.', 'Still sprema poveznicu samo kao izvornu referencu i naznaku prodavatelja. Ne dohvaća niti izmišlja podatke o proizvodu.')}</small></form></details>
       <div id="oo111Message" class="oo111-message" role="status" aria-live="polite"></div>`;
     head.insertAdjacentElement('afterend', panel);
 
-    panel.querySelector('[data-oo111="manual"]')?.addEventListener('click', scrollToForm);
-    panel.querySelector('[data-oo111="receipt"]')?.addEventListener('click', useReceipt);
-    $('#oo111UrlForm', panel)?.addEventListener('submit', event => {
+    $('[data-oo111="manual"]', panel).addEventListener('click', () => withWorld(world => world.openAdd()));
+    $('[data-oo111="receipt"]', panel).addEventListener('click', () => withWorld(world => world.openCapture()));
+    $('[data-oo111="upload"]', panel).addEventListener('click', () => withWorld(world => world.openDocuments()));
+    $('[data-oo111="import"]', panel).addEventListener('click', () => withWorld(world => world.runMigration(true)));
+    $('#oo111UrlForm', panel).addEventListener('submit', event => {
       event.preventDefault();
       useProductUrl($('#oo111Url', panel)?.value || '');
     });
-    bindReceiptResult();
     return true;
   }
 

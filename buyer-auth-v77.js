@@ -19,6 +19,13 @@
   let me = { authenticated: false };
   let root = null;
   let googleLoadPromise = null;
+  const osPath = '/app';
+  const osDestination = () => {
+    try {
+      const saved = sessionStorage.getItem('still-post-auth-destination');
+      return saved?.startsWith('/app') ? saved : osPath;
+    } catch { return osPath; }
+  };
 
   async function api(url, options = {}) {
     const controller = new AbortController();
@@ -70,6 +77,12 @@
 
     render();
     root.removeAttribute('aria-busy');
+    const requestedSignIn = new URLSearchParams(location.search).get('signin') === '1';
+    if (requestedSignIn && me.authenticated) return location.assign(osDestination());
+    if (requestedSignIn && !me.authenticated) {
+      const panel = $('[data-panel]', root), trigger = $('[data-open]', root);
+      if (panel && trigger) { panel.hidden = false; trigger.setAttribute('aria-expanded', 'true'); }
+    }
     if (!me.authenticated && config.enabled) loadGoogle();
   }
 
@@ -134,10 +147,10 @@
         <span class="ba77-account-arrow">›</span>
       </button>
       <div class="ba77-quick">
-        <button type="button" data-go="dashboard">${t('Dashboard', 'Nadzorna ploča')}</button>
-        <button type="button" data-go="saved">${t('My purchases', 'Moje kupnje')}</button>
+        <button type="button" data-go="os">${t('Open Still', 'Otvori Still')}</button>
+        <button type="button" data-go="world">${t('World', 'Svijet')}</button>
+        <button type="button" data-go="together">${t('Together', 'Zajedno')}</button>
         <button type="button" data-go="rewards">${t('Rewards', 'Nagrade')}</button>
-        <button type="button" data-go="notifications">${t('Notifications', 'Obavijesti')}</button>
       </div>
       <div class="ba77-panel" data-panel role="dialog" aria-label="${t('Buyer profile', 'Profil kupca')}" hidden>
         <div class="ba77-profile">
@@ -154,11 +167,12 @@
           <div><b>${cases.length}</b><span>${t('Cases', 'Slučajevi')}</span></div>
         </div>
         <div class="ba77-profile-actions">
+          <button type="button" data-go="os"><b>${t('Open Still', 'Otvori Still')}</b><small>${t('Now, World and everything you own', 'Sada, Svijet i sve što posjeduješ')}</small></button>
+          <button type="button" data-go="world"><b>${t('My World', 'Moj Svijet')}</b><small>${t('Things, Knowledge and Situations', 'Stvari, znanje i situacije')}</small></button>
+          <button type="button" data-go="together"><b>${t('Together', 'Zajedno')}</b><small>${t('Real shared business relationships', 'Stvarni zajednički odnosi s tvrtkama')}</small></button>
+          <button type="button" data-go="os_profile"><b>${t('Profile and privacy', 'Profil i privatnost')}</b><small>${t('Identity, connected data and migration', 'Identitet, povezani podaci i migracija')}</small></button>
           <button type="button" data-go="checker"><b>${t('Check a purchase', 'Provjeri kupnju')}</b><small>${t('Return or warranty eligibility', 'Povrat ili jamstvo')}</small></button>
-          <button type="button" data-go="dashboard"><b>${t('My dashboard', 'Moja nadzorna ploča')}</b><small>${t('Profile, companies and passport activity', 'Profil, tvrtke i aktivnost putovnica')}</small></button>
-          <button type="button" data-go="saved"><b>${t('My purchases', 'Moje kupnje')}</b><small>${t('Saved checks and deadlines', 'Spremljene provjere i rokovi')}</small></button>
           <button type="button" data-go="rewards"><b>${t('Rewards & reputation', 'Nagrade i reputacija')}</b><small>${t('Points, benefits and activity', 'Bodovi, pogodnosti i aktivnost')}</small></button>
-          <button type="button" data-go="notifications"><b>${t('Notifications', 'Obavijesti')}</b><small>${t('Company updates and actions', 'Novosti tvrtki i potrebne radnje')}</small></button>
         </div>
         <section class="ba77-recent">
           <header><b>${t('Recent cases', 'Nedavni slučajevi')}</b><span>${cases.length}</span></header>
@@ -191,7 +205,11 @@
   }
 
   function go(destination) {
-    const targets = { dashboard: '#relationshipDashboardV103', checker: '#checker', saved: '#savedV24Section', rewards: '#buyerRewardsV76', notifications: '#lifecyclePlatformV95' };
+    if (destination === 'os') return location.assign(osDestination());
+    if (destination === 'world') return location.assign('/app/world');
+    if (destination === 'together') return location.assign('/app/together');
+    if (destination === 'os_profile') return location.assign('/app?profile=1');
+    const targets = { checker: '#checker', rewards: '#buyerRewardsV76' };
     if (destination === 'notifications') {
       const bell = $('#buyerNotifyV69 .sn69-button');
       if (bell) {
@@ -281,7 +299,7 @@
         body: JSON.stringify({ credential: response.credential })
       });
       await linkSaved(true);
-      await refresh();
+      location.assign(osDestination());
     } catch (error) {
       showGoogleError(error.status === 503
         ? t('Google sign-in is not configured on the server yet.', 'Google prijava još nije konfigurirana na poslužitelju.')
@@ -319,6 +337,9 @@
         : t('No compatible saved cases were found.', 'Nisu pronađeni kompatibilni spremljeni slučajevi.'));
     }
   }
+
+  window.StillBuyerAuth = { authenticated: () => Boolean(me?.authenticated), open: () => me?.authenticated ? location.assign(osDestination()) : togglePanel() };
+  window.addEventListener('still:buyer-sign-in', () => window.StillBuyerAuth.open());
 
   document.addEventListener('click', event => {
     if (!root || root.contains(event.target)) return;

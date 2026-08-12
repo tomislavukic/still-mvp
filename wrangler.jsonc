@@ -2,9 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v120.js",
-  // Active Worker adds the authenticated CompanyOS orchestration layer while
-  // preserving every existing API through the delegated Worker chain.
+  "main": "merchant-backend/worker-v135.js",
+  // Active Worker adds the ownership-native Market while preserving Still OS,
+  // persisted Needs, the World foundation, CompanyOS and existing APIs.
   "keep_vars": true,
   "observability": {
     "enabled": true,
@@ -13,11 +13,17 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*", "/admin", "/admin/*"]
+    "run_worker_first": ["/api/*", "/app", "/app/*", "/admin", "/admin/*"]
   },
   "ai": {
     "binding": "AI"
   },
+  "r2_buckets": [
+    {
+      "binding": "WORLD_FILES",
+      "bucket_name": "still-private-world"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

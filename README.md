@@ -1,12 +1,23 @@
-# Still?
+# Still
 
-Still? is a buyer-controlled ownership and commitment platform for products, services, subscriptions, bookings, rentals, and projects. It helps before purchase, during ownership, and when something needs resolving. Verified businesses use a separate workspace to issue passports, record concrete commitments, handle service, and build reputation from attributable outcomes.
+**Version 1.0.0 · Production Build 155**
 
-Still? is not a webshop or merchant of record. The original business remains the seller or provider. Still? is the mediator and shared evidence layer connecting the buyer's passport with a verified company's commitments.
+Still is a buyer-controlled operating system for everything a person owns. It keeps Things, receipts, documents, warranties, service history, important knowledge, unresolved needs and ownership history in one private World. The authenticated Still experience helps people remember what matters now, understand one Thing in context, resolve real needs and transfer ownership without losing trustworthy product history.
 
-Build 96 adds a production D1-backed operating system for verified businesses. Twelve connected modules cover locations, inventory, passport traceability, suppliers, purchase orders, repairs, parts, returns/refurbishment, fulfilment, rentals/subscriptions, appointments/workforce, CRM/quotes, warranty analytics and batch/serial recalls. An immutable stock ledger, idempotent writes and an attributable audit log keep these workflows consistent.
+Still is not a webshop, payment provider, escrow service or merchant of record. Businesses remain the seller or service provider. Still connects a buyer-controlled Thing and Product Passport to verified business records only through explicit, scoped relationships.
 
-Build 97 adds a clearly labelled, no-write preview of every company tool before verification. It also distinguishes invalid credentials from Cloudflare capacity failures, so the site never claims a password is wrong when authentication was not actually reached.
+## Version 1.0.0
+
+Version 1 establishes the complete production foundation delivered across Builds 131–155:
+
+- **World:** durable D1-backed Things, receipt review, private R2 originals, evidence and provenance, Product Passports, Knowledge, Situations, Open Loops, History, search and safe legacy migration.
+- **Still OS:** an authenticated, responsive environment organized around Now, World, Discover and Together, with adaptive Thing, Knowledge and Situation workspaces.
+- **Needs and Handle It:** persisted Needs, deterministic World-first resolution, real quotes, explicit user-selected actions and attributable outcomes without invented providers or availability.
+- **Still Market:** canonical-Thing listings, Wanted Objects, explainable deterministic matching, private reverse matching, offers, counteroffers, participant-only deals, manual handoff and privacy-filtered two-party ownership transfer.
+- **Still for Business:** existing authenticated CompanyOS, verification boundaries, operational tools, commerce, lifecycle, rewards and Trust Layer APIs remain available and isolated from buyer authentication.
+- **Production safeguards:** active Worker module-graph validation, production-bundle validation, 90 HTTP integration flows, CodeQL configuration checks, Gitleaks and pinned Wrangler validation.
+
+Payments and shipping in the C2C Market remain explicitly external. Still does not claim escrow, carrier tracking, professional inspection, AI condition verification, seller ratings or market-value estimates unless a real production provider and supporting evidence exist.
 
 ## Experience design
 
@@ -42,13 +53,14 @@ Build 97 adds a clearly labelled, no-write preview of every company tool before 
 - Company operational modules load only after company authentication succeeds.
 - Anonymous buyers can still use the return and warranty checker.
 - A company-issued passport connects only after the buyer signs in and enters the one-time connection code.
-- Buyer-created passports are local first; account sync is optional. Transfer-safe sharing excludes private notes and order references.
+- Signed-in buyer Things are durable server records. Existing browser-only ownership and saved-purchase records are migrated idempotently into the authenticated World. Transfer-safe sharing excludes private notes and order references.
 
 ## Production architecture
 
 - Cloudflare Worker entry point: the `main` file declared in `wrangler.jsonc`; its delegation chain preserves authenticated CompanyOS, Trust Layer and ownership APIs while newer wrappers add capabilities.
 - Cloudflare static asset bundle: generated in `public/` by `build-public.js`
 - Cloudflare D1 binding: `DB`
+- Private buyer receipt/document storage: Cloudflare R2 binding `WORLD_FILES` using the non-public `still-private-world` bucket
 - Optional private profile-image storage: Cloudflare R2 binding `PROFILE_MEDIA` after R2 is enabled; until then buyer Google photos and privacy-proxied company HTTPS logo URLs provide the live identity layer.
 - Google OAuth client configuration: Cloudflare variable `GOOGLE_CLIENT_ID`
 - Ownership data: `ownership_passports`, `passport_commitments` and hashed, expiring `passport_public_shares` in D1
@@ -100,6 +112,12 @@ npm run validate
 - **Dependabot:** GitHub Actions and npm dependencies are checked weekly, with no more than five open update pull requests for each ecosystem.
 
 `npm run validate:deploy` performs the complete validation gate followed by a pinned Wrangler dry run. It creates deployment output locally but does not publish or modify the Cloudflare Worker.
+
+## Buyer World Foundation
+
+Phase 1 adds a buyer-authenticated World for durable Things, private receipt OCR/review, Product Passport evidence, Knowledge, Situations, Open Loops, history, deterministic Now, and unified search. It reuses `ownership_passports` rather than creating a parallel owned-product identity and preserves the existing CompanyOS and Trust Layer boundaries.
+
+Architecture and migration details are documented in [the Phase 1 audit](docs/phase-1-world-foundation-audit.md) and [migration/rollback guide](docs/phase-1-world-foundation-migration.md).
 
 ## Product and legal limitations
 

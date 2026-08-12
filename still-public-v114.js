@@ -6,7 +6,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[character]);
-  const TOOL_IDS = ['ownershipHubV83', 'timelineV83', 'checker', 'lifecyclePlatformV95', 'passportCommerceV92', 'decisionLabV83', 'buyerRewardsV76'];
+  const TOOL_IDS = ['worldFoundationV131', 'ownershipHubV83', 'timelineV83', 'checker', 'lifecyclePlatformV95', 'passportCommerceV92', 'decisionLabV83', 'buyerRewardsV76'];
   let activeTool = '';
   let observer;
 
@@ -98,9 +98,9 @@
       <section class="sp114-section sp114-bring" id="bring-your-things">
         <div class="sp114-section-copy"><span class="sp114-kicker">${t('START ANYWHERE', 'POČNI BILO GDJE')}</span><h2>${t('Bring your things into Still.', 'Donesi svoje stvari u Still.')}</h2><p>${t('New purchase or something you have owned for years—both belong here.', 'Nova kupnja ili nešto što godinama posjeduješ—oboje pripada ovdje.')}</p></div>
         <div class="sp114-action-line" aria-label="${t('Ways to add things', 'Načini dodavanja stvari')}">
-          <button type="button" data-still-scan><span>▦</span><b>${t('Scan a receipt', 'Skeniraj račun')}</b><small>${t('Use the existing scanner', 'Upotrijebi postojeći skener')}</small></button>
-          <button type="button" disabled><span>↑</span><b>${t('Upload a document', 'Prenesi dokument')}</b><small>${t('Planned', 'Planirano')}</small></button>
-          <button type="button" disabled><span>↧</span><b>${t('Import purchases', 'Uvezi kupnje')}</b><small>${t('Planned', 'Planirano')}</small></button>
+          <button type="button" data-still-scan><span>▦</span><b>${t('Scan a receipt', 'Skeniraj račun')}</b><small>${t('Private OCR after sign-in', 'Privatni OCR nakon prijave')}</small></button>
+          <button type="button" data-world-document><span>↑</span><b>${t('Upload a document', 'Prenesi dokument')}</b><small>${t('Keep the original private', 'Sačuvaj izvornik privatno')}</small></button>
+          <button type="button" data-world-import><span>↧</span><b>${t('Import purchases', 'Uvezi kupnje')}</b><small>${t('Bring records from this browser', 'Prenesi zapise iz ovog preglednika')}</small></button>
           <button type="button" data-still-start><span>＋</span><b>${t('Add manually', 'Dodaj ručno')}</b><small>${t('Only a name is required', 'Obavezan je samo naziv')}</small></button>
         </div>
         <div class="sp114-transformation"><div><span>${t('BEFORE', 'PRIJE')}</span><ul><li>▤ ${t('Receipt', 'Račun')}</li><li>PDF ${t('Manual', 'Priručnik')}</li><li>▧ ${t('Photo', 'Fotografija')}</li><li>@ ${t('Purchase email', 'E-pošta o kupnji')}</li></ul></div><i>→</i><div><span>${t('AFTER', 'POSLIJE')}</span><strong>${t('One organized ownership record', 'Jedan uređen zapis vlasništva')}</strong><small>${t('Nothing is imported without your review.', 'Ništa se ne uvozi bez tvog pregleda.')}</small></div></div>
@@ -156,7 +156,7 @@
       button.type = 'button';
       button.className = 'sp114-header-start';
       button.textContent = t('Start free', 'Počni besplatno');
-      button.addEventListener('click', () => openTool('ownership'));
+      button.addEventListener('click', () => enterStill());
       actions.prepend(button);
     } else if ($('#stillHeaderStartV114')) $('#stillHeaderStartV114').textContent = t('Start free', 'Počni besplatno');
     const footer = document.querySelector('footer');
@@ -170,7 +170,7 @@
 
   function registerTools() {
     const mapping = {
-      ownership: 'ownershipHubV83', timeline: 'timelineV83', protection: 'checker', lifecycle: 'lifecyclePlatformV95',
+      ownership: 'worldFoundationV131', timeline: 'timelineV83', protection: 'checker', lifecycle: 'lifecyclePlatformV95',
       commerce: 'passportCommerceV92', decision: 'decisionLabV83', rewards: 'buyerRewardsV76'
     };
     TOOL_IDS.forEach(id => {
@@ -192,11 +192,17 @@
     if (!target) return setTimeout(() => openTool(tool, shouldScroll), 120);
     document.body.classList.add('still-v114-workspace-open');
     if (shouldScroll) setTimeout(() => target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 30);
-    if (tool === 'ownership') setTimeout(() => $('#passportFormV83 input[name="title"]')?.focus({ preventScroll: true }), 500);
+    if (tool === 'ownership') setTimeout(() => $('#worldFoundationV131 [data-world-add]')?.focus({ preventScroll: true }), 500);
+  }
+
+  function enterStill(destination = '/app') {
+    try { sessionStorage.setItem('still-post-auth-destination', destination); } catch {}
+    if (window.StillBuyerAuth?.authenticated?.()) return location.assign(destination);
+    window.dispatchEvent(new CustomEvent('still:buyer-sign-in'));
   }
 
   function toolFromHash() {
-    return ({ '#ownershipHubV83': 'ownership', '#timelineV83': 'timeline', '#checker': 'protection', '#lifecyclePlatformV95': 'lifecycle', '#passportCommerceV92': 'commerce', '#decisionLabV83': 'decision', '#buyerRewardsV76': 'rewards' })[location.hash];
+    return ({ '#buyeros-home': 'ownership', '#worldFoundationV131': 'ownership', '#ownershipHubV83': 'ownership', '#timelineV83': 'timeline', '#checker': 'protection', '#lifecyclePlatformV95': 'lifecycle', '#passportCommerceV92': 'commerce', '#decisionLabV83': 'decision', '#buyerRewardsV76': 'rewards' })[location.hash];
   }
 
   function moveBuyerAccount() {
@@ -213,14 +219,11 @@
   }
 
   function bind(root) {
-    root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => openTool('ownership')));
+    root.querySelectorAll('[data-still-start]').forEach(button => button.addEventListener('click', () => enterStill()));
     root.querySelectorAll('[data-still-tool]').forEach(button => button.addEventListener('click', () => openTool(button.dataset.stillTool)));
-    root.querySelector('[data-still-scan]')?.addEventListener('click', () => {
-      const scan = $('#scanReceipt');
-      if (!scan) return openTool('ownership');
-      openTool('ownership');
-      scan.click();
-    });
+    root.querySelector('[data-still-scan]')?.addEventListener('click', () => enterStill('/app?sight=receipt'));
+    root.querySelector('[data-world-document]')?.addEventListener('click', () => { openTool('ownership'); window.StillWorld?.openDocuments?.(); });
+    root.querySelector('[data-world-import]')?.addEventListener('click', () => { openTool('ownership'); window.StillWorld?.runMigration?.(true); });
   }
 
   function render() {
@@ -252,7 +255,7 @@
     if (footer) footer.classList.add('sp114-footer');
   }
 
-  
+
 /* STILL_PROTECTION_RUNTIME_V1 */
 function initializeStillProtection() {
   if (window.StillProtection) {
