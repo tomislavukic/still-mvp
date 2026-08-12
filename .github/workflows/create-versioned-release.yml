@@ -84,9 +84,9 @@ jobs:
 
           if git ls-remote --exit-code --tags origin \
             "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Release tag ${TAG} already exists."
-            echo "Increase package.json version before creating another release."
-            exit 1
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
@@ -95,7 +95,7 @@ jobs:
           echo "Release version: ${VERSION}"
           echo "Release tag: ${TAG}"
 
-      - name: Publish GitHub release
+      - name: Publish or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
@@ -110,9 +110,15 @@ jobs:
             notes_args=(--notes-file "$notes_file")
           fi
 
-          gh release create "$RELEASE_TAG" \
-            --target "$GITHUB_SHA" \
-            --title "Still ${RELEASE_TAG} · Everything you own" \
-            "${notes_args[@]}"
+          if [ "${{ steps.version.outputs.exists }}" = "true" ]; then
+            gh release edit "$RELEASE_TAG" \
+              --title "Still ${RELEASE_TAG} · Everything you own" \
+              "${notes_args[@]}"
+          else
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "Still ${RELEASE_TAG} · Everything you own" \
+              "${notes_args[@]}"
+          fi
 
           echo "Published Still ${RELEASE_VERSION}"
