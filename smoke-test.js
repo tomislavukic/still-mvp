@@ -209,9 +209,10 @@ if(!fail.length){
  if(!publicExperience.includes('Still does not invent a provider, price, deadline, company update or transaction.'))fail.push('current Still introduction does not disclose its truthful data boundary');
  if(!publicExperience.includes('enterStill()')||!publicExperience.includes("location.assign(destination)"))fail.push('Start free is not connected to the authenticated Still OS');
  if(!publicExperience.includes("enterStill('/app?sight=receipt')"))fail.push('receipt CTA does not enter the canonical Still Sight receipt flow');
- if(!publicExperience.includes('detachBuyerAccount(root)'))fail.push('buyer account controls are not preserved across public shell renders');
- if(!publicExperience.includes("section.id === 'checker' ? 'grid' : 'block'"))fail.push('ownership tools do not override legacy visibility rules in both open and closed states');
- if(!read('still-v114.css').includes('.still-v114 .still-v114-tool:not(.is-open)'))fail.push('supporting ownership modules can leak into the public hierarchy');
+ if(publicExperience.includes('stillAccountMountV114')||publicExperience.includes('data-still-tool'))fail.push('private account or legacy tool controls are mounted in the public landing story');
+ if(!publicExperience.includes('placeBuyerAuth()')||!read('still-v114.css').includes('sp114-auth-overlay'))fail.push('buyer sign-in is not a top-level unobstructed landing overlay');
+ if(!read('still-v114.css').includes('#relationshipDashboardV103'))fail.push('authenticated relationship dashboard can leak into the public hierarchy');
+ if(!read('still-os-v133.js').includes('/api/v1/buyer-profile')||!read('still-os-v133.js').includes('/api/v1/buyer-profile/photo'))fail.push('authenticated Still profile management is incomplete');
  if(!read('still-v114.css').includes('[data-theme="light"]'))fail.push('explicit light theme does not override a dark system preference');
  if(!publicExperience.includes("t('PLANNED', 'PLANIRANO')")||!publicExperience.includes('Still+'))fail.push('planned premium consumer capabilities are not clearly labelled');
  const worldFoundation=read('world-foundation-v131.js');
