@@ -1,6 +1,13 @@
 name: Create versioned release
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+      - docs/releases/**
+      - .github/workflows/create-versioned-release.yml
   workflow_dispatch:
 
 permissions:
