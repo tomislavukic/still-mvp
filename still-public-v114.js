@@ -117,7 +117,7 @@
               <li><span>→</span><div><b>${t('Handle it', 'Riješi')}</b><small>${t('Evidence + real next action', 'Dokazi + stvarna sljedeća radnja')}</small></div><i>${t('no guesses', 'bez nagađanja')}</i></li>
               <li><span>↔</span><div><b>${t('Market & Together', 'Tržište i Zajedno')}</b><small>${t('Handoff + selective sharing', 'Primopredaja + selektivno dijeljenje')}</small></div><i>${t('owner-controlled', 'pod kontrolom vlasnika')}</i></li>
             </ol>
-            <footer><span>✓</span><p><b>${t('Truthful by design', 'Istinito po dizajnu')}</b><small>${t('Still does not invent a provider, price, deadline, company update or transaction. Payments and shipping remain outside Still.', 'Still ne izmišlja pružatelja, cijenu, rok, ažuriranje tvrtke ni transakciju. Plaćanje i dostava ostaju izvan Still-a.')}</small></p></footer>
+            <div class="sp114-stage-truth"><span>✓</span><p><b>${t('Truthful by design', 'Istinito po dizajnu')}</b><small>${t('Still does not invent a provider, price, deadline, company update or transaction. Payments and shipping remain outside Still.', 'Still ne izmišlja pružatelja, cijenu, rok, ažuriranje tvrtke ni transakciju. Plaćanje i dostava ostaju izvan Still-a.')}</small></p></div>
           </article>
         </div>
       </section>
