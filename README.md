@@ -15,7 +15,9 @@ Version 1 establishes the complete production foundation delivered across Builds
 - **Needs and Handle It:** persisted Needs, deterministic World-first resolution, real quotes, explicit user-selected actions and attributable outcomes without invented providers or availability.
 - **Still Market:** canonical-Thing listings, Wanted Objects, explainable deterministic matching, private reverse matching, offers, counteroffers, participant-only deals, manual handoff and privacy-filtered two-party ownership transfer.
 - **Still for Business:** existing authenticated CompanyOS, verification boundaries, operational tools, commerce, lifecycle, rewards and Trust Layer APIs remain available and isolated from buyer authentication.
-- **Production safeguards:** active Worker module-graph validation, production-bundle validation, 90 HTTP integration flows, CodeQL configuration checks, Gitleaks and pinned Wrangler validation.
+- **Production safeguards:** active Worker module-graph validation, production-bundle validation, 91 HTTP integration flows, CodeQL configuration checks, Gitleaks and pinned Wrangler validation.
+
+GitHub publishes a validated semantic release when version metadata changes on `main`; the same workflow remains manually dispatchable for controlled recovery.
 
 Payments and shipping in the C2C Market remain explicitly external. Still does not claim escrow, carrier tracking, professional inspection, AI condition verification, seller ratings or market-value estimates unless a real production provider and supporting evidence exist.
 
