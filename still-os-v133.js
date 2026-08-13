@@ -43,8 +43,9 @@
   function route() {
     const parts = location.pathname.replace(/^\/app\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);
     if (!parts.length) return { space: 'now' };
-    if (['world', 'discover', 'together', 'market'].includes(parts[0]) && parts.length === 1) return { space: parts[0] };
+    if (['world', 'discover', 'together', 'market', 'work'].includes(parts[0]) && parts.length === 1) return { space: parts[0] };
     if (parts[0] === 'market') return { space: 'market', kind: parts[1] || 'home', id: parts[2] || null };
+    if (parts[0] === 'work') return { space: 'work', kind: parts[1] || 'home', id: parts[2] || null };
     const type = parts[0] === 'open-loop' ? 'open_loop' : parts[0];
     if (['thing', 'situation', 'knowledge', 'receipt', 'open_loop', 'need'].includes(type) && parts[1]) return { space: 'context', type, id: parts[1] };
     return { space: 'now' };
@@ -195,6 +196,7 @@
           ${passports.length ? `<ol>${passports.map(passport => `<li><span>${icon('thing')}</span><div><b>${esc(passport.title || t('Untitled Passport', 'Putovnica bez naziva'))}</b><small>${esc(passport.company_display_name || passport.business_name || typeLabel('thing'))}${passport.updated_at ? ` · ${date(passport.updated_at)}` : ''}</small></div></li>`).join('')}</ol>` : `<p>${t('Your latest Passports will appear here after you add or receive them.', 'Tvoje najnovije Putovnice pojavit će se ovdje nakon što ih dodaš ili primiš.')}</p>`}
         </section>
       </div>
+      ${window.StillProfessionalV136?.accountSection(helpers()) || ''}
     </section>`;
   }
 
@@ -221,12 +223,14 @@
       host.innerHTML = `<section class="sos133-now">
         <header class="sos133-now-head"><span>${t('NOW', 'SADA')}</span><h1>${esc(greeting(data.owner?.name))}</h1><p>${data.quietState ? t('Everything’s handled.', 'Sve je riješeno.') : t('Here is what matters right now.', 'Evo što je sada važno.')}</p></header>
         ${dashboard ? accountOverview(dashboard) : ''}
+        ${window.StillProfessionalV136?.nowSection(data.professional, helpers()) || ''}
         ${dominant ? `<article class="sos133-dominant"><div><span>${dominant.type === 'need' ? t('NEED', 'POTREBA') : dominant.overdue ? t('NEEDS YOU', 'TRAŽI TEBE') : dominant.status === 'WAITING' ? t('WAITING', 'ČEKANJE') : t('CURRENT CONTEXT', 'TRENUTAČNI KONTEKST')}</span><h2>${esc(dominant.title)}</h2><p>${dominant.waitingOn ? `${t('Waiting for', 'Čeka se')}: ${esc(dominant.waitingOn)}` : dominant.dueAt ? `${dominant.overdue ? t('Due', 'Rok') : t('Coming up', 'Uskoro')}: ${date(dominant.dueAt)}` : dominant.type === 'need' ? t('Open this Need to see real ways to handle it.', 'Otvori potrebu i pogledaj stvarne načine rješavanja.') : t('One active situation may need your attention.', 'Jedna aktivna situacija možda traži tvoju pažnju.')}</p></div><button type="button" data-open-context="${esc(dominant.type)}:${esc(dominant.id)}">${dominant.type === 'need' ? t('Handle it', 'Riješi') : t('Open', 'Otvori')} <span>→</span></button></article>` : `<article class="sos133-quiet"><span aria-hidden="true">✓</span><h2>${t('Everything’s handled.', 'Sve je riješeno.')}</h2><p>${t('Your World is quiet. Still will show real deadlines and open work here when they exist.', 'Tvoj Svijet je miran. Still će ovdje prikazati stvarne rokove i otvorene obveze kada postoje.')}</p><div><button type="button" data-command-open>${t('Add something', 'Dodaj nešto')}</button><a href="/app/world" data-nav>${t('Explore your World', 'Istraži svoj Svijet')}</a></div></article>`}
         ${attentionCount ? `<section class="sos133-attention"><button type="button" class="sos133-attention-toggle" data-toggle-attention aria-expanded="${state.attentionOpen}"><span><b>${attentionCount}</b> ${t(attentionCount === 1 ? 'thing may need you' : 'things may need you', attentionCount === 1 ? 'stvar te možda treba' : 'stvari te možda trebaju')}</span><i aria-hidden="true">${state.attentionOpen ? '−' : '+'}</i></button><div class="sos133-attention-list" ${state.attentionOpen ? '' : 'hidden'}>${attentionItems.map(item => contextButton(item, true)).join('')}</div></section>` : ''}
         <section class="sos133-input-invite"><button type="button" data-command-open><span aria-hidden="true">＋</span><div><b>${t('Ask, show or tell Still…', 'Pitaj, pokaži ili reci Still-u…')}</b><small>${t('Add a Thing, start a Situation, save Knowledge or remember an action.', 'Dodaj stvar, pokreni situaciju, spremi znanje ili zapamti obvezu.')}</small></div><i>→</i></button></section>
         ${(data.recentItems || []).length || (data.recentNeeds || []).length ? `<section class="sos133-recent"><header><span>${t('RECENT CONTEXT', 'NEDAVNI KONTEKST')}</span><h2>${t('Recently remembered', 'Nedavno zapamćeno')}</h2></header><ol>${[...(data.recentNeeds || []).map(item => ({ ...item, type: 'need', occurredAt: item.createdAt })), ...(data.recentItems || [])].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt))).slice(0, 5).map(item => `<li><span aria-hidden="true">${icon(item.type)}</span><div><b>${esc(item.title)}</b><small>${date(item.occurredAt)}</small></div></li>`).join('')}</ol></section>` : ''}
       </section>`;
       bindContent();
+      window.StillProfessionalV136?.bindAccount(helpers());
     } catch (error) {
       host.innerHTML = failed(error.message);
       bindContent();
@@ -559,6 +563,7 @@
     if (current.space === 'now') return renderNow();
     if (current.space === 'world') return renderWorld();
     if (current.space === 'market' && window.StillMarketV135) return window.StillMarketV135.render({ host: main(), route: current, helpers: helpers() });
+    if (current.space === 'work' && window.StillProfessionalV136) return window.StillProfessionalV136.render({ host: main(), route: current, helpers: helpers() });
     if (current.space === 'discover') return renderDiscover();
     if (current.space === 'together') return renderTogether();
     return renderContext(current.type, current.id);
