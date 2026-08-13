@@ -37,6 +37,6 @@ test('20 Sight can create a Need from a real private document', () => assert.ok(
 test('21 quotes use real user-entered amounts and factual comparison', () => assert.ok(client.includes('amountCents: Math.round(amount * 100)') && client.includes('quoteComparison')));
 test('22 Need status is written as text and keyboard controls have target sizing', () => assert.ok(client.includes('statusLabel(need.status') && /min-height:\s*4[4-9]px/.test(style)));
 test('23 mobile resolution layout is intentionally single column', () => assert.match(style, /@media\(max-width:600px\)[\s\S]*\.need134-options article\{grid-template-columns:1fr/));
-test('24 production ships Phase 3 beneath the additive Market Worker', () => { const marketWorker = read('merchant-backend/worker-v135.js'); assert.ok(app.includes('needs-resolution-v134.js') && build.includes("'needs-resolution-v134.css'") && wrangler.includes('worker-v135.js') && marketWorker.includes("import app from './worker-v134.js'")); });
+test('24 production ships Phase 3 in the active additive Worker chain', () => { const chain = require('./worker-chain').activeWorkerChain(); assert.ok(app.includes('needs-resolution-v134.js') && build.includes("'needs-resolution-v134.css'") && chain.some(item => item.relativePath === 'merchant-backend/worker-v135.js') && chain.some(item => item.relativePath === 'merchant-backend/worker-v134.js')); });
 
 process.stdout.write(`Needs and Resolution tests passed (${passed} assertions).\n`);

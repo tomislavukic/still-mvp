@@ -17,7 +17,7 @@ let passed = 0;
 function test(name, check) { check(); passed += 1; process.stdout.write(`✓ ${name}\n`); }
 
 test('01 Market Worker is additive over Phase 3', () => assert.ok(worker.includes("import app from './worker-v134.js'") && worker.includes('return app.fetch(request,env,ctx)')));
-test('02 active deployment entry points to Market Worker', () => assert.ok(wrangler.includes('merchant-backend/worker-v135.js')));
+test('02 active deployment chain includes the Market Worker', () => assert.ok(require('./worker-chain').activeWorkerChain().some(item => item.relativePath === 'merchant-backend/worker-v135.js')));
 test('03 canonical listings reference Thing passports', () => assert.ok(schema.includes('thing_passport_id TEXT NOT NULL') && worker.includes('thing_passport_id')));
 test('04 one open listing per Thing is enforced by D1', () => assert.ok(schema.includes('CREATE UNIQUE INDEX IF NOT EXISTS idx_market_one_open_listing')));
 test('05 ownership is checked before listing creation', () => assert.ok(worker.includes('thing_not_owned') && worker.includes('ownerThing(env,buyer.buyer_account_id')));

@@ -85,9 +85,9 @@ function test(name, check) {
   test('42 the client uses server World endpoints for every Phase 1 area', () => ['/world/things','/world/receipts','/world/knowledge','/world/situations','/world/open-loops'].forEach(route => assert.ok(client.includes(route), route)));
   test('43 the production bundle ships the World client and style', () => assert.ok(build.includes("'world-foundation-v131.js'") && build.includes("'world-foundation-v131.css'")));
   test('44 the active Worker delegates to Phase 1 and keeps private storage configured', () => {
-    const activeWorker = read('merchant-backend/worker-v135.js');
-    const phase3Worker = read('merchant-backend/worker-v134.js');
-    assert.ok(wrangler.includes('worker-v135.js') && activeWorker.includes("import app from './worker-v134.js'") && phase3Worker.includes("import app from './worker-v133.js'") && wrangler.includes('"binding": "WORLD_FILES"'));
+    const chain = require('./worker-chain').activeWorkerChain();
+    const sources = chain.map(item => item.source).join('\n');
+    assert.ok(chain[0].relativePath === require('./worker-chain').readWrangler(root).main && sources.includes("import app from './worker-v134.js'") && sources.includes("import app from './worker-v133.js'") && wrangler.includes('"binding": "WORLD_FILES"'));
   });
   test('45 receipt review exposes explicit existing-Thing selection', () => assert.ok(client.includes('function bindReceiptLine') && client.includes("choice.hidden=action.value!=='link'")));
   test('46 legacy onboarding delegates to the real World without simulated receipt success', () => assert.ok(legacyOnboarding.includes('world.openCapture()') && legacyOnboarding.includes('world.openDocuments()') && !legacyOnboarding.includes("heading.textContent = t('Found it.'")));

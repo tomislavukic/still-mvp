@@ -5,11 +5,12 @@
   "scripts": {
     "syntax": "node scripts/check-syntax.js",
     "build": "node build-public.js",
-    "test": "node smoke-test.js && node scripts/world-foundation-test.js && node scripts/still-os-test.js && node scripts/needs-resolution-test.js && node scripts/still-market-test.js",
+    "test": "node smoke-test.js && node scripts/world-foundation-test.js && node scripts/still-os-test.js && node scripts/needs-resolution-test.js && node scripts/still-market-test.js && node scripts/professional-network-test.js",
     "test:world": "node scripts/world-foundation-test.js",
     "test:os": "node scripts/still-os-test.js",
     "test:needs": "node scripts/needs-resolution-test.js",
     "test:market": "node scripts/still-market-test.js",
+    "test:professional": "node scripts/professional-network-test.js",
     "test:world:integration": "node scripts/run-world-foundation-integration.js",
     "test:world:sqlite": "node scripts/run-worker-sqlite-integration.js",
     "security": "gitleaks git --config .gitleaks.toml --redact --no-banner --exit-code 1",

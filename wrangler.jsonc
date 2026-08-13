@@ -2,9 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v135.js",
-  // Active Worker adds the ownership-native Market while preserving Still OS,
-  // persisted Needs, the World foundation, CompanyOS and existing APIs.
+  "main": "merchant-backend/worker-v136.js",
+  // Active Worker adds the Professional Resolution Network while preserving
+  // the ownership Market, Still OS, CompanyOS and every existing API.
   "keep_vars": true,
   "observability": {
     "enabled": true,
