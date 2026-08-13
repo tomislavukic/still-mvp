@@ -61,9 +61,18 @@ test('33 private profile maintenance is available only in authenticated Still', 
   assert.ok(client.includes('/api/v1/buyer-profile') && client.includes('/api/v1/buyer-profile/photo'));
   assert.ok(!publicExperience.includes('stillAccountMountV114') && !publicExperience.includes('data-still-tool'));
 });
-test('34 public buyer sign-in is a top-level overlay rather than a bottom-page module', () => {
-  assert.ok(publicExperience.includes('placeBuyerAuth()'));
-  assert.ok(style.includes('font-family:Inter'));
+test('34 public buyer sign-in is an anchored top stage rather than a floating or bottom-page module', () => {
+  assert.ok(publicExperience.includes("auth.classList.add('sp114-auth-stage')"));
+  assert.ok(!publicExperience.includes("auth.classList.add('sp114-auth-overlay')"));
+  assert.ok(buyerAuth.includes("shape: 'pill'") && buyerAuth.includes('data-close'));
+});
+test('35 private Still restores the real account overview and a real logout action', () => {
+  ['data-account-profile','recentPassports','connectedPassports','openCommitments','/api/v1/buyer-auth/logout'].forEach(capability => assert.ok(client.includes(capability)));
+});
+test('36 public legacy buyer modules remain quarantined after late runtime mutations', () => {
+  assert.ok(publicExperience.includes('quarantineLegacyPublicModules()'));
+  assert.ok(publicExperience.includes("element.style.setProperty('display', 'none', 'important')"));
+  assert.ok(publicExperience.includes("attributeFilter: ['style', 'hidden']"));
 });
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);

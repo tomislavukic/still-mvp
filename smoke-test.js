@@ -37,7 +37,7 @@ if(!fail.length){
  if(!buyerAuth.includes('/api/v1/buyer-auth/google/config'))fail.push('buyer Google config does not use isolated auth namespace');
  if(!buyerAuth.includes('/api/v1/buyer-auth/google'))fail.push('buyer Google login does not use isolated auth namespace');
  if(buyerAuth.includes("api('/api/v1/auth/google"))fail.push('buyer auth still calls the shared company auth namespace');
- if(!buyerAuth.includes('Google authenticates only buyer accounts'))fail.push('buyer-only Google scope is not explained');
+ if(!buyerAuth.includes('Google authenticates only')||!buyerAuth.includes('buyer account')||!buyerAuth.includes('warranty claim'))fail.push('buyer-only Google scope is not explained');
  if(company.includes('buyer-auth-v77.js'))fail.push('buyer Google authentication is loaded on the company page');
  if(!authWorker.includes("pathname === '/api/v1/buyer-auth/google/config'"))fail.push('worker does not route buyer Google config');
  if(!authWorker.includes("VALUES('GOOGLE_CLIENT_ID'"))fail.push('auth worker does not persist Google Client ID');
@@ -210,9 +210,11 @@ if(!fail.length){
  if(!publicExperience.includes('enterStill()')||!publicExperience.includes("location.assign(destination)"))fail.push('Start free is not connected to the authenticated Still OS');
  if(!publicExperience.includes("enterStill('/app?sight=receipt')"))fail.push('receipt CTA does not enter the canonical Still Sight receipt flow');
  if(publicExperience.includes('stillAccountMountV114')||publicExperience.includes('data-still-tool'))fail.push('private account or legacy tool controls are mounted in the public landing story');
- if(!publicExperience.includes('placeBuyerAuth()')||!read('still-v114.css').includes('sp114-auth-overlay'))fail.push('buyer sign-in is not a top-level unobstructed landing overlay');
+ if(!publicExperience.includes("auth.classList.add('sp114-auth-stage')")||!read('still-v114.css').includes('sp114-auth-stage'))fail.push('buyer sign-in is not an anchored top-level landing stage');
+ if(!publicExperience.includes('quarantineLegacyPublicModules()')||!publicExperience.includes("element.style.setProperty('display', 'none', 'important')"))fail.push('late legacy buyer modules can reappear inside the public landing page');
  if(!read('still-v114.css').includes('#relationshipDashboardV103'))fail.push('authenticated relationship dashboard can leak into the public hierarchy');
  if(!read('still-os-v133.js').includes('/api/v1/buyer-profile')||!read('still-os-v133.js').includes('/api/v1/buyer-profile/photo'))fail.push('authenticated Still profile management is incomplete');
+ if(!read('still-os-v133.js').includes('/api/v1/buyer-auth/logout')||!read('still-os-v133.js').includes('recentPassports'))fail.push('authenticated Still account overview or logout is incomplete');
  if(!read('still-v114.css').includes('[data-theme="light"]'))fail.push('explicit light theme does not override a dark system preference');
  if(!publicExperience.includes("t('PLANNED', 'PLANIRANO')")||!publicExperience.includes('Still+'))fail.push('planned premium consumer capabilities are not clearly labelled');
  const worldFoundation=read('world-foundation-v131.js');

@@ -124,17 +124,22 @@
         ${t('Buyer sign in', 'Prijava kupca')}
       </button>
       <div class="ba77-panel login" data-panel role="dialog" aria-label="${t('Buyer account', 'Račun kupca')}" hidden>
-        <small class="ba77-audience">${t('FOR BUYERS', 'ZA KUPCE')}</small>
-        <h3>${t('Your Still? account', 'Tvoj Still? račun')}</h3>
-        <p>${t('Keep purchases, cases, points and rewards with you across devices.', 'Sačuvaj kupnje, slučajeve, bodove i nagrade na svim uređajima.')}</p>
-        ${unavailableNotice()}
-        ${config?.enabled
-          ? '<div id="googleSignInV77" aria-label="Google sign in"></div>'
-          : config?.unavailable
-            ? ''
-            : `<div class="ba77-config">${t('Google sign-in needs its configured Client ID before it can be used.', 'Za Google prijavu potrebno je postaviti Client ID.')}</div>`}
-        <small class="ba77-trust">${t('Google authenticates only buyer accounts. It does not verify a purchase or warranty claim.', 'Google potvrđuje samo račun kupca. Time se kupnja ili jamstveni zahtjev ne potvrđuju automatski.')}</small>
-        <a class="ba77-business-link" href="/company.html">${t('Are you a verified business? Use Still? for Business →', 'Predstavljaš verificiranu tvrtku? Otvori Still? for Business →')}</a>
+        <button class="ba77-close" type="button" data-close aria-label="${t('Close sign in', 'Zatvori prijavu')}">×</button>
+        <div class="ba77-login-copy">
+          <small class="ba77-audience">${t('YOUR PRIVATE STILL', 'TVOJ PRIVATNI STILL')}</small>
+          <h3>${t('Continue to everything you own.', 'Nastavi do svega što posjeduješ.')}</h3>
+          <p>${t('Your Passports, receipts, reminders, company connections, cases and rewards stay together across devices.', 'Tvoje Putovnice, računi, podsjetnici, veze s tvrtkama, slučajevi i nagrade ostaju zajedno na svim uređajima.')}</p>
+        </div>
+        <div class="ba77-login-action">
+          ${unavailableNotice()}
+          ${config?.enabled
+            ? '<div id="googleSignInV77" aria-label="Google sign in"></div>'
+            : config?.unavailable
+              ? ''
+              : `<div class="ba77-config">${t('Google sign-in needs its configured Client ID before it can be used.', 'Za Google prijavu potrebno je postaviti Client ID.')}</div>`}
+          <small class="ba77-trust">${t('Google authenticates only your buyer account. A purchase or warranty claim is always verified separately.', 'Google potvrđuje samo tvoj račun kupca. Kupnja ili jamstveni zahtjev uvijek se provjeravaju zasebno.')}</small>
+          <a class="ba77-business-link" href="/company.html">${t('Signing in for a business? Open Still for Business →', 'Prijavljuješ se za tvrtku? Otvori Still za tvrtke →')}</a>
+        </div>
       </div>`;
   }
 
@@ -213,7 +218,10 @@
     if (!panel || !trigger) return;
     panel.hidden = !panel.hidden;
     trigger.setAttribute('aria-expanded', String(!panel.hidden));
-    if (!panel.hidden && config?.enabled && !me?.authenticated) startGoogle();
+    if (!panel.hidden) {
+      if (config?.enabled && !me?.authenticated) startGoogle();
+      requestAnimationFrame(() => root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+    }
   }
 
   function go(destination) {
@@ -234,6 +242,11 @@
 
   function bind() {
     $('[data-open], [data-account]', root)?.addEventListener('click', togglePanel);
+    $('[data-close]', root)?.addEventListener('click', () => {
+      const panel = $('[data-panel]', root), trigger = $('[data-open], [data-account]', root);
+      if (panel) panel.hidden = true;
+      trigger?.setAttribute('aria-expanded', 'false');
+    });
     $('[data-retry]', root)?.addEventListener('click', refresh);
     $('[data-logout]', root)?.addEventListener('click', async () => {
       await api(endpoints.logout, { method: 'POST', body: '{}' }).catch(() => {});
@@ -292,7 +305,7 @@
     });
     window.google.accounts.id.renderButton(container, {
       type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
-      shape: 'rectangular', logo_alignment: 'left', width: 300
+      shape: 'pill', logo_alignment: 'left', width: 320
     });
   }
 
