@@ -81,6 +81,8 @@ const retiredDemoAssets = [
 ];
 
 const staticAssets = ['og-v85.png'];
+const publicRuntime = ['theme.js', 'buyer-auth-v77.js', 'still-public-v114.js'];
+const publicStyles = ['buyer-auth-v77.css', 'still-v114.css'];
 
 function fail(message) {
   failures.push(message);
@@ -151,13 +153,35 @@ if (bundle) {
 for (const file of buyerScripts) {
   assertFileExists(`public/${file}`);
   assertManifestIncludes(manifest.runtime, file, 'BuyerOS runtime manifest');
-  if (bundle) assertVersionedReference(indexHtml, 'public/index.html', file, bundle);
 }
 
 for (const file of buyerStyles) {
   assertFileExists(`public/${file}`);
   assertManifestIncludes(manifest.files, file, 'production file manifest');
+}
+
+if (JSON.stringify(manifest.publicRuntime) !== JSON.stringify(publicRuntime)) {
+  fail(`public landing runtime must contain only ${publicRuntime.join(', ')}`);
+}
+if (JSON.stringify(manifest.publicStyles) !== JSON.stringify(publicStyles)) {
+  fail(`public landing styles must contain only ${publicStyles.join(', ')}`);
+}
+for (const file of publicRuntime) {
   if (bundle) assertVersionedReference(indexHtml, 'public/index.html', file, bundle);
+}
+for (const file of publicStyles) {
+  if (bundle) assertVersionedReference(indexHtml, 'public/index.html', file, bundle);
+}
+for (const file of (manifest.runtime || []).filter(file => !publicRuntime.includes(file))) {
+  if (assetReference(indexHtml, file)) fail(`public landing activates non-essential runtime ${file}`);
+}
+for (const file of buyerStyles.filter(file => !publicStyles.includes(file))) {
+  if (assetReference(indexHtml, file)) fail(`public landing activates non-essential style ${file}`);
+}
+if (!/<main>\s*<\/main>/i.test(indexHtml)) fail('public landing ships the legacy homepage DOM instead of the lightweight Still shell');
+if (assetReference(indexHtml, 'share-icons.css')) fail('public landing activates the retired share-control stylesheet');
+for (const origin of ['https://accounts.google.com', 'https://accounts.gstatic.com']) {
+  if (!indexHtml.includes(`rel="preconnect" href="${origin}"`)) fail(`public landing does not preconnect to ${origin}`);
 }
 
 for (const file of companyScripts) {
@@ -235,6 +259,10 @@ if (manifest.runtime?.some(file => ['relationship-dashboard-v103.js','contact-pr
 if (consumerRuntime.includes('stillAccountMountV114') || consumerRuntime.includes('data-still-tool')) fail('private account or legacy tool controls are mounted in the public landing story');
 if (!consumerRuntime.includes("auth.classList.add('sp114-auth-stage')") || !read('public/still-v114.css').includes('sp114-auth-stage')) fail('anchored top-level buyer sign-in stage is not shipped');
 if (!consumerRuntime.includes('quarantineLegacyPublicModules()') || !consumerRuntime.includes("element.style.setProperty('display', 'none', 'important')")) fail('public runtime does not quarantine late legacy buyer modules');
+if (consumerRuntime.includes('initializeStillProtection') || consumerRuntime.includes('data-still-protection-runtime')) fail('public landing starts the private Protection runtime before authentication');
+if (consumerRuntime.includes("if (!$('#ownershipPlatformV83'))")) fail('public landing waits for the legacy ownership platform before rendering');
+if (!consumerRuntime.includes('restoreLanguage()') || !consumerRuntime.includes('persistLanguage()')) fail('lightweight public landing does not preserve language preference');
+if (!read('public/buyer-auth-v77.js').includes('const start = refresh;')) fail('buyer authentication is delayed after the public shell placement step');
 if (!consumerRuntime.includes("t('PLANNED', 'PLANIRANO')") || !consumerRuntime.includes('Still+')) fail('unavailable premium consumer capabilities are not truthfully labelled');
 const worldRuntime = read('public/world-foundation-v131.js');
 for (const capability of ['/api/v1/world/bootstrap','/api/v1/world/things','/api/v1/world/receipts/capture','/api/v1/world/knowledge','/api/v1/world/situations','/api/v1/world/open-loops']) {
@@ -312,4 +340,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Production bundle validation passed (bundle ${bundle}, ${buyerScripts.length} BuyerOS scripts, ${companyScripts.length} CompanyOS scripts).`);
+console.log(`Production bundle validation passed (bundle ${bundle}, ${publicRuntime.length} public scripts, ${buyerScripts.length} preserved BuyerOS capabilities, ${companyScripts.length} CompanyOS scripts).`);

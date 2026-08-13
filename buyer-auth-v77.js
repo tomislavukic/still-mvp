@@ -392,7 +392,7 @@
   });
   $('#language')?.addEventListener('change', () => setTimeout(render, 0));
 
-  const start = () => setTimeout(refresh, 150);
+  const start = refresh;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();
