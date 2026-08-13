@@ -13,8 +13,6 @@
     'timelineV83', 'howConnectsV83', 'buyerRewardsV76', 'checker', 'advancedToolsV84',
     'proofV22', 'relationshipDashboardV103', 'worldFoundationV131'
   ];
-  let observer;
-
   function readPassports() {
     try {
       const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -252,8 +250,9 @@
       root = document.createElement('div');
       root.id = 'stillPublicV114';
       root.className = 'sp114';
-      const platform = $('#ownershipPlatformV83');
-      (platform || $('main')?.firstElementChild)?.insertAdjacentElement(platform ? 'beforebegin' : 'beforebegin', root);
+      const main = $('main');
+      if (main) main.prepend(root);
+      else document.body.appendChild(root);
     }
     placeBuyerAuth();
     quarantineLegacyPublicModules();
@@ -265,102 +264,9 @@
     const footer = document.querySelector('footer');
     if (footer) footer.classList.add('sp114-footer');
   }
-
-
-/* STILL_PROTECTION_RUNTIME_V1 */
-function initializeStillProtection() {
-  if (window.StillProtection) {
-    window.dispatchEvent(
-      new CustomEvent('still:protection-ready')
-    );
-    return Promise.resolve(window.StillProtection);
-  }
-
-  if (window.__stillProtectionLoading) {
-    return window.__stillProtectionLoading;
-  }
-
-  window.__stillProtectionLoading = new Promise(
-    (resolve, reject) => {
-      const existing = document.querySelector(
-        'script[data-still-protection-runtime]'
-      );
-
-      if (existing) {
-        existing.addEventListener(
-          'load',
-          () => resolve(window.StillProtection || null),
-          { once: true }
-        );
-
-        existing.addEventListener(
-          'error',
-          reject,
-          { once: true }
-        );
-
-        return;
-      }
-
-      const script = document.createElement('script');
-
-      script.src =
-        '/buyer/protection/browser/ProtectionBrowserService.js';
-
-      script.defer = true;
-
-      script.dataset.stillProtectionRuntime = '1';
-
-      script.addEventListener(
-        'load',
-        () => {
-          if (!window.StillProtection) {
-            reject(
-              new Error(
-                'Protection runtime loaded without StillProtection.'
-              )
-            );
-            return;
-          }
-
-          window.dispatchEvent(
-            new CustomEvent('still:protection-ready')
-          );
-
-          resolve(window.StillProtection);
-        },
-        { once: true }
-      );
-
-      script.addEventListener(
-        'error',
-        () => reject(
-          new Error('Unable to load Protection runtime.')
-        ),
-        { once: true }
-      );
-
-      document.head.appendChild(script);
-    }
-  ).catch(error => {
-    console.error('[Still Protection]', error);
-    window.__stillProtectionLoading = null;
-    return null;
-  });
-
-  return window.__stillProtectionLoading;
-}
-
 function start() {
     normalizeLegacyWorkspaceHash();
-    if (!$('#ownershipPlatformV83')) return setTimeout(start, 80);
     render();
-    initializeStillProtection();
-    observer = new MutationObserver(() => {
-      placeBuyerAuth();
-      quarantineLegacyPublicModules();
-    });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden'] });
     window.addEventListener('hashchange', normalizeLegacyWorkspaceHash);
     window.addEventListener('still:buyer-authenticated', () => { const button = $('#stillHeaderStartV114'); if (button) button.textContent = t('Open Still', 'Otvori Still'); });
     window.addEventListener('storage', event => { if (event.key === STORAGE_KEY) render(); });

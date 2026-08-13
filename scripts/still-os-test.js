@@ -69,10 +69,11 @@ test('34 public buyer sign-in is an anchored top stage rather than a floating or
 test('35 private Still restores the real account overview and a real logout action', () => {
   ['data-account-profile','recentPassports','connectedPassports','openCommitments','/api/v1/buyer-auth/logout'].forEach(capability => assert.ok(client.includes(capability)));
 });
-test('36 public legacy buyer modules remain quarantined after late runtime mutations', () => {
+test('36 public legacy buyer modules are excluded from the active landing runtime', () => {
   assert.ok(publicExperience.includes('quarantineLegacyPublicModules()'));
   assert.ok(publicExperience.includes("element.style.setProperty('display', 'none', 'important')"));
-  assert.ok(publicExperience.includes("attributeFilter: ['style', 'hidden']"));
+  assert.ok(build.includes("const publicRuntime=['theme.js','buyer-auth-v77.js','still-public-v114.js']"));
+  assert.ok(build.includes("'<main></main>'") && build.includes('const tags=publicRuntime.map'));
 });
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);
