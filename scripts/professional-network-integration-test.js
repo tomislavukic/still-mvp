@@ -14,7 +14,7 @@ async function check(name, action) { await action(); passed += 1; process.stdout
 
 const run = (async () => {
   const suffix = crypto.randomUUID().slice(0, 8);
-  let needId, opportunityId, proposalId, projectId, milestoneId, firstDeliverableId, outcomeId;
+  let needId, opportunityId, proposalId, projectId, milestoneId, firstDeliverableId, outcomeId, cancellableOpportunityId, cancellableProposalId, cancellableProjectId;
 
   await check('same buyer identity enables Professional Mode', async () => {
     const result = await request('/api/v1/professional/profile', { cookie: professionalCookie, method: 'POST', body: JSON.stringify({ professionalModeEnabled: true, displayName: 'World Test Professional', headline: 'Brand identity designer', bio: 'Helps independent businesses with identity systems.', availabilityStatus: 'AVAILABLE', locationModes: ['REMOTE'], weeklyCapacityHours: 20, minimumProjectCents: 20000, currency: 'EUR' }) });
@@ -27,6 +27,10 @@ const run = (async () => {
   await check('declared capability persists as unverified', async () => {
     const result = await request('/api/v1/professional/capabilities', { cookie: professionalCookie, method: 'POST', body: JSON.stringify({ name: 'Brand identity', key: 'brand_identity', category: 'DESIGN', yearsExperience: 4 }) });
     assert.equal(result.status, 201); assert.equal(result.data.capabilities[0].verificationStatus, 'UNVERIFIED');
+  });
+  await check('real portfolio evidence persists without claiming verification', async () => {
+    const created = await request('/api/v1/professional/portfolio', { cookie: professionalCookie, method: 'POST', body: JSON.stringify({ title: 'Independent restaurant identity', description: 'A real work sample shared by its author.', externalUrl: 'https://example.invalid/restaurant-identity', capabilityKeys: ['brand_identity'], isPublic: true }) });
+    assert.equal(created.status, 201); const result = await request('/api/v1/professional/portfolio', { cookie: professionalCookie }); assert.equal(result.status, 200); assert.ok(result.data.portfolio.some(item => item.title === 'Independent restaurant identity'));
   });
   await check('client creates a real HIRE Need', async () => {
     const result = await request('/api/v1/world/needs', { method: 'POST', body: JSON.stringify({ title: `Restaurant identity ${suffix}`, description: 'Create a clear identity for a small restaurant.', desiredOutcome: 'A usable brand identity.', needType: 'HIRE', sourceType: 'USER_CREATED', confidence: 'CONFIRMED', budgetMaxCents: 50000, currency: 'EUR', deadline: '2026-09-30', locationMode: 'REMOTE', requiredCapabilities: ['brand_identity'] }) });
@@ -129,7 +133,7 @@ const run = (async () => {
     assert.equal(outcome.resolutionType, 'HIRE'); assert.ok(outcome.professionalId); assert.equal(outcome.professionalProjectId, projectId);
   });
   await check('only relevant completed-work capability gains evidence', async () => {
-    const result = await request('/api/v1/professional/capabilities', { cookie: professionalCookie }); assert.equal(result.data.capabilities[0].evidenceCount, 1);
+    const result = await request('/api/v1/professional/capabilities', { cookie: professionalCookie }); assert.equal(result.data.capabilities[0].verificationStatus, 'UNVERIFIED'); assert.equal(result.data.capabilities[0].evidenceCount, 2);
   });
   await check('structured feedback is allowed only after completion', async () => {
     const result = await request(`/api/v1/professional/projects/${projectId}/feedback`, { method: 'POST', body: JSON.stringify({ outcomeRating: 5, communicationRating: 5, reliabilityRating: 4, comment: 'Clear work and good communication.' }) }); assert.equal(result.status, 201);
@@ -140,12 +144,32 @@ const run = (async () => {
   await check('completed client can mark trusted repeat work', async () => {
     assert.equal((await request(`/api/v1/professional/projects/${projectId}/favorite`, { method: 'POST', body: '{}' })).status, 200);
   });
+  await check('completed project can be reported without inventing arbitration', async () => {
+    const result = await request('/api/v1/professional/reports', { method: 'POST', body: JSON.stringify({ projectId, reason: 'Integration safety record', details: 'A durable test report attached to a real participant-scoped project.' }) }); assert.equal(result.status, 201); assert.ok(result.data.reportId);
+  });
+  await check('professional can withdraw a real proposal before acceptance', async () => {
+    const created = await request('/api/v1/world/needs', { method: 'POST', body: JSON.stringify({ title: `Cancellable identity ${suffix}`, needType: 'HIRE', requiredCapabilities: ['brand_identity'], locationMode: 'REMOTE' }) });
+    await request(`/api/v1/world/needs/${created.data.need.publicId}/brief`, { method: 'POST', body: JSON.stringify({ objective: 'Prepare a cancellable identity.', scope: 'One small identity task.', confirm: true, matchingEnabled: true, locationMode: 'REMOTE' }) });
+    const matches = await request(`/api/v1/world/needs/${created.data.need.publicId}/professional-matches`), shared = await request(`/api/v1/world/needs/${created.data.need.publicId}/brief/share`, { method: 'POST', body: JSON.stringify({ professionalIds: [matches.data.matches[0].professional.publicId] }) }); cancellableOpportunityId = shared.data.opportunityIds[0];
+    const proposal = await request('/api/v1/professional/proposals', { cookie: professionalCookie, method: 'POST', body: JSON.stringify({ opportunityId: cancellableOpportunityId, amountCents: 10000, currency: 'EUR', summary: 'Small identity task.', scope: 'One agreed deliverable.', milestones: [{ title: 'Identity delivery' }] }) }); cancellableProposalId = proposal.data.proposalId;
+    const withdrawn = await request(`/api/v1/professional/proposals/${cancellableProposalId}`, { cookie: professionalCookie, method: 'PATCH', body: JSON.stringify({ action: 'WITHDRAW' }) }); assert.equal(withdrawn.status, 200); assert.equal(withdrawn.data.status, 'WITHDRAWN');
+  });
+  await check('client can cancel a new project before completed work', async () => {
+    const proposal = await request('/api/v1/professional/proposals', { cookie: professionalCookie, method: 'POST', body: JSON.stringify({ opportunityId: cancellableOpportunityId, amountCents: 10000, currency: 'EUR', summary: 'Replacement proposal.', scope: 'One agreed deliverable.', milestones: [{ title: 'Identity delivery' }] }) });
+    const accepted = await request(`/api/v1/professional/proposals/${proposal.data.proposalId}`, { method: 'PATCH', body: JSON.stringify({ action: 'ACCEPT' }) }); cancellableProjectId = accepted.data.projectId;
+    const cancelled = await request(`/api/v1/professional/projects/${cancellableProjectId}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 'Client no longer needs this work.' }) }); assert.equal(cancelled.status, 200); assert.equal(cancelled.data.status, 'CANCELLED');
+  });
   await check('professional can pause availability and leaves future matching', async () => {
     const profile = await request('/api/v1/professional/profile', { cookie: professionalCookie });
     assert.equal((await request('/api/v1/professional/profile', { cookie: professionalCookie, method: 'PATCH', body: JSON.stringify({ ...profile.data.profile, professionalModeEnabled: true, availabilityStatus: 'PAUSED', locationModes: ['REMOTE'] }) })).status, 200);
     const created = await request('/api/v1/world/needs', { method: 'POST', body: JSON.stringify({ title: `Second identity need ${suffix}`, needType: 'HIRE', requiredCapabilities: ['brand_identity'], locationMode: 'REMOTE' }) });
     await request(`/api/v1/world/needs/${created.data.need.publicId}/brief`, { method: 'POST', body: JSON.stringify({ objective: 'Create a second identity.', scope: 'Identity design.', confirm: true, matchingEnabled: true, locationMode: 'REMOTE' }) });
     const matches = await request(`/api/v1/world/needs/${created.data.need.publicId}/professional-matches`); assert.equal(matches.data.matches.length, 0); assert.equal(matches.data.emptyState.title, 'No matching professionals are available yet.');
+  });
+  await check('a blocked professional is excluded from future matching', async () => {
+    const profile = await request('/api/v1/professional/profile', { cookie: professionalCookie }); await request('/api/v1/professional/profile', { cookie: professionalCookie, method: 'PATCH', body: JSON.stringify({ ...profile.data.profile, professionalModeEnabled: true, availabilityStatus: 'AVAILABLE', locationModes: ['REMOTE'] }) });
+    const created = await request('/api/v1/world/needs', { method: 'POST', body: JSON.stringify({ title: `Blocked identity need ${suffix}`, needType: 'HIRE', requiredCapabilities: ['brand_identity'], locationMode: 'REMOTE' }) }); await request(`/api/v1/world/needs/${created.data.need.publicId}/brief`, { method: 'POST', body: JSON.stringify({ objective: 'Create an identity.', scope: 'Identity design.', confirm: true, matchingEnabled: true, locationMode: 'REMOTE' }) });
+    const before = await request(`/api/v1/world/needs/${created.data.need.publicId}/professional-matches`); assert.equal(before.data.matches.length, 1); const blocked = await request('/api/v1/professional/blocks', { method: 'POST', body: JSON.stringify({ professionalId: before.data.matches[0].professional.publicId }) }); assert.equal(blocked.status, 200); const after = await request(`/api/v1/world/needs/${created.data.need.publicId}/professional-matches`); assert.equal(after.data.matches.length, 0);
   });
   await check('CompanyOS private authorization remains outside Phase 5', async () => {
     const result = await request('/api/v1/companyos/bootstrap'); assert.ok([401,403,404].includes(result.status));
