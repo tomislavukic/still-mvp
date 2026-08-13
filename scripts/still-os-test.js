@@ -64,7 +64,7 @@ test('33 private profile maintenance is available only in authenticated Still', 
 test('34 public buyer sign-in is an anchored top stage rather than a floating or bottom-page module', () => {
   assert.ok(publicExperience.includes("auth.classList.add('sp114-auth-stage')"));
   assert.ok(!publicExperience.includes("auth.classList.add('sp114-auth-overlay')"));
-  assert.ok(buyerAuth.includes("shape: 'pill'") && buyerAuth.includes('data-close'));
+  assert.ok(buyerAuth.includes("shape: 'pill'") && buyerAuth.includes('data-close') && buyerAuth.includes('setTimeout(reveal'));
 });
 test('35 private Still restores the real account overview and a real logout action', () => {
   ['data-account-profile','recentPassports','connectedPassports','openCommitments','/api/v1/buyer-auth/logout'].forEach(capability => assert.ok(client.includes(capability)));

@@ -220,7 +220,9 @@
     trigger.setAttribute('aria-expanded', String(!panel.hidden));
     if (!panel.hidden) {
       if (config?.enabled && !me?.authenticated) startGoogle();
-      requestAnimationFrame(() => root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+      const reveal = () => root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      requestAnimationFrame(reveal);
+      setTimeout(reveal, config?.enabled && !me?.authenticated ? 180 : 0);
     }
   }
 
