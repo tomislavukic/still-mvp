@@ -12,6 +12,7 @@
     'company-workbench-v72.js',
     'company-services-mount-v79.js',
     'company-services-v73.js',
+    'company-service-network-v137.js',
     'company-ops-v74.js',
     'company-rewards-v75.js',
     'company-control-center-v101.js',
