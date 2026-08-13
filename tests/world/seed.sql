@@ -57,3 +57,11 @@ VALUES('wri_world_fixture_create','RLI-WORLD-CREATE','wrc_world_fixture','ba_wor
 
 INSERT OR REPLACE INTO world_receipt_items(id,public_id,receipt_id,buyer_account_id,raw_label,title,quantity,total_cents,currency,confidence,disposition,created_at,updated_at)
 VALUES('wri_world_fixture_link','RLI-WORLD-LINK','wrc_world_fixture','ba_world_test_one','Fixture Existing Thing 100.00 EUR','Fixture Existing Thing',1,10000,'EUR',0.92,'NEEDS_REVIEW','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
+
+-- Verified CompanyOS fixture for the Phase 6 service-network integration path.
+INSERT OR REPLACE INTO merchant_organizations(id,slug,name,country_code,status,created_at,updated_at)
+VALUES('org_service_fixture','service-fixture','Service Fixture Company','hr','verified','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
+INSERT OR REPLACE INTO merchant_members(id,organization_id,email,password_hash,password_salt,password_iterations,role,status,created_at,updated_at)
+VALUES('mem_service_fixture','org_service_fixture','service-company@example.invalid','fixture','fixture',210000,'owner','active','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
+INSERT OR REPLACE INTO merchant_sessions(id,member_id,token_hash,expires_at,last_seen_at,created_at)
+VALUES('ms_service_fixture','mem_service_fixture','ed40f7c2774c7602ab529e006b056abb9bcf592df52b9ad34225cdcd3e789dbf','2099-01-01T00:00:00.000Z','2026-08-12T00:00:00.000Z','2026-08-12T00:00:00.000Z');
