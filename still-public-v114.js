@@ -1,5 +1,6 @@
 (() => {
   const STORAGE_KEY = 'still-ownership-passports-v83';
+  const LANGUAGE_KEY = 'still-lang';
   const $ = (selector, root = document) => root.querySelector(selector);
   const isHr = () => $('#language')?.value === 'hr';
   const t = (en, hr) => isHr() ? hr : en;
@@ -207,6 +208,22 @@
     history.replaceState(null, '', `${location.pathname}${location.search}`);
   }
 
+  function restoreLanguage() {
+    const select = $('#language');
+    if (!select) return;
+    try {
+      const saved = localStorage.getItem(LANGUAGE_KEY);
+      if (saved === 'en' || saved === 'hr') select.value = saved;
+    } catch {}
+    document.documentElement.lang = isHr() ? 'hr' : 'en';
+  }
+
+  function persistLanguage() {
+    const language = isHr() ? 'hr' : 'en';
+    document.documentElement.lang = language;
+    try { localStorage.setItem(LANGUAGE_KEY, language); } catch {}
+  }
+
   function placeBuyerAuth() {
     const auth = $('#buyerAuthV77,.ba77');
     if (!auth) return;
@@ -266,6 +283,7 @@
   }
 function start() {
     normalizeLegacyWorkspaceHash();
+    restoreLanguage();
     render();
     window.addEventListener('hashchange', normalizeLegacyWorkspaceHash);
     window.addEventListener('still:buyer-authenticated', () => { const button = $('#stillHeaderStartV114'); if (button) button.textContent = t('Open Still', 'Otvori Still'); });
@@ -273,7 +291,10 @@ function start() {
     window.addEventListener('still:ownership-updated', () => setTimeout(render, 60));
     window.addEventListener('still:commerce-paid', () => setTimeout(render, 60));
     window.addEventListener('still:language', () => setTimeout(render, 120));
-    $('#language')?.addEventListener('change', () => setTimeout(render, 120));
+    $('#language')?.addEventListener('change', () => {
+      persistLanguage();
+      setTimeout(render, 0);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });

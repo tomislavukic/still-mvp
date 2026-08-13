@@ -261,6 +261,8 @@ if (!consumerRuntime.includes("auth.classList.add('sp114-auth-stage')") || !read
 if (!consumerRuntime.includes('quarantineLegacyPublicModules()') || !consumerRuntime.includes("element.style.setProperty('display', 'none', 'important')")) fail('public runtime does not quarantine late legacy buyer modules');
 if (consumerRuntime.includes('initializeStillProtection') || consumerRuntime.includes('data-still-protection-runtime')) fail('public landing starts the private Protection runtime before authentication');
 if (consumerRuntime.includes("if (!$('#ownershipPlatformV83'))")) fail('public landing waits for the legacy ownership platform before rendering');
+if (!consumerRuntime.includes('restoreLanguage()') || !consumerRuntime.includes('persistLanguage()')) fail('lightweight public landing does not preserve language preference');
+if (!read('public/buyer-auth-v77.js').includes('const start = refresh;')) fail('buyer authentication is delayed after the public shell placement step');
 if (!consumerRuntime.includes("t('PLANNED', 'PLANIRANO')") || !consumerRuntime.includes('Still+')) fail('unavailable premium consumer capabilities are not truthfully labelled');
 const worldRuntime = read('public/world-foundation-v131.js');
 for (const capability of ['/api/v1/world/bootstrap','/api/v1/world/things','/api/v1/world/receipts/capture','/api/v1/world/knowledge','/api/v1/world/situations','/api/v1/world/open-loops']) {

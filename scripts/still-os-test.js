@@ -75,5 +75,10 @@ test('36 public legacy buyer modules are excluded from the active landing runtim
   assert.ok(build.includes("const publicRuntime=['theme.js','buyer-auth-v77.js','still-public-v114.js']"));
   assert.ok(build.includes("'<main></main>'") && build.includes('const tags=publicRuntime.map'));
 });
+test('37 lightweight landing preserves auth placement and language preference', () => {
+  assert.ok(buyerAuth.includes('const start = refresh;'));
+  assert.ok(publicExperience.includes("localStorage.getItem(LANGUAGE_KEY)") && publicExperience.includes("localStorage.setItem(LANGUAGE_KEY, language)"));
+  assert.ok(publicExperience.includes('document.documentElement.lang = language'));
+});
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);
