@@ -116,7 +116,10 @@
       h.bindContent();
       const hireMarkup = window.StillProfessionalV136?.hireSection(data, h);
       if (hireMarkup) host.querySelector('.sos133-workspace-section:last-of-type')?.insertAdjacentHTML('beforebegin', hireMarkup);
+      const serviceMarkup = window.StillServicesV137?.serviceSection(data, h);
+      if (serviceMarkup) host.querySelector('.sos133-workspace-section:last-of-type')?.insertAdjacentHTML('beforebegin', serviceMarkup);
       window.StillProfessionalV136?.bindHire(data, h);
+      window.StillServicesV137?.bindService(data, h);
       if (need.waitingOn) host.querySelector('.need134-status')?.insertAdjacentHTML('beforeend', `<span>${h.t('Waiting for', 'Čeka se')}: ${h.esc(need.waitingOn)}${need.waitingUntil ? ` · ${h.date(need.waitingUntil)}` : ''}</span>`);
       if (canHandle) host.querySelector('.need134-head-actions')?.insertAdjacentHTML('beforeend', `<button type="button" data-edit-need>${h.t('Edit', 'Uredi')}</button>${need.status === 'WAITING' ? `<button type="button" data-resume-need>${h.t('Resume', 'Nastavi')}</button>` : `<button type="button" data-wait-need>${h.t('Wait', 'Čekaj')}</button>`}`);
       host.querySelector('[data-confirm-need]')?.addEventListener('click', async event => { event.currentTarget.disabled = true; try { await h.api(`/api/v1/world/needs/${encodeURIComponent(id)}/confirm`, { method: 'POST', body: '{}' }); h.invalidate(); h.renderNeed(id); } catch (error) { h.setStatus(error.message, true); event.currentTarget.disabled = false; } });
