@@ -7,6 +7,12 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[character]);
   const LEGACY_PUBLIC_HASHES = /^#(?:buyeros-(?:home|things|thing|protection|timeline|documents|services|household|family|search|assistant)|worldFoundationV131|ownershipHubV83|timelineV83|checker|lifecyclePlatformV95|passportCommerceV92|decisionLabV83|buyerRewardsV76)$/;
+  const LEGACY_PUBLIC_IDS = [
+    'discoverV83', 'ownershipPlatformV83', 'ownershipHomeV112', 'ownershipFeedV113',
+    'passportCommerceV92', 'decisionLabV83', 'ownershipHubV83', 'lifecyclePlatformV95',
+    'timelineV83', 'howConnectsV83', 'buyerRewardsV76', 'checker', 'advancedToolsV84',
+    'proofV22', 'relationshipDashboardV103', 'worldFoundationV131'
+  ];
   let observer;
 
   function readPassports() {
@@ -207,8 +213,23 @@
     const auth = $('#buyerAuthV77,.ba77');
     if (!auth) return;
     auth.classList.remove('ba78-embedded');
-    auth.classList.add('sp114-auth-overlay');
-    if (auth.parentElement !== document.body) document.body.appendChild(auth);
+    auth.classList.remove('sp114-auth-overlay');
+    auth.classList.add('sp114-auth-stage');
+    const topbar = $('.topbar');
+    if (topbar && topbar.nextElementSibling !== auth) topbar.insertAdjacentElement('afterend', auth);
+  }
+
+  function quarantineLegacyPublicModules() {
+    for (const id of LEGACY_PUBLIC_IDS) {
+      const element = document.getElementById(id);
+      if (!element || element.id === 'stillPublicV114') continue;
+      if (!element.hidden) element.hidden = true;
+      if (!element.inert) element.inert = true;
+      if (element.getAttribute('aria-hidden') !== 'true') element.setAttribute('aria-hidden', 'true');
+      if (element.style.getPropertyValue('display') !== 'none' || element.style.getPropertyPriority('display') !== 'important') {
+        element.style.setProperty('display', 'none', 'important');
+      }
+    }
   }
 
   function bind(root) {
@@ -235,10 +256,12 @@
       (platform || $('main')?.firstElementChild)?.insertAdjacentElement(platform ? 'beforebegin' : 'beforebegin', root);
     }
     placeBuyerAuth();
+    quarantineLegacyPublicModules();
     root.innerHTML = shell();
     header();
     bind(root);
     placeBuyerAuth();
+    quarantineLegacyPublicModules();
     const footer = document.querySelector('footer');
     if (footer) footer.classList.add('sp114-footer');
   }
@@ -333,8 +356,11 @@ function start() {
     if (!$('#ownershipPlatformV83')) return setTimeout(start, 80);
     render();
     initializeStillProtection();
-    observer = new MutationObserver(placeBuyerAuth);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer = new MutationObserver(() => {
+      placeBuyerAuth();
+      quarantineLegacyPublicModules();
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden'] });
     window.addEventListener('hashchange', normalizeLegacyWorkspaceHash);
     window.addEventListener('still:buyer-authenticated', () => { const button = $('#stillHeaderStartV114'); if (button) button.textContent = t('Open Still', 'Otvori Still'); });
     window.addEventListener('storage', event => { if (event.key === STORAGE_KEY) render(); });

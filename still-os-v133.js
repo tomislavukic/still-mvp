@@ -115,7 +115,8 @@
     }
     const name = state.now?.owner?.name || '';
     const avatar = root.querySelector('[data-avatar]');
-    if (avatar) avatar.textContent = name.trim().charAt(0).toLocaleUpperCase() || '•';
+    const picture = state.relationship?.profile?.pictureUrl || state.relationship?.profile?.picture_url;
+    if (avatar) avatar.innerHTML = picture ? `<img src="${esc(picture)}" alt="">` : esc(name.trim().charAt(0).toLocaleUpperCase() || '•');
   }
 
   function loading(label) {
@@ -160,15 +161,66 @@
     </button>`;
   }
 
+  function accountOverview(data) {
+    const profile = data.profile || data.buyer || {}, metrics = data.metrics || {};
+    const name = profile.displayName || profile.display_name || profile.name || state.now?.owner?.name || t('Still member', 'Član Still-a');
+    const pictureUrl = profile.pictureUrl || profile.picture_url;
+    const portrait = pictureUrl ? `<img src="${esc(pictureUrl)}" alt="">` : esc(name.charAt(0).toLocaleUpperCase());
+    const companies = (data.companies || data.relationships || []).slice(0, 3);
+    const passports = (data.recentPassports || []).slice(0, 3);
+    const address = [profile.addressLine1, profile.addressLine2, [profile.postalCode, profile.city].filter(Boolean).join(' '), profile.region, profile.countryCode].filter(Boolean).join(', ');
+    const metric = (value, en, hrv) => `<div><b>${Number(value || 0)}</b><span>${t(en, hrv)}</span></div>`;
+    const companyName = company => company.display_name || company.displayName || company.legal_name || company.name || t('Connected business', 'Povezana tvrtka');
+    return `<section class="sos133-account-overview" aria-label="${t('Your Still account overview', 'Pregled tvog Still računa')}">
+      <header class="sos133-account-head">
+        <div class="sos133-account-person"><span>${portrait}</span><div><small>${t('YOUR PRIVATE STILL', 'TVOJ PRIVATNI STILL')}</small><h2>${esc(name)}</h2><p>${esc([profile.email, profile.phone, address].filter(Boolean).join(' · '))}</p></div></div>
+        <div class="sos133-account-links">
+          <button type="button" data-account-profile>${t('Profile & privacy', 'Profil i privatnost')}</button>
+          <button type="button" class="sos133-signout" data-sign-out>${t('Sign out', 'Odjava')}</button>
+        </div>
+      </header>
+      <div class="sos133-account-metrics">
+        ${metric(metrics.passports, 'Passports', 'Putovnice')}
+        ${metric(metrics.connectedPassports, 'Connected', 'Povezano')}
+        ${metric(metrics.openCommitments, 'Open commitments', 'Otvorene obveze')}
+        ${metric(metrics.cases, 'Cases', 'Slučajevi')}
+        ${metric(metrics.points, 'Reward points', 'Bodovi nagrada')}
+        ${metric(metrics.reputation, 'Reputation', 'Reputacija')}
+      </div>
+      <div class="sos133-account-detail-grid">
+        <section><header><div><small>${t('CONNECTED BUSINESSES', 'POVEZANE TVRTKE')}</small><h3>${t('Who shares a real relationship', 'S kim postoji stvaran odnos')}</h3></div><a href="/app/together" data-nav>${t('Together', 'Zajedno')} →</a></header>
+          ${companies.length ? `<ol>${companies.map(company => { const companyLabel = companyName(company); return `<li>${company.logo_url ? `<img src="${esc(company.logo_url)}" alt="">` : `<span>${esc(companyLabel.charAt(0).toLocaleUpperCase())}</span>`}<div><b>${esc(companyLabel)}</b><small>${Number(company.passport_count || 0)} ${t('Passports', 'Putovnice')} · ${esc(company.status || '')}</small></div></li>`; }).join('')}</ol>` : `<p>${t('No company is connected yet. Your Still remains useful and private on its own.', 'Još nijedna tvrtka nije povezana. Tvoj Still ostaje koristan i privatan sam za sebe.')}</p>`}
+        </section>
+        <section><header><div><small>${t('RECENT PASSPORTS', 'NEDAVNE PUTOVNICE')}</small><h3>${t('Recently updated records', 'Nedavno ažurirani zapisi')}</h3></div><a href="/app/world" data-nav>${t('World', 'Svijet')} →</a></header>
+          ${passports.length ? `<ol>${passports.map(passport => `<li><span>${icon('thing')}</span><div><b>${esc(passport.title || t('Untitled Passport', 'Putovnica bez naziva'))}</b><small>${esc(passport.company_display_name || passport.business_name || typeLabel('thing'))}${passport.updated_at ? ` · ${date(passport.updated_at)}` : ''}</small></div></li>`).join('')}</ol>` : `<p>${t('Your latest Passports will appear here after you add or receive them.', 'Tvoje najnovije Putovnice pojavit će se ovdje nakon što ih dodaš ili primiš.')}</p>`}
+        </section>
+      </div>
+    </section>`;
+  }
+
+  async function signOut(button) {
+    if (button) button.disabled = true;
+    try {
+      await api('/api/v1/buyer-auth/logout', { method: 'POST', body: '{}' });
+      location.assign('/');
+    } catch (error) {
+      if (button) button.disabled = false;
+      setStatus(error.message, true);
+    }
+  }
+
   async function renderNow() {
     const host = main();
     host.innerHTML = loading(t('Opening Now…', 'Otvaram Sada…'));
     try {
-      const data = await ensureNow(true), dominantRaw = data.dominantNeed || data.dominantContext, dominant = dominantRaw ? { ...dominantRaw, type: data.dominantNeed ? 'need' : dominantRaw.type, id: dominantRaw.id || dominantRaw.publicId } : null;
+      const [data, dashboard] = await Promise.all([ensureNow(true), api('/api/v1/buyer-dashboard').catch(() => null)]);
+      if (dashboard) { state.relationship = dashboard; updateChrome(route().space); }
+      const dominantRaw = data.dominantNeed || data.dominantContext, dominant = dominantRaw ? { ...dominantRaw, type: data.dominantNeed ? 'need' : dominantRaw.type, id: dominantRaw.id || dominantRaw.publicId } : null;
       const needAttention = [...(data.needsRequiringConfirmation || []), ...(data.urgentNeeds || [])].filter((item, index, values) => values.findIndex(other => other.publicId === item.publicId) === index).map(item => ({ ...item, type: 'need', id: item.publicId }));
       const attentionItems = [...needAttention, ...(data.attentionItems || [])], attentionCount = Number(data.attentionCount || 0) + Number(data.activeNeedCount || 0);
       host.innerHTML = `<section class="sos133-now">
         <header class="sos133-now-head"><span>${t('NOW', 'SADA')}</span><h1>${esc(greeting(data.owner?.name))}</h1><p>${data.quietState ? t('Everything’s handled.', 'Sve je riješeno.') : t('Here is what matters right now.', 'Evo što je sada važno.')}</p></header>
+        ${dashboard ? accountOverview(dashboard) : ''}
         ${dominant ? `<article class="sos133-dominant"><div><span>${dominant.type === 'need' ? t('NEED', 'POTREBA') : dominant.overdue ? t('NEEDS YOU', 'TRAŽI TEBE') : dominant.status === 'WAITING' ? t('WAITING', 'ČEKANJE') : t('CURRENT CONTEXT', 'TRENUTAČNI KONTEKST')}</span><h2>${esc(dominant.title)}</h2><p>${dominant.waitingOn ? `${t('Waiting for', 'Čeka se')}: ${esc(dominant.waitingOn)}` : dominant.dueAt ? `${dominant.overdue ? t('Due', 'Rok') : t('Coming up', 'Uskoro')}: ${date(dominant.dueAt)}` : dominant.type === 'need' ? t('Open this Need to see real ways to handle it.', 'Otvori potrebu i pogledaj stvarne načine rješavanja.') : t('One active situation may need your attention.', 'Jedna aktivna situacija možda traži tvoju pažnju.')}</p></div><button type="button" data-open-context="${esc(dominant.type)}:${esc(dominant.id)}">${dominant.type === 'need' ? t('Handle it', 'Riješi') : t('Open', 'Otvori')} <span>→</span></button></article>` : `<article class="sos133-quiet"><span aria-hidden="true">✓</span><h2>${t('Everything’s handled.', 'Sve je riješeno.')}</h2><p>${t('Your World is quiet. Still will show real deadlines and open work here when they exist.', 'Tvoj Svijet je miran. Still će ovdje prikazati stvarne rokove i otvorene obveze kada postoje.')}</p><div><button type="button" data-command-open>${t('Add something', 'Dodaj nešto')}</button><a href="/app/world" data-nav>${t('Explore your World', 'Istraži svoj Svijet')}</a></div></article>`}
         ${attentionCount ? `<section class="sos133-attention"><button type="button" class="sos133-attention-toggle" data-toggle-attention aria-expanded="${state.attentionOpen}"><span><b>${attentionCount}</b> ${t(attentionCount === 1 ? 'thing may need you' : 'things may need you', attentionCount === 1 ? 'stvar te možda treba' : 'stvari te možda trebaju')}</span><i aria-hidden="true">${state.attentionOpen ? '−' : '+'}</i></button><div class="sos133-attention-list" ${state.attentionOpen ? '' : 'hidden'}>${attentionItems.map(item => contextButton(item, true)).join('')}</div></section>` : ''}
         <section class="sos133-input-invite"><button type="button" data-command-open><span aria-hidden="true">＋</span><div><b>${t('Ask, show or tell Still…', 'Pitaj, pokaži ili reci Still-u…')}</b><small>${t('Add a Thing, start a Situation, save Knowledge or remember an action.', 'Dodaj stvar, pokreni situaciju, spremi znanje ili zapamti obvezu.')}</small></div><i>→</i></button></section>
@@ -223,7 +275,7 @@
       const companies = data.companies || data.relationships || [];
       host.innerHTML = `<section class="sos133-together"><header class="sos133-page-head"><span>${t('TOGETHER', 'ZAJEDNO')}</span><h1>${t('Share only what helps.', 'Podijeli samo ono što pomaže.')}</h1><p>${t('Your World stays private. Connected businesses see information only through an existing passport or case relationship.', 'Tvoj Svijet ostaje privatan. Povezane tvrtke vide podatke samo kroz postojeći odnos putovnice ili slučaja.')}</p></header>
         <article class="sos133-sharing-principle"><div><span aria-hidden="true">●</span><b>${t('Private by default', 'Privatno prema zadanim postavkama')}</b><small>${t('Nothing in your World is public.', 'Ništa u tvojem Svijetu nije javno.')}</small></div><span aria-hidden="true">→</span><div><span aria-hidden="true">◎</span><b>${t('Selected sharing', 'Odabrano dijeljenje')}</b><small>${t('Passports and cases carry only the context you choose.', 'Putovnice i slučajevi nose samo kontekst koji odabereš.')}</small></div></article>
-        <section class="sos133-connections"><h2>${t('Existing connections', 'Postojeće veze')}</h2>${companies.length ? companies.map(company => `<article><span>${esc((company.name || company.organization_name || '?').charAt(0))}</span><div><b>${esc(company.name || company.organization_name || t('Connected business', 'Povezana tvrtka'))}</b><small>${esc(company.relationship || company.status || t('Existing relationship', 'Postojeći odnos'))}</small></div></article>`).join('') : `<p>${t('No shared business relationships yet.', 'Još nema dijeljenih poslovnih odnosa.')}</p>`}</section>
+        <section class="sos133-connections"><h2>${t('Existing connections', 'Postojeće veze')}</h2>${companies.length ? companies.map(company => { const name = company.display_name || company.displayName || company.legal_name || company.name || company.organization_name || t('Connected business', 'Povezana tvrtka'); return `<article>${company.logo_url ? `<span><img src="${esc(company.logo_url)}" alt=""></span>` : `<span>${esc(name.charAt(0).toLocaleUpperCase())}</span>`}<div><b>${esc(name)}</b><small>${Number(company.passport_count || 0)} ${t('Passports', 'Putovnice')} · ${esc(company.relationship || company.status || t('Existing relationship', 'Postojeći odnos'))}</small></div></article>`; }).join('') : `<p>${t('No shared business relationships yet.', 'Još nema dijeljenih poslovnih odnosa.')}</p>`}</section>
       </section>`;
       bindContent();
     } catch (error) {
@@ -419,14 +471,17 @@
       const profile = data.profile || data.buyer || {}, name = profile.displayName || profile.display_name || profile.name || state.now?.owner?.name || t('Still member', 'Član Still-a');
       const migration = state.migration.status === 'complete' ? t(`${state.migration.imported} imported · ${state.migration.skipped} already accounted for`, `${state.migration.imported} uvezeno · ${state.migration.skipped} već obrađeno`) : state.migration.status === 'failed' ? t('Migration needs attention. Your server records remain safe.', 'Migraciju treba provjeriti. Zapisi na poslužitelju ostaju sigurni.') : t('No browser records need migration.', 'Nijedan zapis iz preglednika ne treba migraciju.');
       const picture = profile.pictureUrl ? `<img src="${esc(profile.pictureUrl)}" alt="">` : esc(name.charAt(0).toLocaleUpperCase());
+      const metrics = data.metrics || {};
+      const profileMetrics = `<div class="sos133-profile-metrics"><span><b>${Number(metrics.passports || 0)}</b>${t('Passports', 'Putovnice')}</span><span><b>${Number(metrics.connectedPassports || 0)}</b>${t('Connected', 'Povezano')}</span><span><b>${Number(metrics.cases || 0)}</b>${t('Cases', 'Slučajevi')}</span><span><b>${Number(metrics.points || 0)}</b>${t('Points', 'Bodovi')}</span></div>`;
+      const contactFields = `<details class="sos133-profile-contact"><summary>${t('Contact and delivery details', 'Kontakt i podaci za dostavu')}</summary><div><label>${t('Phone', 'Telefon')}<input name="phone" maxlength="40" value="${esc(profile.phone || '')}" autocomplete="tel"></label><label>${t('Preferred contact', 'Preferirani kontakt')}<select name="preferredContact"><option value="email" ${profile.preferredContact === 'email' ? 'selected' : ''}>Email</option><option value="phone" ${profile.preferredContact === 'phone' ? 'selected' : ''}>${t('Phone', 'Telefon')}</option><option value="sms" ${profile.preferredContact === 'sms' ? 'selected' : ''}>SMS</option></select></label><label class="wide">${t('Address', 'Adresa')}<input name="addressLine1" maxlength="240" value="${esc(profile.addressLine1 || '')}" autocomplete="address-line1"></label><label class="wide">${t('Address line 2', 'Dodatak adresi')}<input name="addressLine2" maxlength="240" value="${esc(profile.addressLine2 || '')}" autocomplete="address-line2"></label><label>${t('Postal code', 'Poštanski broj')}<input name="postalCode" maxlength="30" value="${esc(profile.postalCode || '')}" autocomplete="postal-code"></label><label>${t('City', 'Grad')}<input name="city" maxlength="120" value="${esc(profile.city || '')}" autocomplete="address-level2"></label><label>${t('Region', 'Regija')}<input name="region" maxlength="120" value="${esc(profile.region || '')}" autocomplete="address-level1"></label><label>${t('Country code', 'Oznaka države')}<input name="countryCode" maxlength="2" value="${esc(profile.countryCode || '')}" placeholder="HR" autocomplete="country"></label><label class="wide">${t('Delivery instructions', 'Upute za dostavu')}<textarea name="deliveryInstructions" maxlength="600">${esc(profile.deliveryInstructions || '')}</textarea></label><label class="sos133-profile-share wide"><input type="checkbox" name="shareContactWithConnectedBusinesses" ${profile.shareContactWithConnectedBusinesses ? 'checked' : ''}><span><b>${t('Share contact details with connected businesses', 'Dijeli kontaktne podatke s povezanim tvrtkama')}</b><small>${t('Only businesses connected through a Passport or case can receive them.', 'Mogu ih dobiti samo tvrtke povezane Putovnicom ili slučajem.')}</small></span></label></div></details>`;
       const upload = data.capabilities?.profileMediaUploads ? `<label class="sos133-profile-photo">${t('Profile picture', 'Slika profila')}<input type="file" name="photo" accept="image/png,image/jpeg,image/webp"><small>${t('JPEG, PNG or WebP. Still prepares a private square image before upload.', 'JPEG, PNG ili WebP. Still priprema privatnu kvadratnu sliku prije prijenosa.')}</small></label>` : '';
-      const dialog = openDialog(t('Your profile', 'Tvoj profil'), `<section class="sos133-profile"><div class="sos133-profile-id"><span>${picture}</span><div><h2>${esc(name)}</h2><p>${esc(profile.email || '')}</p></div></div><form class="sos133-profile-form" data-profile-form><label>${t('Display name', 'Ime za prikaz')}<input name="displayName" required minlength="2" maxlength="180" value="${esc(name)}"></label><label>${t('Short profile description', 'Kratak opis profila')}<textarea name="bio" maxlength="600" placeholder="${t('A little context for businesses you intentionally connect with.', 'Kratak kontekst za tvrtke s kojima se namjerno povežeš.')}">${esc(profile.bio || '')}</textarea></label><label class="sos133-profile-share"><input type="checkbox" name="shareWithConnectedBusinesses" ${profile.shareWithConnectedBusinesses === false ? '' : 'checked'}><span><b>${t('Share my profile with connected businesses', 'Dijeli moj profil s povezanim tvrtkama')}</b><small>${t('Only businesses already connected through a Passport or case can see it.', 'Mogu ga vidjeti samo tvrtke već povezane Putovnicom ili slučajem.')}</small></span></label>${upload}<button class="primary">${t('Save profile', 'Spremi profil')}</button><p class="sos133-profile-status" data-profile-status role="status"></p></form><dl><div><dt>${t('Private World', 'Privatni Svijet')}</dt><dd>${t('Your records remain private and owner-scoped.', 'Tvoji zapisi ostaju privatni i ograničeni na vlasnika.')}</dd></div><div><dt>${t('Migration', 'Migracija')}</dt><dd>${esc(migration)}</dd></div></dl><div class="sos133-profile-links"><a href="/app/together" data-nav>${t('Connected businesses', 'Povezane tvrtke')}</a><a href="/">${t('Public Still website', 'Javna stranica Still')}</a></div></section>`);
+      const dialog = openDialog(t('Your profile', 'Tvoj profil'), `<section class="sos133-profile"><div class="sos133-profile-id"><span>${picture}</span><div><h2>${esc(name)}</h2><p>${esc(profile.email || '')}</p></div></div>${profileMetrics}<form class="sos133-profile-form" data-profile-form><label>${t('Display name', 'Ime za prikaz')}<input name="displayName" required minlength="2" maxlength="180" value="${esc(name)}"></label><label>${t('Short profile description', 'Kratak opis profila')}<textarea name="bio" maxlength="600" placeholder="${t('A little context for businesses you intentionally connect with.', 'Kratak kontekst za tvrtke s kojima se namjerno povežeš.')}">${esc(profile.bio || '')}</textarea></label><label class="sos133-profile-share"><input type="checkbox" name="shareWithConnectedBusinesses" ${profile.shareWithConnectedBusinesses === false ? '' : 'checked'}><span><b>${t('Share my profile with connected businesses', 'Dijeli moj profil s povezanim tvrtkama')}</b><small>${t('Only businesses already connected through a Passport or case can see it.', 'Mogu ga vidjeti samo tvrtke već povezane Putovnicom ili slučajem.')}</small></span></label>${contactFields}${upload}<button class="primary">${t('Save profile', 'Spremi profil')}</button><p class="sos133-profile-status" data-profile-status role="status"></p></form><dl><div><dt>${t('Private World', 'Privatni Svijet')}</dt><dd>${t('Your records remain private and owner-scoped.', 'Tvoji zapisi ostaju privatni i ograničeni na vlasnika.')}</dd></div><div><dt>${t('Migration', 'Migracija')}</dt><dd>${esc(migration)}</dd></div></dl><div class="sos133-profile-links"><a href="/app/together" data-nav>${t('Connected businesses', 'Povezane tvrtke')}</a><a href="/">${t('Public Still website', 'Javna stranica Still')}</a></div><button class="sos133-profile-signout" type="button" data-profile-signout>${t('Sign out of Still', 'Odjavi se iz Still-a')}</button></section>`);
       dialog.querySelector('[data-profile-form]').addEventListener('submit', async event => {
         event.preventDefault();
         const form = event.currentTarget, button = form.querySelector('button'), status = form.querySelector('[data-profile-status]'), photo = form.elements.photo?.files?.[0];
         button.disabled = true; status.textContent = t('Saving…', 'Spremanje…');
         try {
-          const saved = await api('/api/v1/buyer-profile', { method: 'POST', body: JSON.stringify({ displayName: form.elements.displayName.value, bio: form.elements.bio.value, shareWithConnectedBusinesses: form.elements.shareWithConnectedBusinesses.checked }) });
+          const saved = await api('/api/v1/buyer-profile', { method: 'POST', body: JSON.stringify({ displayName: form.elements.displayName.value, bio: form.elements.bio.value, shareWithConnectedBusinesses: form.elements.shareWithConnectedBusinesses.checked, phone: form.elements.phone.value, preferredContact: form.elements.preferredContact.value, addressLine1: form.elements.addressLine1.value, addressLine2: form.elements.addressLine2.value, postalCode: form.elements.postalCode.value, city: form.elements.city.value, region: form.elements.region.value, countryCode: form.elements.countryCode.value, deliveryInstructions: form.elements.deliveryInstructions.value, shareContactWithConnectedBusinesses: form.elements.shareContactWithConnectedBusinesses.checked }) });
           if (photo) {
             const blob = await profileImageBlob(photo);
             await api('/api/v1/buyer-profile/photo', { method: 'POST', headers: { 'content-type': 'image/webp' }, body: blob });
@@ -439,6 +494,7 @@
         } catch (error) { status.textContent = error.message; setStatus(error.message, true); }
         finally { button.disabled = false; }
       });
+      dialog.querySelector('[data-profile-signout]').addEventListener('click', event => signOut(event.currentTarget));
     } catch (error) { setStatus(error.message, true); }
   }
 
@@ -479,6 +535,8 @@
     root.querySelectorAll('[data-open-context]').forEach(button => { if (button.dataset.bound) return; button.dataset.bound = '1'; button.addEventListener('click', () => { const [type, ...id] = button.dataset.openContext.split(':'); navigate(pathFor(type, id.join(':'))); root.querySelector('[data-search-results]')?.setAttribute('hidden', ''); }); });
     root.querySelectorAll('[data-command-open]').forEach(button => { if (button.dataset.bound) return; button.dataset.bound = '1'; button.addEventListener('click', () => openCommand()); });
     root.querySelectorAll('[data-sight-open]').forEach(button => { if (button.dataset.bound) return; button.dataset.bound = '1'; button.addEventListener('click', () => openSight(button.dataset.sightOpen)); });
+    root.querySelectorAll('[data-account-profile]').forEach(button => { if (button.dataset.bound) return; button.dataset.bound = '1'; button.addEventListener('click', openProfile); });
+    root.querySelectorAll('[data-sign-out]').forEach(button => { if (button.dataset.bound) return; button.dataset.bound = '1'; button.addEventListener('click', () => signOut(button)); });
     root.querySelector('[data-toggle-attention]')?.addEventListener('click', () => { state.attentionOpen = !state.attentionOpen; renderNow(); });
     root.querySelector('[data-retry]')?.addEventListener('click', renderRoute);
     root.querySelector('[data-back]')?.addEventListener('click', () => history.length > 1 ? history.back() : navigate('/app'));

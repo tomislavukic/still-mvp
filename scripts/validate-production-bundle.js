@@ -233,7 +233,8 @@ if (!consumerRuntime.includes('Everything you own.') || !consumerRuntime.include
 if (!consumerRuntime.includes('data-still-start') || !consumerRuntime.includes("enterStill('/app/world')")) fail('consumer CTAs are not connected to the authenticated Still ownership workflow');
 if (manifest.runtime?.some(file => ['relationship-dashboard-v103.js','contact-profile-v104.js','buyer-auth-layout-v78.js'].includes(file))) fail('authenticated profile/dashboard modules are shipped in the public landing runtime');
 if (consumerRuntime.includes('stillAccountMountV114') || consumerRuntime.includes('data-still-tool')) fail('private account or legacy tool controls are mounted in the public landing story');
-if (!consumerRuntime.includes('placeBuyerAuth()') || !read('public/still-v114.css').includes('sp114-auth-overlay')) fail('top-level buyer sign-in overlay is not shipped');
+if (!consumerRuntime.includes("auth.classList.add('sp114-auth-stage')") || !read('public/still-v114.css').includes('sp114-auth-stage')) fail('anchored top-level buyer sign-in stage is not shipped');
+if (!consumerRuntime.includes('quarantineLegacyPublicModules()') || !consumerRuntime.includes("element.style.setProperty('display', 'none', 'important')")) fail('public runtime does not quarantine late legacy buyer modules');
 if (!consumerRuntime.includes("t('PLANNED', 'PLANIRANO')") || !consumerRuntime.includes('Still+')) fail('unavailable premium consumer capabilities are not truthfully labelled');
 const worldRuntime = read('public/world-foundation-v131.js');
 for (const capability of ['/api/v1/world/bootstrap','/api/v1/world/things','/api/v1/world/receipts/capture','/api/v1/world/knowledge','/api/v1/world/situations','/api/v1/world/open-loops']) {
@@ -247,6 +248,7 @@ for (const route of ['/api/v1/world/now','/api/v1/world/context/','/api/v1/world
 for (const route of ['/api/v1/buyer-dashboard','/api/v1/buyer-profile','/api/v1/buyer-profile/photo']) {
   if (!osRuntime.includes(route)) fail(`authenticated Still profile management is missing ${route}`);
 }
+if (!osRuntime.includes('/api/v1/buyer-auth/logout') || !osRuntime.includes('recentPassports')) fail('authenticated Still account overview or logout is not shipped');
 for (const area of ['Now','World','Market','Discover','Together']) {
   if (!osRuntime.includes(area)) fail(`Still OS navigation is missing ${area}`);
 }
