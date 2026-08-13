@@ -99,5 +99,7 @@ test('77 approved brief documents are copied into participant-scoped bookings', 
 test('78 approved originals require booking participant authorization', () => assert.ok(worker.includes('/attachments\\/([^/]+)\\/original') && worker.includes('serviceAttachmentOriginal') && worker.includes('bookingForParticipant')));
 test('79 booking UI exposes real slots and manual requested windows', () => ['availabilityId','scheduledStart','scheduledEnd','Request another time'].forEach(value => assert.ok(client.includes(value))));
 test('80 both provider surfaces expose scheduling messages parts and warranties', () => ['suggest-time','reschedule','data-service-message','data-add-part','serviceWarrantyDays'].forEach(value => assert.ok(client.includes(value) || company.includes(value))));
+test('81 quote inbox projects only buyer-approved Thing fields', () => assert.ok(worker.includes("approved.has('thing_name')") && worker.includes("approved.has('brand')") && worker.includes("approved.has('service_history')") && worker.includes('shared_fields')));
+test('82 quote attachments use provider-scoped private R2 delivery', () => assert.ok(worker.includes('quoteRequestAttachmentOriginal') && worker.includes('q.public_id=? AND q.provider_id=?') && client.includes('Buyer-approved context') && company.includes('Buyer-approved service context')));
 
 process.stdout.write(`Services and Local Resolution Network tests passed (${passed} assertions).\n`);

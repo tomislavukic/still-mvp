@@ -85,7 +85,10 @@ const run = (async () => {
     assert.equal((await request(`/api/v1/world/needs/${needId}/service-quote-requests`, { method: 'POST', body: JSON.stringify({ providerId, capabilityId }) })).status, 409);
   });
   await check('provider inbox receives only the persisted request', async () => {
-    const result = await request('/api/v1/services/provider/work', { cookie: companyCookie }); assert.equal(result.data.quoteRequests.length, 1); assert.equal(result.data.quoteRequests[0].public_id, quoteRequestId); assert.equal(JSON.stringify(result.data).includes('Private Service Street'), false);
+    const result = await request('/api/v1/services/provider/work', { cookie: companyCookie }); const item=result.data.quoteRequests[0];assert.equal(result.data.quoteRequests.length, 1); assert.equal(item.public_id, quoteRequestId);assert.equal(item.issue_description,'Washer stops during drain and displays an error.');assert.equal(item.shared_fields.brand,'Bosch');assert.equal(item.attachments[0].publicId,documentId); assert.equal(JSON.stringify(result.data).includes('Private Service Street'), false);assert.equal(JSON.stringify(item).includes('buyer_account_id'),false);
+  });
+  await check('provider can read only the file explicitly approved for its quote request', async () => {
+    const work=await request('/api/v1/services/provider/work',{cookie:companyCookie}),url=work.data.quoteRequests[0].attachments[0].originalUrl,provider=await fetch(`${origin}${url}`,{headers:{cookie:companyCookie}}),unrelated=await fetch(`${origin}${url}`,{headers:{cookie:unrelatedCookie}});assert.equal(provider.status,200);assert.equal(await provider.text(),'Private warranty terms for the washer.');assert.equal(unrelated.status,409);
   });
   await check('provider creates an honest diagnostic-first quote', async () => {
     const result = await request(`/api/v1/services/quote-requests/${quoteRequestId}/quotes`, { cookie: companyCookie, method: 'POST', body: JSON.stringify({ pricingType: 'DIAGNOSTIC_FIRST', diagnosticFeeCents: 3500, currency: 'EUR', scope: 'On-site diagnosis. Repair price will be quoted only after diagnosis.', estimatedDurationMinutes: 60, validUntil: '2026-09-30' }) }); assert.equal(result.status, 201); quoteId = result.data.quote.publicId; assert.equal(result.data.quote.amountCents, null);
