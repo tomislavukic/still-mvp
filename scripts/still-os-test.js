@@ -12,6 +12,7 @@ const build = read('build-public.js');
 const wrangler = read('wrangler.jsonc');
 const buyerAuth = read('buyer-auth-v77.js');
 const publicExperience = read('still-public-v114.js');
+const publicIndex = read('index.html');
 let passed = 0;
 
 function test(name, check) {
@@ -79,6 +80,14 @@ test('37 lightweight landing preserves auth placement and language preference', 
   assert.ok(buyerAuth.includes('const start = refresh;'));
   assert.ok(publicExperience.includes("localStorage.getItem(LANGUAGE_KEY)") && publicExperience.includes("localStorage.setItem(LANGUAGE_KEY, language)"));
   assert.ok(publicExperience.includes('document.documentElement.lang = language'));
+});
+test('38 Google sign-in uses browser-mediated account selection with safe fallback', () => {
+  ['use_fedcm_for_button: true','button_auto_select: true','itp_support: true'].forEach(capability => assert.ok(buyerAuth.includes(capability)));
+  assert.ok(buyerAuth.includes("document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline'"));
+});
+test('39 canonical public shell contains no retired checker interface', () => {
+  ['Consumer rights checker','returnForm','checker-card','hero-share-row','share-icons.css','styles.css'].forEach(marker => assert.ok(!publicIndex.includes(marker)));
+  assert.ok(publicIndex.includes('<main></main>') && publicIndex.includes('Still · Everything you own.'));
 });
 
 process.stdout.write(`Still OS tests passed (${passed} assertions).\n`);
