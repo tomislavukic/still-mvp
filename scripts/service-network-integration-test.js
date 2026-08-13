@@ -7,13 +7,13 @@ const companyCookie = 'still_company=service-company-session';
 let passed = 0;
 
 async function request(path, { cookie = clientCookie, method = 'GET', body } = {}) {
-  const response = await fetch(`${origin}${path}`, { method, body, signal: AbortSignal.timeout(15000), headers: { cookie, ...(!['GET','HEAD'].includes(method) ? { origin, 'content-type': 'application/json' } : {}) } });
+  const response = await fetch(`${origin}${path}`, { method, body, signal: AbortSignal.timeout(15000), headers: { cookie, ...(!['GET','HEAD'].includes(method) ? { origin, ...(!(body instanceof FormData) ? { 'content-type': 'application/json' } : {}) } : {}) } });
   return { status: response.status, data: await response.json().catch(() => ({})) };
 }
 async function check(name, action) { await action(); passed += 1; process.stdout.write(`✓ Services ${String(passed).padStart(2,'0')} ${name}\n`); }
 
 const run = (async () => {
-  let providerId, capabilityId, availabilityId, thingId, needId, briefId, quoteRequestId, quoteId, bookingId, reportId, repeatId;
+  let providerId, capabilityId, availabilityId, documentId, thingId, needId, briefId, quoteRequestId, quoteId, bookingId, reportId, repeatId, cancelledRepeatId;
   const suffix = crypto.randomUUID().slice(0, 8);
 
   await check('service APIs require an existing authenticated identity', async () => {
@@ -45,6 +45,9 @@ const run = (async () => {
   await check('buyer creates a real owned Thing for service context', async () => {
     const result = await request('/api/v1/world/things', { method: 'POST', body: JSON.stringify({ title: `Bosch Washer ${suffix}`, thingType: 'product', source: 'manual', brand: 'Bosch', model: 'WAT-Test' }) }); assert.equal(result.status, 201); thingId = result.data.thing.publicId;
   });
+  await check('buyer stores a real private document before approving it for service', async () => {
+    const form=new FormData();form.set('title','Washer warranty');form.set('documentType','warranty');form.set('consent','true');form.set('file',new File(['Private warranty terms for the washer.'],'washer-warranty.txt',{type:'text/plain'}));const result=await request('/api/v1/world/documents',{method:'POST',body:form});assert.equal(result.status,201);documentId=result.data.document.publicId;
+  });
   await check('buyer creates a canonical REPAIR Need linked to the Thing', async () => {
     const result = await request('/api/v1/world/needs', { method: 'POST', body: JSON.stringify({ title: `Repair washer ${suffix}`, description: 'Washer stops during the drain cycle.', problemDescription: 'Stops during drain and shows an error.', needType: 'REPAIR', thingId, category: 'REPAIR', locationMode: 'AT_CUSTOMER', confidence: 'CONFIRMED' }) }); assert.equal(result.status, 201); needId = result.data.need.publicId;
   });
@@ -55,7 +58,7 @@ const run = (async () => {
     assert.equal((await request(`/api/v1/world/needs/${needId}/service-matches`)).status, 409);
   });
   await check('buyer confirms exact shared fields and stores private address', async () => {
-    const result = await request(`/api/v1/world/needs/${needId}/service-brief`, { method: 'POST', body: JSON.stringify({ title: 'Diagnose and repair washer', issueDescription: 'Washer stops during drain and displays an error.', category: 'REPAIR', serviceMode: 'AT_CUSTOMER', coarseLocation: '10000 Zagreb, Croatia', brand: 'Bosch', model: 'WAT-Test', desiredWindowStart: '2026-09-10T09:30:00.000Z', desiredWindowEnd: '2026-09-10T10:30:00.000Z', addressRequired: true, approvedFields: ['thing_name','brand','model'], address: { addressLine: 'Private Service Street 7', postalCode: '10000', city: 'Zagreb', countryCode: 'HR' }, confirmed: true, matchingEnabled: true }) }); assert.equal(result.status, 200); assert.ok(result.data.brief.confirmedAt); assert.equal(result.data.brief.privacy.exactAddressShared, false);
+    const result = await request(`/api/v1/world/needs/${needId}/service-brief`, { method: 'POST', body: JSON.stringify({ title: 'Diagnose and repair washer', issueDescription: 'Washer stops during drain and displays an error.', category: 'REPAIR', serviceMode: 'AT_CUSTOMER', coarseLocation: '10000 Zagreb, Croatia', brand: 'Bosch', model: 'WAT-Test', desiredWindowStart: '2026-09-10T09:30:00.000Z', desiredWindowEnd: '2026-09-10T10:30:00.000Z', addressRequired: true, approvedFields: ['thing_name','brand','model'], attachmentIds:[documentId], address: { addressLine: 'Private Service Street 7', postalCode: '10000', city: 'Zagreb', countryCode: 'HR' }, confirmed: true, matchingEnabled: true }) }); assert.equal(result.status, 200); assert.ok(result.data.brief.confirmedAt); assert.equal(result.data.brief.privacy.exactAddressShared, false);assert.equal(result.data.brief.attachments[0].publicId,documentId);
   });
   await check('service brief read never returns exact address', async () => {
     const result = await request(`/api/v1/world/needs/${needId}/service-brief`); assert.equal(result.status, 200); assert.equal(JSON.stringify(result.data).includes('Private Service Street'), false);
@@ -94,7 +97,10 @@ const run = (async () => {
     const result = await request('/api/v1/services/bookings', { method: 'POST', body: JSON.stringify({ quoteId, availabilityId, clientNote: 'Please ring the apartment intercom.' }) }); assert.equal(result.status, 201); assert.equal(result.data.status, 'REQUESTED'); assert.match(result.data.paymentNotice, /No deposit or escrow/i); bookingId = result.data.bookingId;
   });
   await check('requested booking still hides exact address', async () => {
-    const result = await request(`/api/v1/services/bookings/${bookingId}`); assert.equal(result.data.booking.status, 'REQUESTED'); assert.equal(result.data.booking.address, null); assert.equal(JSON.stringify(result.data).includes('Private Service Street'), false);
+    const result = await request(`/api/v1/services/bookings/${bookingId}`); assert.equal(result.data.booking.status, 'REQUESTED'); assert.equal(result.data.booking.address, null); assert.equal(JSON.stringify(result.data).includes('Private Service Street'), false);assert.equal(result.data.attachments[0].publicId,documentId);
+  });
+  await check('only booking participants can open an explicitly approved file', async () => {
+    const booking=await request(`/api/v1/services/bookings/${bookingId}`),url=booking.data.attachments[0].originalUrl,client=await fetch(`${origin}${url}`,{headers:{cookie:clientCookie}}),provider=await fetch(`${origin}${url}`,{headers:{cookie:companyCookie}}),unrelated=await fetch(`${origin}${url}`,{headers:{cookie:unrelatedCookie}});assert.equal(client.status,200);assert.equal(provider.status,200);assert.equal(await client.text(),'Private warranty terms for the washer.');assert.equal(unrelated.status,404);
   });
   await check('unrelated buyer cannot read booking or address', async () => {
     assert.equal((await request(`/api/v1/services/bookings/${bookingId}`, { cookie: unrelatedCookie })).status, 404);
@@ -138,14 +144,23 @@ const run = (async () => {
   await check('repeat booking creates a new real request without copying payment', async () => {
     const result = await request(`/api/v1/services/bookings/${bookingId}/repeat`, { method: 'POST', body: '{}' }); assert.equal(result.status, 201); repeatId = result.data.bookingId; const read = await request(`/api/v1/services/bookings/${repeatId}`); assert.equal(read.data.booking.payment.status, 'NOT_RECORDED');
   });
-  await check('client can cancel the repeat request with a reason', async () => {
-    const result = await request(`/api/v1/services/bookings/${repeatId}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 'Created only to verify the repeat-booking flow.' }) }); assert.equal(result.status, 200); assert.equal(result.data.status, 'CANCELLED');
+  await check('provider suggests a real alternate time on a requested booking', async () => {
+    const result=await request(`/api/v1/services/bookings/${repeatId}/suggest-time`,{cookie:companyCookie,method:'POST',body:JSON.stringify({scheduledStart:'2026-09-12T09:00:00.000Z',scheduledEnd:'2026-09-12T10:00:00.000Z',note:'First available visit.'})});assert.equal(result.status,200);assert.equal(result.data.status,'TIME_SUGGESTED');const read=await request(`/api/v1/services/bookings/${repeatId}`);assert.equal(read.data.booking.address,null);
+  });
+  await check('client can request a reschedule and provider must reconfirm it', async () => {
+    const moved=await request(`/api/v1/services/bookings/${repeatId}/reschedule`,{method:'POST',body:JSON.stringify({scheduledStart:'2026-09-12T11:00:00.000Z',scheduledEnd:'2026-09-12T12:00:00.000Z',note:'Later works better.'})});assert.equal(moved.data.status,'REQUESTED');const confirmed=await request(`/api/v1/services/bookings/${repeatId}/accept`,{cookie:companyCookie,method:'POST',body:'{}'});assert.equal(confirmed.data.status,'CONFIRMED');
+  });
+  await check('provider can record no-show only after confirmation', async () => {
+    const result=await request(`/api/v1/services/bookings/${repeatId}/no-show`,{cookie:companyCookie,method:'POST',body:'{}'});assert.equal(result.status,200);assert.equal(result.data.status,'NO_SHOW');
+  });
+  await check('client can create and cancel another repeat request with a reason', async () => {
+    const repeated=await request(`/api/v1/services/bookings/${bookingId}/repeat`,{method:'POST',body:'{}'});cancelledRepeatId=repeated.data.bookingId;const result=await request(`/api/v1/services/bookings/${cancelledRepeatId}/cancel`, { method: 'POST', body: JSON.stringify({ reason: 'Created only to verify the cancellation flow.' }) }); assert.equal(result.status, 200); assert.equal(result.data.status, 'CANCELLED');
   });
   await check('NOW exposes only persisted active service work', async () => {
-    const result = await request('/api/v1/world/now'); assert.equal(result.status, 200); assert.ok(result.data.services); assert.equal(result.data.services.bookings.some(item => item.public_id === repeatId), false);
+    const result = await request('/api/v1/world/now'); assert.equal(result.status, 200); assert.ok(result.data.services); assert.equal(result.data.services.bookings.some(item => [repeatId,cancelledRepeatId].includes(item.public_id)), false);
   });
   await check('provider workspace reflects quote booking and report lifecycle', async () => {
-    const result = await request('/api/v1/services/provider/work', { cookie: companyCookie }); assert.equal(result.status, 200); assert.ok(result.data.bookings.some(item => item.public_id === bookingId && item.status === 'COMPLETED')); assert.ok(result.data.bookings.some(item => item.public_id === repeatId && item.status === 'CANCELLED'));
+    const result = await request('/api/v1/services/provider/work', { cookie: companyCookie }); assert.equal(result.status, 200); assert.ok(result.data.bookings.some(item => item.public_id === bookingId && item.status === 'COMPLETED')); assert.ok(result.data.bookings.some(item => item.public_id === repeatId && item.status === 'NO_SHOW'));assert.ok(result.data.bookings.some(item => item.public_id === cancelledRepeatId && item.status === 'CANCELLED'));
   });
   await check('service lifecycle never reports Still payment escrow or settlement', async () => {
     const result = await request(`/api/v1/services/bookings/${bookingId}`); assert.equal(result.data.booking.payment.mode, 'EXTERNAL_MANUAL'); assert.equal(result.data.booking.payment.status, 'NOT_RECORDED'); assert.match(result.data.booking.payment.notice, /does not hold funds/i);
