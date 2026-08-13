@@ -180,6 +180,13 @@ for (const file of buyerStyles.filter(file => !publicStyles.includes(file))) {
 }
 if (!/<main>\s*<\/main>/i.test(indexHtml)) fail('public landing ships the legacy homepage DOM instead of the lightweight Still shell');
 if (assetReference(indexHtml, 'share-icons.css')) fail('public landing activates the retired share-control stylesheet');
+if (assetReference(indexHtml, 'styles.css')) fail('public landing activates the retired checker stylesheet');
+for (const marker of ['Consumer rights checker','returnForm','checker-card','hero-share-row']) {
+  if (indexHtml.includes(marker)) fail(`public landing contains retired UI marker ${marker}`);
+}
+for (const capability of ['use_fedcm_for_button: true','button_auto_select: true','itp_support: true']) {
+  if (!read('public/buyer-auth-v77.js').includes(capability)) fail(`production buyer sign-in is missing ${capability}`);
+}
 for (const origin of ['https://accounts.google.com', 'https://accounts.gstatic.com']) {
   if (!indexHtml.includes(`rel="preconnect" href="${origin}"`)) fail(`public landing does not preconnect to ${origin}`);
 }

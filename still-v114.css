@@ -12,6 +12,12 @@
   --still-shadow: 0 24px 70px rgba(35, 39, 71, .10);
 }
 
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; }
+body.still-v114 { margin: 0; min-height: 100dvh; line-height: 1.5; }
+body.still-v114 :focus-visible { outline: 3px solid color-mix(in srgb, var(--still-accent) 44%, transparent); outline-offset: 3px; }
+
 body.still-v114,
 body.business-v114,
 body.pricing-v114 {
@@ -34,6 +40,9 @@ body.pricing-v114 {
   position: sticky;
   z-index: 1000;
   top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
   width: min(1320px, calc(100% - 48px));
   min-height: 72px;
   margin: 14px auto 0;
@@ -45,9 +54,9 @@ body.pricing-v114 {
   backdrop-filter: blur(22px);
 }
 
-.still-v114 .brand { color: var(--still-ink) !important; letter-spacing: -.06em; }
+.still-v114 .brand { color: var(--still-ink) !important; font-size: 30px; font-weight: 820; letter-spacing: -.06em; text-decoration: none; }
 .still-v114 .brand span { color: var(--still-accent) !important; }
-.still-v114 .topbar .nav { display: flex !important; gap: 4px; }
+.still-v114 .topbar .nav { display: flex !important; gap: 4px; margin-left: auto; }
 .still-v114 .topbar .nav a {
   min-height: 44px;
   display: inline-flex;
@@ -63,7 +72,7 @@ body.pricing-v114 {
 }
 .still-v114 .topbar .nav a:hover { background: rgba(92, 92, 226, .07) !important; color: var(--still-ink) !important; }
 .still-v114 .feature-nav-v82 { display: none !important; }
-.still-v114 .top-actions { gap: 8px; }
+.still-v114 .top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .still-v114 .top-actions select,
 .still-v114 .top-actions #themeToggle {
   min-height: 44px;
@@ -72,6 +81,8 @@ body.pricing-v114 {
   background: rgba(24, 32, 51, .055) !important;
   color: var(--still-ink) !important;
 }
+.still-v114 .top-actions select { padding: 0 11px; }
+.still-v114 .top-actions #themeToggle { width: 44px; padding: 0; cursor: pointer; }
 .sp114-header-start,
 .sp114-primary {
   min-height: 50px;
@@ -378,7 +389,8 @@ body.still-v114 #buyerAuthV77.sp114-auth-stage .ba77-close { position: absolute;
 .still-v114 .op83-progressive-details { margin: 5px 0 2px; padding: 13px; border-radius: 13px; background: color-mix(in srgb, var(--still-soft) 55%, transparent); }
 .still-v114 .op83-progressive-details summary { color: var(--still-accent); font-size: 13px; font-weight: 740; cursor: pointer; }
 .still-v114 .op83-progressive-details[open] summary { margin-bottom: 14px; }
-.still-v114 .sp114-footer { width: min(1240px, calc(100% - 48px)); margin: 80px auto 0; border-top: 1px solid var(--still-line); }
+.still-v114 .sp114-footer { width: min(1240px, calc(100% - 48px)); margin: 80px auto 0; padding: 30px 0 38px; border-top: 1px solid var(--still-line); color: var(--still-ink); font-weight: 760; }
+.still-v114 .sp114-footer span { margin-left: 8px; color: var(--still-muted); font-weight: 520; }
 
 /* Business public page */
 .business-v114 .business-shell { width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }

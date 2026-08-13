@@ -6,8 +6,9 @@ const fail=[];
 for(const f of files){if(!fs.existsSync(f))fail.push(`missing ${f}`);}
 if(!fail.length){
  const html=read('index.html'),app=read('app.js'),v10=read('v10.js'),enh=read('enhancements.js'),theme=read('theme.js'),css=read('styles.css');
- const ids=['returnForm','market','purchaseType','store','purchaseDate','itemName','result','language','themeToggle','addReminder','scanReceipt','retailerSearch'];
- ids.forEach(id=>{if(!html.includes(`id="${id}"`))fail.push(`missing DOM id ${id}`)});
+ ['language','themeToggle'].forEach(id=>{if(!html.includes(`id="${id}"`))fail.push(`missing public shell DOM id ${id}`)});
+ ['returnForm','market','purchaseType','store','purchaseDate','itemName','result','addReminder','scanReceipt','retailerSearch'].forEach(id=>{if(!app.includes(id)&&!enh.includes(id))fail.push(`legacy protection capability is missing ${id}`)});
+ ['Consumer rights checker','returnForm','checker-card','hero-share-row','share-icons.css','styles.css'].forEach(marker=>{if(html.includes(marker))fail.push(`retired public UI remains in canonical index.html: ${marker}`)});
  ['value="en"','value="hr"'].forEach(x=>{if(!html.includes(x))fail.push(`missing language option ${x}`)});
  ['warrantyNote','goWarranty','checkReturn'].forEach(k=>{if(!v10.includes(k))fail.push(`missing localization key ${k}`)});
  ['whatsapp','facebook','linkedin','telegram','email','native','copy'].forEach(k=>{if(!enh.includes(k)&&!app.includes(k))fail.push(`missing share route ${k}`)});
@@ -37,6 +38,7 @@ if(!fail.length){
  if(!buyerAuth.includes('/api/v1/buyer-auth/google/config'))fail.push('buyer Google config does not use isolated auth namespace');
  if(!buyerAuth.includes('/api/v1/buyer-auth/google'))fail.push('buyer Google login does not use isolated auth namespace');
  if(buyerAuth.includes("api('/api/v1/auth/google"))fail.push('buyer auth still calls the shared company auth namespace');
+ ['use_fedcm_for_button: true','button_auto_select: true','itp_support: true'].forEach(capability=>{if(!buyerAuth.includes(capability))fail.push(`buyer Google sign-in is missing ${capability}`)});
  if(!buyerAuth.includes('Google authenticates only')||!buyerAuth.includes('buyer account')||!buyerAuth.includes('warranty claim'))fail.push('buyer-only Google scope is not explained');
  if(company.includes('buyer-auth-v77.js'))fail.push('buyer Google authentication is loaded on the company page');
  if(!authWorker.includes("pathname === '/api/v1/buyer-auth/google/config'"))fail.push('worker does not route buyer Google config');

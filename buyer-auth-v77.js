@@ -303,11 +303,19 @@
       client_id: config.clientId,
       callback: googleCallback,
       auto_select: false,
-      cancel_on_tap_outside: true
+      cancel_on_tap_outside: true,
+      itp_support: true,
+      use_fedcm_for_button: true,
+      button_auto_select: true
     });
     window.google.accounts.id.renderButton(container, {
-      type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
-      shape: 'pill', logo_alignment: 'left', width: 320
+      type: 'standard',
+      theme: document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'pill',
+      logo_alignment: 'left',
+      width: 360
     });
   }
 
