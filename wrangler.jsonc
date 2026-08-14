@@ -2,10 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v140.js",
-  // Active Worker modernizes Stripe Connect to Accounts v2 merchant accounts.
-  // worker-v140 delegates to merchant-backend/worker-v139.js, preserving the complete
-  // Company Network, services, Market, Still OS and CompanyOS runtime chain beneath it.
+  "main": "merchant-backend/worker-v141.js",
+  // Active Worker fixes Professional Mode setup while preserving the full runtime chain.
+  // worker-v141 delegates to worker-v140 and all prior Company Network, Market and Still OS layers.
   "keep_vars": true,
   "observability": {
     "enabled": true,
