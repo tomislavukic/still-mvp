@@ -1,0 +1,15 @@
+.cn138-wanted{display:grid;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--sos-line)}
+.cn138-wanted>span{font-size:11px;font-weight:850;color:var(--sos-accent)}
+.cn138-wanted .cn138-offer{text-align:left}
+.cn138-claim-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(8,12,24,.72);backdrop-filter:blur(18px)}
+.cn138-claim-overlay>section{position:relative;width:min(560px,100%);padding:clamp(24px,5vw,46px);border-radius:30px;background:#f8f7f4;color:#17192a;box-shadow:0 40px 100px rgba(0,0,0,.35)}
+.cn138-claim-overlay .close{position:absolute;right:16px;top:16px;width:44px;height:44px;border:0;border-radius:50%;font-size:24px}
+.cn138-claim-overlay>section>span{font-size:11px;font-weight:850;letter-spacing:.12em;color:#6548d8}
+.cn138-claim-overlay h1{font-size:clamp(30px,6vw,52px);letter-spacing:-.055em;line-height:1;margin:14px 0}
+.cn138-claim-overlay section>p,.cn138-claim-overlay section>small{color:#686b78}
+.cn138-claim-overlay section>div{margin:24px 0;padding:18px;border-radius:17px;background:#eeece8}
+.cn138-claim-overlay section>div p{margin-bottom:0;color:#686b78}
+.cn138-claim-overlay .primary{width:100%;min-height:52px;border:0;border-radius:14px;background:#6548d8;color:#fff;font-weight:800}
+.cn138-claim-overlay em{display:block;margin-top:12px;color:#a33;font-style:normal}
+@media(max-width:600px){.cn138-claim-overlay{padding:0}.cn138-claim-overlay>section{min-height:100dvh;border-radius:0;display:flex;flex-direction:column;justify-content:center}.cn138-wanted .cn138-offer footer{display:grid}}
+@media(prefers-reduced-motion:reduce){.cn138-claim-overlay{backdrop-filter:none}}

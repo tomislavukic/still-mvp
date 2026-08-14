@@ -1,6 +1,5 @@
 (() => {
   const featureScripts = [
-    'company-commerce-v92.js',
     'company-passport-studio-v83.js',
     'company-lifecycle-v95.js',
     'company-operations-v96.js',
@@ -13,6 +12,7 @@
     'company-services-mount-v79.js',
     'company-services-v73.js',
     'company-service-network-v137.js',
+    'company-commerce-network-v138.js',
     'company-ops-v74.js',
     'company-rewards-v75.js',
     'company-control-center-v101.js',
