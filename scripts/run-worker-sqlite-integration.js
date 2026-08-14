@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'still-worker-sqlite-'));
 const database = path.join(temporary, 'still.db');
-const files = ['merchant-backend/schema.sql', 'merchant-backend/schema-v83.sql', 'merchant-backend/schema-v95.sql', 'merchant-backend/schema-v131.sql', 'merchant-backend/schema-v134.sql', 'merchant-backend/schema-v135.sql', 'merchant-backend/schema-v136.sql', 'merchant-backend/schema-v137.sql', 'tests/world/seed.sql'];
+const files = ['merchant-backend/schema.sql', 'merchant-backend/schema-v83.sql', 'merchant-backend/schema-v95.sql', 'merchant-backend/schema-v131.sql', 'merchant-backend/schema-v134.sql', 'merchant-backend/schema-v135.sql', 'merchant-backend/schema-v136.sql', 'merchant-backend/schema-v137.sql', 'merchant-backend/schema-v138.sql', 'tests/world/seed.sql'];
 
 function quote(value) {
   if (value === null || value === undefined) return 'NULL';
@@ -82,7 +82,7 @@ function assetResponse(request) {
 
 async function main() {
   seed();
-  const worker = (await import(path.join(root, 'merchant-backend/worker-v137.js'))).default;
+  const worker = (await import(path.join(root, 'merchant-backend/worker-v138.js'))).default;
   const env = {
     DB: new Database(),
     WORLD_FILES: new PrivateFiles(),
@@ -98,11 +98,12 @@ async function main() {
   const origin = 'http://still.local';
   global.fetch = async (input, init) => worker.fetch(input instanceof Request ? input : new Request(input, init), env, { waitUntil() {}, passThroughOnException() {} });
   process.argv[2] = origin;
-  if (!process.env.SERVICE_ONLY) {
+  if (!process.env.SERVICE_ONLY && !process.env.COMPANY_NETWORK_ONLY) {
     await require('./world-foundation-integration-test.js');
     await require('./professional-network-integration-test.js');
   }
-  await require('./service-network-integration-test.js');
+  if (!process.env.COMPANY_NETWORK_ONLY) await require('./service-network-integration-test.js');
+  if (!process.env.SERVICE_ONLY) await require('./company-network-integration-test.js');
 }
 
 main().catch(error => { console.error(error.stack || error); process.exitCode = 1; }).finally(() => fs.rmSync(temporary, { recursive: true, force: true }));
