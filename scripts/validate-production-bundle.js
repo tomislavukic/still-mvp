@@ -46,7 +46,7 @@ const buyerStyles = [
 const companyScripts = [
   'company-authenticated-loader-v82.js',
   'company-passport-studio-v83.js',
-  'company-commerce-v92.js',
+  'company-commerce-network-v138.js',
   'company-lifecycle-v95.js',
   'company-operations-v96.js',
   'company-control-center-v101.js',
@@ -60,7 +60,7 @@ const companyScripts = [
 
 const companyStyles = [
   'company-passport-studio-v83.css',
-  'company-commerce-v92.css',
+  'company-commerce-network-v138.css',
   'company-lifecycle-v95.css',
   'company-operations-v96.css',
   'company-control-center-v101.css',
@@ -78,6 +78,8 @@ const retiredDemoAssets = [
   'company-capabilities-v1.js',
   'company-preview-v97.css',
   'company-demo-v102.css',
+  'company-commerce-v92.js',
+  'company-commerce-v92.css',
 ];
 
 const staticAssets = ['og-v85.png'];
@@ -133,11 +135,11 @@ try {
 const bundle = manifest.productionBundle;
 if (!Number.isInteger(bundle) || bundle < 1) fail('public/build.json has no valid productionBundle');
 
-for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css']) {
+for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css', 'commerce-network-v138.js', 'commerce-network-v138.css', 'commerce-claim-v138.css']) {
   assertFileExists(`public/${file}`);
   assertManifestIncludes(manifest.files, file, 'production file manifest');
 }
-for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css']) {
+for (const file of ['app.html', 'still-os-v133.js', 'still-os-v133.css', 'needs-resolution-v134.js', 'needs-resolution-v134.css', 'still-market-v135.js', 'still-market-v135.css', 'commerce-network-v138.js', 'commerce-network-v138.css', 'commerce-claim-v138.css']) {
   assertManifestIncludes(manifest.authenticatedApp, file, 'authenticated Still OS manifest');
 }
 if (bundle) {
@@ -147,6 +149,9 @@ if (bundle) {
   assertVersionedReference(appHtml, 'public/app.html', 'needs-resolution-v134.css', bundle);
   assertVersionedReference(appHtml, 'public/app.html', 'still-market-v135.js', bundle);
   assertVersionedReference(appHtml, 'public/app.html', 'still-market-v135.css', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'commerce-network-v138.js', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'commerce-network-v138.css', bundle);
+  assertVersionedReference(appHtml, 'public/app.html', 'commerce-claim-v138.css', bundle);
   assertVersionedReference(appHtml, 'public/app.html', 'theme.js', bundle);
 }
 

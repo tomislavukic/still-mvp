@@ -20,7 +20,7 @@ let passed = 0;
 function test(name, check) { check(); passed += 1; process.stdout.write(`✓ ${name}\n`); }
 
 test('01 Phase 6 is additive over the complete Phase 5 Worker', () => assert.ok(worker.includes("import app from './worker-v136.js'") && worker.includes('return app.fetch(request,env,ctx)')));
-test('02 active deployment entrypoint is Phase 6', () => assert.ok(wrangler.includes('merchant-backend/worker-v137.js')));
+test('02 active deployment chain preserves Phase 6', () => assert.ok(wrangler.includes('merchant-backend/worker-v138.js') && read('merchant-backend/worker-v138.js').includes("import app from './worker-v137.js'")));
 test('03 no database identifier or binding was replaced', () => ['2fce8b3f-ffb7-4ffe-8e11-b565a65ea655','WORLD_FILES','ASSETS','AI'].forEach(value => assert.ok(wrangler.includes(value))));
 test('04 service provider reuses Professional or CompanyOS identity', () => assert.ok(schema.includes('professional_profile_id TEXT UNIQUE') && schema.includes('organization_id TEXT UNIQUE')));
 test('05 no service password or third identity store exists', () => assert.equal(/service_(?:password|sessions|accounts)/i.test(schema), false));
@@ -91,7 +91,7 @@ test('69 buyer UI respects reduced motion', () => assert.ok(style.includes('pref
 test('70 production app and build ship every Phase 6 asset', () => ['service-network-v137.js','service-network-v137.css','company-service-network-v137.js','company-service-network-v137.css'].forEach(value => assert.ok(build.includes(value) || app.includes(value))));
 test('71 integration suite contains more than 34 real flows', () => assert.ok((integration.match(/await check\(/g) || []).length >= 34));
 test('72 integration suite verifies privacy completion and CompanyOS intake', () => ['exact address is revealed only after confirmation','confirmed network booking enters the real CompanyOS service workspace','client confirmation completes booking and resolves Need'].forEach(value => assert.ok(integration.includes(value))));
-test('73 production bundle number was intentionally advanced for Phase 6', () => assert.ok(build.includes('const BUNDLE=164')));
+test('73 production bundle remains at or beyond the Phase 6 release', () => { const value=Number(build.match(/const BUNDLE=(\d+)/)?.[1]); assert.ok(value>=164); });
 test('74 no map SDK or invented map marker was added', () => assert.equal(/google\.maps|mapbox|leaflet|fake marker/i.test(`${worker}${client}${company}`), false));
 test('75 no demo provider or simulated service success was added', () => assert.equal(/demo provider|sample provider|simulated (?:booking|payment|success)/i.test(`${worker}${client}${company}`), false));
 test('76 buyer explicitly chooses stored documents for a ServiceBrief', () => assert.ok(client.includes('name="attachmentIds"') && client.includes("h.api('/api/v1/world/documents')")));

@@ -7,6 +7,15 @@ const worker = read('merchant-backend/worker-v138.js');
 const schema = read('merchant-backend/schema-v138.sql');
 const runtime = read('merchant-backend/company-network-schema-v138.js');
 const preflight = read('docs/phase-7-preflight.md');
+const buyerUi = read('commerce-network-v138.js');
+const buyerClaimStyle = read('commerce-claim-v138.css');
+const companyUi = read('company-commerce-network-v138.js');
+const companyStyle = read('company-commerce-network-v138.css');
+const companyLoader = read('company-authenticated-loader-v82.js');
+const appHtml = read('app.html');
+const build = read('build-public.js');
+const wrangler = read('wrangler.jsonc');
+const legacyCommerce = read('merchant-backend/worker-v92.js');
 let passed = 0;
 function test(name, check) { check(); passed += 1; process.stdout.write(`✓ ${name}\n`); }
 
@@ -70,5 +79,20 @@ test('57 observability uses structured events',()=>assert.ok(worker.includes("sc
 test('58 migration is additive and explicitly documented',()=>assert.ok(preflight.includes('Phase 7 is additive')&&preflight.includes('no rows are deleted')));
 test('59 preflight identifies legacy demo and verification risks',()=>assert.ok(preflight.includes("provider='demo'")&&preflight.includes('always returns `verified:true`')));
 test('60 schema and runtime schema contain every network table',()=>['public_profiles','products','variants','policies','offers','orders','order_items','relationships','marketing_consents','claim_tokens','support_requests','notices','events','plan_config'].forEach(name=>{assert.ok(schema.includes(`company_network_${name}`));assert.ok(runtime.includes(`company_network_${name}`))}));
+test('61 Worker entrypoint activates Phase 7 without changing bindings',()=>assert.ok(wrangler.includes('merchant-backend/worker-v138.js')&&wrangler.includes('"binding": "DB"')&&wrangler.includes('"binding": "ASSETS"')));
+test('62 authenticated app ships Company Network and claim assets',()=>['commerce-network-v138.js','commerce-network-v138.css','commerce-claim-v138.css'].forEach(file=>{assert.ok(appHtml.includes(file));assert.ok(build.includes(file))}));
+test('63 Needs UI requests real deterministic commerce options',()=>assert.ok(buyerUi.includes('/commerce-options')&&buyerUi.includes('pre-purchase-passport')&&buyerUi.includes('compare-with-mine')));
+test('64 Wanted UI renders persisted company offers',()=>assert.ok(buyerUi.includes('wantedOffers')&&read('still-market-v135.js').includes('companyOffers')));
+test('65 QR claim screen resolves and claims through production APIs',()=>assert.ok(buyerUi.includes('/claims/resolve')&&buyerUi.includes('/claims/claim')&&buyerUi.includes('existingThingId')));
+test('66 claim route remains recoverable through sign-in',()=>assert.ok(buyerUi.includes('still_pending_claim_v138')&&buyerUi.includes("location.href='/?destination=/app'")));
+test('67 Company Network is mounted only inside CompanyOS',()=>assert.ok(companyUi.includes("$('#companyOSV120 .cos120-primary')||$('#companyOSV120Mount')")&&!companyUi.includes("$('.business-shell>main')")));
+test('68 CompanyOS exposes real products offers orders support passports and settings',()=>['products','offers','orders','support','passports','settings'].forEach(tab=>assert.ok(companyUi.includes(`'${tab}'`))));
+test('69 CompanyOS operations call real Phase 7 routes',()=>['/products','/offers','/orders','/support-requests','/claims','/notices','/profile'].forEach(route=>assert.ok(companyUi.includes(`/api/v1/company-network${route}`))));
+test('70 retired simulated company commerce is not loaded',()=>assert.ok(companyLoader.includes('company-commerce-network-v138.js')&&!companyLoader.includes('company-commerce-v92.js')));
+test('71 buyer and company interfaces define phone tablet and desktop layouts',()=>assert.ok(companyStyle.includes('@media(max-width:1050px)')&&companyStyle.includes('@media(max-width:760px)')&&read('commerce-network-v138.css').includes('@media(max-width:680px)')&&buyerClaimStyle.includes('@media(max-width:600px)')));
+test('72 claim overlay has accessible modal structure and safe layering',()=>assert.ok(buyerUi.includes('role="dialog"')&&buyerUi.includes('aria-modal="true"')&&buyerClaimStyle.includes('z-index:1000')));
+test('73 legacy checkout cannot silently create demo payment success',()=>assert.ok(legacyCommerce.includes('payment_provider_not_configured')&&!legacyCommerce.includes("const provider = env.STRIPE_SECRET_KEY && seller?.charges_enabled ? 'stripe' : 'demo'")));
+test('74 legacy public offers derive verification from organization status',()=>assert.ok(legacyCommerce.includes("verified: (seller.organization_status || row.organization_status) === 'verified'")&&legacyCommerce.includes("m.status='verified'")));
+test('75 Phase 7 does not replace receipt ownership foundations',()=>assert.ok(worker.includes("import app from './worker-v137.js'")&&read('merchant-backend/worker-v131.js').includes('/api/v1/world/receipts/')));
 
 process.stdout.write(`Company Network tests passed (${passed} assertions).\n`);
