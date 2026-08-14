@@ -207,7 +207,7 @@ function offerJson(row, seller = {}) {
       slug: seller.public_slug || row.public_slug || null,
       summary: seller.summary || seller.seller_summary || row.seller_summary || null,
       supportEmail: seller.support_email || row.support_email || null,
-      verified: true,
+      verified: (seller.organization_status || row.organization_status) === 'verified',
       paymentsConnected: !!(seller.charges_enabled ?? row.charges_enabled)
     },
     createdAt: row.created_at,
@@ -444,16 +444,18 @@ async function publicOffers(request, env) {
   let where = "o.status='published'";
   if (kind) { where += ' AND o.kind=?'; params.push(kind); }
   if (q) { where += ' AND (lower(o.title) LIKE ? OR lower(o.description) LIKE ? OR lower(p.display_name) LIKE ?)'; params.push(`%${q}%`, `%${q}%`, `%${q}%`); }
-  const rows = await env.DB.prepare(`SELECT o.*,p.display_name seller_name,p.public_slug,p.summary seller_summary,p.support_email,p.charges_enabled
+  const rows = await env.DB.prepare(`SELECT o.*,p.display_name seller_name,p.public_slug,p.summary seller_summary,p.support_email,p.charges_enabled,m.status organization_status
     FROM commerce_offers o JOIN commerce_business_profiles p ON p.organization_id=o.organization_id
-    WHERE ${where} ORDER BY o.updated_at DESC LIMIT 120`).bind(...params).all();
+    JOIN merchant_organizations m ON m.id=o.organization_id
+    WHERE ${where} AND m.status='verified' ORDER BY o.updated_at DESC LIMIT 120`).bind(...params).all();
   return json({ offers: (rows.results || []).map(row => offerJson(row)) });
 }
 
 async function publicOffer(request, env, publicId) {
-  const row = await env.DB.prepare(`SELECT o.*,p.display_name seller_name,p.public_slug,p.summary seller_summary,p.support_email,p.charges_enabled
+  const row = await env.DB.prepare(`SELECT o.*,p.display_name seller_name,p.public_slug,p.summary seller_summary,p.support_email,p.charges_enabled,m.status organization_status
     FROM commerce_offers o JOIN commerce_business_profiles p ON p.organization_id=o.organization_id
-    WHERE o.public_id=? AND o.status IN ('published','private')`).bind(publicId).first();
+    JOIN merchant_organizations m ON m.id=o.organization_id
+    WHERE o.public_id=? AND o.status IN ('published','private') AND m.status='verified'`).bind(publicId).first();
   if (!row) return json({ error: 'not_found' }, 404);
   if (row.status === 'private') {
     const buyer = await buyerSession(request, env);
@@ -489,7 +491,7 @@ async function companyProfile(request, env) {
       configured: !!env.STRIPE_SECRET_KEY,
       publishableKeyConfigured: !!env.STRIPE_PUBLISHABLE_KEY,
       country: env.STRIPE_CONNECTED_ACCOUNT_COUNTRY || 'HR',
-      note: env.STRIPE_SECRET_KEY ? 'Provider credentials are configured.' : 'Provider credentials are not configured. Offers use an explicitly labelled demo checkout.'
+      note: env.STRIPE_SECRET_KEY ? 'Provider credentials are configured.' : 'Provider credentials are not configured. Checkout remains unavailable until configuration is complete.'
     }
   });
 }
@@ -584,11 +586,16 @@ function snapshot(offer, seller) {
 async function checkout(request, env, publicId) {
   const buyer = await buyerSession(request, env);
   if (!buyer) return json({ error: 'buyer_sign_in_required' }, 401);
-  const offer = await env.DB.prepare("SELECT * FROM commerce_offers WHERE public_id=? AND status IN ('published','private')").bind(publicId).first();
+  const offer = await env.DB.prepare(`SELECT o.* FROM commerce_offers o
+    JOIN merchant_organizations m ON m.id=o.organization_id
+    WHERE o.public_id=? AND o.status IN ('published','private') AND m.status='verified'`).bind(publicId).first();
   if (!offer) return json({ error: 'offer_not_available' }, 404);
   if (offer.status === 'private' && !await buyerCanAccessOffer(env, buyer.buyer_account_id, offer.id)) return json({ error: 'offer_not_available' }, 404);
   if (offer.quantity_available !== null && offer.quantity_available <= 0) return json({ error: 'sold_out' }, 409);
   const seller = await env.DB.prepare('SELECT * FROM commerce_business_profiles WHERE organization_id=?').bind(offer.organization_id).first();
+  if (!env.STRIPE_SECRET_KEY || !seller?.charges_enabled || !seller?.stripe_account_id) {
+    return json({ error: 'payment_provider_not_configured', message: 'Live checkout is unavailable until the verified seller completes payment onboarding.' }, 503);
+  }
   const body = await request.json().catch(() => ({}));
   const quantity = Math.max(1, Math.min(10, Math.floor(Number(body.quantity) || 1)));
   if (offer.quantity_available !== null && quantity > offer.quantity_available) return json({ error: 'insufficient_availability' }, 409);
@@ -598,14 +605,13 @@ async function checkout(request, env, publicId) {
   const orderId = uid('cor_');
   const publicOrderId = `ORDER-${crypto.randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`;
   const timestamp = now();
-  const provider = env.STRIPE_SECRET_KEY && seller?.charges_enabled ? 'stripe' : 'demo';
+  const provider = 'stripe';
   await env.DB.prepare(`INSERT INTO commerce_orders(id,public_id,offer_id,organization_id,buyer_account_id,buyer_email_hint,quantity,amount_cents,currency,platform_fee_cents,provider,status,buyer_message,terms_snapshot,created_at,updated_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
       orderId, publicOrderId, offer.id, offer.organization_id, buyer.buyer_account_id, buyer.email.replace(/^(.{2}).*(@.*)$/, '$1***$2'), quantity, amount,
       offer.currency, fee, provider, 'awaiting_payment', clean(body.buyerMessage, 1000) || null, snapshot(offer, seller), timestamp, timestamp
     ).run();
-  if (provider === 'stripe') {
-    try {
+  try {
       const intent = await stripeRequest(env, '/payment_intents', {
         amount: String(amount),
         currency: offer.currency.toLowerCase(),
@@ -623,16 +629,10 @@ async function checkout(request, env, publicId) {
         payment: { provider: 'stripe', clientSecret: intent.client_secret, publishableKey: env.STRIPE_PUBLISHABLE_KEY, connectedAccountId: seller.stripe_account_id },
         seller: { name: seller.display_name, verified: true }
       }, 201);
-    } catch (error) {
-      await env.DB.prepare("UPDATE commerce_orders SET status='cancelled',updated_at=? WHERE id=?").bind(now(), orderId).run();
-      return json({ error: 'payment_initialization_failed', message: error.message }, 502);
-    }
+  } catch (error) {
+    await env.DB.prepare("UPDATE commerce_orders SET status='cancelled',updated_at=? WHERE id=?").bind(now(), orderId).run();
+    return json({ error: 'payment_initialization_failed', message: error.message }, 502);
   }
-  return json({
-    order: { publicId: publicOrderId, amountCents: amount, currency: offer.currency, provider: 'demo', status: 'awaiting_payment' },
-    payment: { provider: 'demo', liveCharge: false, reason: env.STRIPE_SECRET_KEY ? 'This business has not completed payment onboarding.' : 'The platform payment provider has not been configured.' },
-    seller: { name: seller.display_name, verified: true }
-  }, 201);
 }
 
 async function award(env, buyerId, organizationId, email, order, stage, points, credits) {
