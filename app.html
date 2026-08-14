@@ -49,7 +49,7 @@
       input,select,textarea,button{max-width:100%}
       input,select,textarea{font-size:16px!important}
       img,svg,video,canvas{max-width:100%;height:auto}
-      .sos133-floating-add{position:fixed!important;z-index:90!important;right:14px!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;width:auto!important;min-width:0!important;max-width:calc(100vw - 28px)!important;min-height:48px!important;padding:0 15px!important;border:1px solid color-mix(in srgb,var(--sos-accent) 65%,#000 10%)!important;border-radius:16px!important;background:var(--sos-accent)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1!important;box-shadow:0 10px 28px rgba(20,22,42,.24)!important;font-size:13px!important;font-weight:800!important;line-height:1!important;white-space:nowrap!important}
+      .sos133-floating-add{position:fixed!important;z-index:90!important;right:14px!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;width:auto!important;min-width:0!important;max-width:calc(100vw - 28px)!important;min-height:48px!important;padding:0 15px!important;border:1px solid #4f4fd0!important;border-radius:16px!important;background:#5c5ce2!important;color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1!important;box-shadow:0 10px 28px rgba(42,42,110,.28)!important;font-size:13px!important;font-weight:800!important;line-height:1!important;white-space:nowrap!important}
       .sos133-floating-add span{display:inline!important;color:#fff!important;-webkit-text-fill-color:#fff!important;font-size:13px!important;font-weight:800!important}
     }
     @media (max-width:380px){
@@ -62,21 +62,52 @@
       .sos133-floating-add{right:10px!important;max-width:calc(100vw - 20px)!important}
     }
   </style>
+  <style id="still-visual-refinement-v170">
+    .still-os-document{background:radial-gradient(circle at 50% -20%,rgba(92,92,226,.075),transparent 36%),var(--sos-bg)}
+    .sos133-topbar{box-shadow:0 1px 0 rgba(39,45,77,.035)}
+    .sos133-command,.sos133-command button,.sos133-account-actions button,.sos133-nav a,.sos133-context-row,.sos133-floating-add{transition:border-color .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease}
+    .sos133-nav a:hover{background:color-mix(in srgb,var(--sos-surface) 72%,transparent);color:var(--sos-ink)}
+    .sos133-nav a[aria-current=page]{box-shadow:0 8px 22px rgba(47,40,80,.075),inset 0 0 0 1px rgba(92,92,226,.06)}
+    .sos133-main{width:min(1180px,calc(100% - 48px));padding-top:clamp(42px,6vw,82px)}
+    .sos133-now{max-width:1020px}.sos133-now-head,.sos133-page-head{margin-bottom:clamp(32px,5vw,58px)}
+    .sos133-now-head h1,.sos133-page-head h1,.sos133-workspace-head h1{max-width:880px;text-wrap:balance}.sos133-now-head p,.sos133-page-head p{text-wrap:pretty}
+    .sos133-dominant{border:1px solid rgba(255,255,255,.055);box-shadow:0 28px 80px rgba(32,29,59,.16)}.sos133-dominant button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.16)}
+    .sos133-quiet,.sos133-sharing-principle,.sos133-attention{border:1px solid color-mix(in srgb,var(--sos-line) 72%,transparent)}
+    .sos133-family{padding:26px 28px;border:1px solid color-mix(in srgb,var(--sos-line) 72%,transparent);border-radius:28px;background:color-mix(in srgb,var(--sos-surface) 90%,transparent);box-shadow:0 18px 52px rgba(45,44,72,.045)}
+    .sos133-family>header{margin-bottom:12px}.sos133-context-row{border-radius:15px;border-bottom-color:color-mix(in srgb,var(--sos-line) 72%,transparent)}.sos133-context-row:hover{background:color-mix(in srgb,var(--sos-soft) 58%,transparent);transform:translateX(2px)}
+    .sos133-editorial-list>button{border-radius:18px;padding-left:14px}.sos133-editorial-list>button:hover{background:color-mix(in srgb,var(--sos-soft) 36%,transparent)}
+    .sos133-input-invite>button{box-shadow:inset 0 0 0 1px rgba(255,255,255,.38),0 10px 32px rgba(55,49,92,.04)}
+    .sos133-floating-add{background:#5c5ce2!important;border-color:#4f4fd0!important;color:#fff!important;-webkit-text-fill-color:#fff!important}.sos133-floating-add:hover{transform:translateY(-2px);box-shadow:0 18px 38px rgba(42,42,110,.3)!important}
+    .sos133-recent li,.sos133-history li{padding-top:15px;padding-bottom:15px}.sos133-recent li:last-child,.sos133-history li:last-child{border-bottom-color:transparent}
+    button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--sos-accent) 34%,transparent);outline-offset:3px}
+    @media (min-width:721px){
+      .sos133-topbar{min-height:72px;padding-top:8px;padding-bottom:8px}.sos133-nav{top:72px;padding-top:8px;padding-bottom:8px}.sos133-nav a{min-height:42px;padding-left:17px;padding-right:17px}
+      .sos133-page-head{max-width:820px}.sos133-page-head h1{font-size:clamp(48px,5.4vw,72px)}
+      .sos133-world-families{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}.sos133-world-families>.sos133-family{max-width:none;margin:0;height:100%}
+      .sos133-sharing-principle{margin-top:28px}.sos133-editorial-list,.sos133-connections{max-width:900px}
+    }
+    @media (min-width:1100px){.sos133-main{width:min(1220px,calc(100% - 72px))}.sos133-now{max-width:1080px}.sos133-dominant{padding:48px 52px}.sos133-family{padding:28px 30px}}
+    @media (max-width:720px){
+      .still-os-document{background:linear-gradient(180deg,rgba(92,92,226,.045),transparent 190px),var(--sos-bg)}.sos133-topbar{background:color-mix(in srgb,var(--sos-bg) 93%,transparent)!important;border-bottom-color:color-mix(in srgb,var(--sos-line) 72%,transparent)!important}.sos133-main{padding-top:18px!important}
+      .sos133-page-head,.sos133-now-head{margin-bottom:24px!important}.sos133-page-head{text-align:left!important;padding:0 4px!important}.sos133-page-head h1,.sos133-now-head h1{margin-top:7px!important;margin-bottom:9px!important;font-size:clamp(30px,9.6vw,40px)!important;letter-spacing:-.035em!important;text-wrap:balance}.sos133-page-head p,.sos133-now-head p{max-width:34rem;font-size:15px!important;line-height:1.5!important;text-wrap:pretty}
+      .sos133-dominant{padding:24px 20px!important;border-radius:22px!important;gap:20px!important}.sos133-dominant h2{font-size:clamp(28px,8.4vw,38px)!important}.sos133-dominant button{width:100%;min-height:48px!important}
+      .sos133-quiet{padding:30px 20px!important;border-radius:22px!important}.sos133-quiet.compact{padding:26px 18px!important}.sos133-quiet h2,.sos133-quiet.compact h2{font-size:clamp(27px,8vw,34px)!important}
+      .sos133-family{padding:18px 14px!important;border-radius:22px!important;background:var(--sos-surface)!important;box-shadow:0 12px 34px rgba(45,44,72,.045)!important}.sos133-family>header{align-items:center!important;margin-bottom:8px!important}.sos133-family header h2{font-size:clamp(25px,7.6vw,32px)!important}
+      .sos133-context-row{min-height:70px!important;padding:11px 9px!important;grid-template-columns:38px minmax(0,1fr) 20px!important;gap:10px!important;border-radius:13px!important}.sos133-context-row>span{width:38px!important;height:38px!important;border-radius:12px!important}.sos133-context-row b{font-size:15px!important;line-height:1.25!important}.sos133-context-row em{font-size:11px!important}
+      .sos133-editorial-list>button{padding:20px 38px 20px 4px!important;border-radius:15px!important}.sos133-editorial-list h2{font-size:clamp(25px,7.4vw,32px)!important}
+      .sos133-sharing-principle{padding:20px 16px!important;gap:18px!important;border-radius:22px!important}.sos133-sharing-principle>span{transform:rotate(90deg);justify-self:center}.sos133-connections{margin-top:36px!important;margin-bottom:36px!important}.sos133-connections h2,.sos133-recent header h2,.sos133-workspace-section>header h2{font-size:clamp(26px,7.8vw,32px)!important}
+      .sos133-input-invite{margin-top:32px!important}.sos133-input-invite>button{min-height:76px!important;padding:12px!important;grid-template-columns:42px minmax(0,1fr) 18px!important;gap:11px!important;border-radius:18px!important}.sos133-input-invite>button>span{width:42px!important;height:42px!important;border-radius:13px!important}.sos133-input-invite b{font-size:15px!important;line-height:1.25!important}.sos133-input-invite small{font-size:11px!important;line-height:1.35!important}
+      .sos133-attention{border-radius:18px!important}.sos133-attention-toggle{min-height:60px!important;padding:0 16px!important}.sos133-recent{margin-top:40px!important}.sos133-recent li,.sos133-history li{grid-template-columns:24px minmax(0,1fr)!important;gap:10px!important;padding:12px 2px!important}.sos133-recent li div,.sos133-history li div{display:grid!important;gap:3px!important}.sos133-recent small,.sos133-history small{font-size:11px!important}
+      .sos133-nav{box-shadow:0 14px 42px rgba(27,28,56,.22)!important}.sos133-nav a[aria-current=page]{background:color-mix(in srgb,var(--sos-accent) 15%,var(--sos-surface))!important;color:var(--sos-ink)!important}.sos133-floating-add{min-height:46px!important;padding:0 14px!important;border-radius:15px!important;background:#5c5ce2!important;color:#fff!important;-webkit-text-fill-color:#fff!important;box-shadow:0 12px 30px rgba(42,42,110,.30)!important}
+    }
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+  </style>
 </head>
 <body class="still-os-document">
   <a class="sos133-skip" href="#stillOSMain">Skip to your World</a>
   <div id="stillOSV133" aria-live="polite">
-    <main class="sos133-boot" id="stillOSMain">
-      <span aria-hidden="true"></span>
-      <p>Opening Still…</p>
-    </main>
+    <main class="sos133-boot" id="stillOSMain"><span aria-hidden="true"></span><p>Opening Still…</p></main>
   </div>
-  <script src="theme.js?v=169" defer></script>
-  <script src="needs-resolution-v134.js?v=169" defer></script>
-  <script src="still-market-v135.js?v=169" defer></script>
-  <script src="professional-network-v136.js?v=169" defer></script>
-  <script src="service-network-v137.js?v=169" defer></script>
-  <script src="commerce-network-v138.js?v=169" defer></script>
-  <script src="still-os-v133.js?v=169" defer></script>
+  <script src="theme.js?v=169" defer></script><script src="needs-resolution-v134.js?v=169" defer></script><script src="still-market-v135.js?v=169" defer></script><script src="professional-network-v136.js?v=169" defer></script><script src="service-network-v137.js?v=169" defer></script><script src="commerce-network-v138.js?v=169" defer></script><script src="still-os-v133.js?v=169" defer></script>
 </body>
 </html>
