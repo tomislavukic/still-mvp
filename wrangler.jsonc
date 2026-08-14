@@ -5,6 +5,7 @@
   "main": "merchant-backend/worker-v141.js",
   // Active Worker fixes Professional Mode setup while preserving the full runtime chain.
   // worker-v141 delegates to worker-v140 and all prior Company Network, Market and Still OS layers.
+  // Compatibility chain still includes merchant-backend/worker-v139.js -> worker-v138.js -> worker-v137.js -> worker-v136.js.
   "keep_vars": true,
   "observability": {
     "enabled": true,
