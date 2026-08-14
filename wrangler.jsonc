@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v138.js",
+  "main": "merchant-backend/worker-v139.js",
   // Active Worker adds inventory-backed Company Network commerce while preserving
   // services, ownership Market, Still OS, CompanyOS and every existing API.
   "keep_vars": true,
