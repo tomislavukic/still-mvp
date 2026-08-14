@@ -20,7 +20,7 @@ let passed = 0;
 function test(name, check) { check(); passed += 1; process.stdout.write(`✓ ${name}\n`); }
 
 test('01 Phase 6 is additive over the complete Phase 5 Worker', () => assert.ok(worker.includes("import app from './worker-v136.js'") && worker.includes('return app.fetch(request,env,ctx)')));
-test('02 active deployment chain preserves Phase 6', () => assert.ok(wrangler.includes('merchant-backend/worker-v138.js') && read('merchant-backend/worker-v138.js').includes("import app from './worker-v137.js'")));
+test('02 active deployment chain preserves Phase 6', () => assert.ok(wrangler.includes('merchant-backend/worker-v139.js') && read('merchant-backend/worker-v139.js').includes("import app from './worker-v138.js'") && read('merchant-backend/worker-v138.js').includes("import app from './worker-v137.js'")));
 test('03 no database identifier or binding was replaced', () => ['2fce8b3f-ffb7-4ffe-8e11-b565a65ea655','WORLD_FILES','ASSETS','AI'].forEach(value => assert.ok(wrangler.includes(value))));
 test('04 service provider reuses Professional or CompanyOS identity', () => assert.ok(schema.includes('professional_profile_id TEXT UNIQUE') && schema.includes('organization_id TEXT UNIQUE')));
 test('05 no service password or third identity store exists', () => assert.equal(/service_(?:password|sessions|accounts)/i.test(schema), false));
