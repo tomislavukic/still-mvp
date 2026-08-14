@@ -109,5 +109,6 @@ test('85 public company projections do not expose private CompanyOS data',()=>as
 test('86 DPP export is extensible and makes no compliance claim',()=>assert.ok(completionWorker.includes('still-dpp-interoperability-v1')&&completionWorker.includes('regulatoryComplianceClaim:null')));
 test('87 claim checkout and support mutations are rate limited',()=>assert.ok(completionSchema.includes('company_network_rate_limits')&&['claim','checkout','support'].every(value=>completionWorker.includes(`'${value}'`))));
 test('88 owned Thing projection includes official identity warranty and permissions',()=>assert.ok(completionWorker.includes('officialProduct')&&completionWorker.includes('companyRelationship')&&completionWorker.includes('warranty=warranty')));
+test('89 unrelated World routes do not initialize optional Company Network schema',()=>assert.ok(completionWorker.includes('const completionRead=')&&completionWorker.includes('else if(completionRead)await bootstrap(request,env,ctx)')&&!completionWorker.includes('app.fetch(request,env,ctx);await ensureSchema(env)')));
 
 process.stdout.write(`Company Network tests passed (${passed} assertions).\n`);
