@@ -224,6 +224,7 @@
         <header class="sos133-now-head"><span>${t('NOW', 'SADA')}</span><h1>${esc(greeting(data.owner?.name))}</h1><p>${data.quietState ? t('Everything’s handled.', 'Sve je riješeno.') : t('Here is what matters right now.', 'Evo što je sada važno.')}</p></header>
         ${dashboard ? accountOverview(dashboard) : ''}
         ${window.StillProfessionalV136?.nowSection(data.professional, helpers()) || ''}
+        ${window.StillCommerceV138?.nowSection(data.companyNetwork, helpers()) || ''}
         ${dominant ? `<article class="sos133-dominant"><div><span>${dominant.type === 'need' ? t('NEED', 'POTREBA') : dominant.overdue ? t('NEEDS YOU', 'TRAŽI TEBE') : dominant.status === 'WAITING' ? t('WAITING', 'ČEKANJE') : t('CURRENT CONTEXT', 'TRENUTAČNI KONTEKST')}</span><h2>${esc(dominant.title)}</h2><p>${dominant.waitingOn ? `${t('Waiting for', 'Čeka se')}: ${esc(dominant.waitingOn)}` : dominant.dueAt ? `${dominant.overdue ? t('Due', 'Rok') : t('Coming up', 'Uskoro')}: ${date(dominant.dueAt)}` : dominant.type === 'need' ? t('Open this Need to see real ways to handle it.', 'Otvori potrebu i pogledaj stvarne načine rješavanja.') : t('One active situation may need your attention.', 'Jedna aktivna situacija možda traži tvoju pažnju.')}</p></div><button type="button" data-open-context="${esc(dominant.type)}:${esc(dominant.id)}">${dominant.type === 'need' ? t('Handle it', 'Riješi') : t('Open', 'Otvori')} <span>→</span></button></article>` : `<article class="sos133-quiet"><span aria-hidden="true">✓</span><h2>${t('Everything’s handled.', 'Sve je riješeno.')}</h2><p>${t('Your World is quiet. Still will show real deadlines and open work here when they exist.', 'Tvoj Svijet je miran. Still će ovdje prikazati stvarne rokove i otvorene obveze kada postoje.')}</p><div><button type="button" data-command-open>${t('Add something', 'Dodaj nešto')}</button><a href="/app/world" data-nav>${t('Explore your World', 'Istraži svoj Svijet')}</a></div></article>`}
         ${attentionCount ? `<section class="sos133-attention"><button type="button" class="sos133-attention-toggle" data-toggle-attention aria-expanded="${state.attentionOpen}"><span><b>${attentionCount}</b> ${t(attentionCount === 1 ? 'thing may need you' : 'things may need you', attentionCount === 1 ? 'stvar te možda treba' : 'stvari te možda trebaju')}</span><i aria-hidden="true">${state.attentionOpen ? '−' : '+'}</i></button><div class="sos133-attention-list" ${state.attentionOpen ? '' : 'hidden'}>${attentionItems.map(item => contextButton(item, true)).join('')}</div></section>` : ''}
         <section class="sos133-input-invite"><button type="button" data-command-open><span aria-hidden="true">＋</span><div><b>${t('Ask, show or tell Still…', 'Pitaj, pokaži ili reci Still-u…')}</b><small>${t('Add a Thing, start a Situation, save Knowledge or remember an action.', 'Dodaj stvar, pokreni situaciju, spremi znanje ili zapamti obvezu.')}</small></div><i>→</i></button></section>
@@ -231,6 +232,7 @@
       </section>`;
       bindContent();
       window.StillProfessionalV136?.bindAccount(helpers());
+      window.StillCommerceV138?.bindNow(data.companyNetwork, helpers());
     } catch (error) {
       host.innerHTML = failed(error.message);
       bindContent();
@@ -248,6 +250,7 @@
       host.innerHTML = `<section class="sos133-world"><header class="sos133-page-head"><span>${t('WORLD', 'SVIJET')}</span><h1>${t('Everything Still remembers for you.', 'Sve što Still pamti za tebe.')}</h1><p>${t('Things, Knowledge and Situations stay connected through relationships you control.', 'Stvari, znanje i situacije ostaju povezani odnosima kojima ti upravljaš.')}</p></header>
         <div class="sos133-world-families">
           ${window.StillNeedsV134?.worldNeeds(data.needs || [], helpers()) || ''}
+          ${window.StillCommerceV138?.worldSection(helpers()) || ''}
           ${familySection(t('Your things', 'Tvoje stvari'), data.things || [], 'thing', t('Add your first Thing when you are ready.', 'Dodaj prvu stvar kada budeš spreman.'))}
           ${familySection(t('Knowledge you kept', 'Znanje koje čuvaš'), data.knowledge || [], 'knowledge', t('Saved notes, documents and useful text appear here.', 'Spremljene bilješke, dokumenti i koristan tekst pojavljuju se ovdje.'))}
           ${familySection(t('Situations in motion', 'Situacije u tijeku'), data.situations || [], 'situation', t('Active situations appear here without manufactured urgency.', 'Aktivne situacije pojavljuju se ovdje bez izmišljene hitnosti.'))}
@@ -256,6 +259,7 @@
       </section>`;
       bindContent();
       window.StillNeedsV134?.bindWorld(helpers());
+      window.StillCommerceV138?.bindWorld(helpers());
     } catch (error) { host.innerHTML = failed(error.message); bindContent(); }
   }
 

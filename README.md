@@ -1,6 +1,6 @@
 # Still
 
-**Version 1.0.0 · Production Build 155**
+**Version 1.0.0 · Production Build 165**
 
 Still is a buyer-controlled operating system for everything a person owns. It keeps Things, receipts, documents, warranties, service history, important knowledge, unresolved needs and ownership history in one private World. The authenticated Still experience helps people remember what matters now, understand one Thing in context, resolve real needs and transfer ownership without losing trustworthy product history.
 
@@ -8,14 +8,15 @@ Still is not a webshop, payment provider, escrow service or merchant of record. 
 
 ## Version 1.0.0
 
-Version 1 establishes the complete production foundation delivered across Builds 131–155:
+Version 1 establishes the complete production foundation delivered across Builds 131–165:
 
 - **World:** durable D1-backed Things, receipt review, private R2 originals, evidence and provenance, Product Passports, Knowledge, Situations, Open Loops, History, search and safe legacy migration.
 - **Still OS:** an authenticated, responsive environment organized around Now, World, Discover and Together, with adaptive Thing, Knowledge and Situation workspaces.
 - **Needs and Handle It:** persisted Needs, deterministic World-first resolution, real quotes, explicit user-selected actions and attributable outcomes without invented providers or availability.
 - **Still Market:** canonical-Thing listings, Wanted Objects, explainable deterministic matching, private reverse matching, offers, counteroffers, participant-only deals, manual handoff and privacy-filtered two-party ownership transfer.
+- **Services and Company Network:** real individual/company service resolution plus normalized verified-company products, live-inventory offers, honest external orders, secure claim QR codes, permissioned after-sale relationships, support, warranty, returns and product notices.
 - **Still for Business:** existing authenticated CompanyOS, verification boundaries, operational tools, commerce, lifecycle, rewards and Trust Layer APIs remain available and isolated from buyer authentication.
-- **Production safeguards:** active Worker module-graph validation, production-bundle validation, 91 HTTP integration flows, CodeQL configuration checks, Gitleaks and pinned Wrangler validation.
+- **Production safeguards:** active Worker module-graph validation, production-bundle validation, isolated HTTP integration flows, CodeQL configuration checks, Gitleaks and pinned Wrangler validation.
 
 GitHub publishes a validated semantic release when version metadata changes on `main`; the same workflow remains manually dispatchable for controlled recovery.
 
@@ -66,7 +67,7 @@ Payments and shipping in the C2C Market remain explicitly external. Still does n
 - Optional private profile-image storage: Cloudflare R2 binding `PROFILE_MEDIA` after R2 is enabled; until then buyer Google photos and privacy-proxied company HTTPS logo URLs provide the live identity layer.
 - Google OAuth client configuration: Cloudflare variable `GOOGLE_CLIENT_ID`
 - Ownership data: `ownership_passports`, `passport_commitments` and hashed, expiring `passport_public_shares` in D1
-- Commerce data: `commerce_business_profiles`, `commerce_offers`, `commerce_orders`, `commerce_requests` and `commerce_quotes` in D1
+- Company Network data: normalized `company_network_*` products, variants, policies, inventory-backed offers, orders, relationships, consent, claim hashes, owner requests, notices, audit events and plan configuration in D1; legacy `commerce_*` records remain compatible but their demo completion is retired
 - Lifecycle data: `lifecycle_preferences`, `promise_templates`, `passport_service_events`, `passport_alerts`, `passport_threads`, `passport_messages` and `business_assets` in D1
 - Company operations data: `ops_products`, `ops_stock_balances`, immutable `ops_stock_movements`, lots/serials, suppliers and purchase orders, repairs and parts, returns, reservations, agreements, staff and appointments, CRM/quotes, recall deliveries, audit log and idempotency records in D1
 - Contact and fulfilment data: private current buyer contacts, public verified-company contact/location profiles and immutable buyer/seller order-party snapshots in D1

@@ -136,7 +136,8 @@ if(!fail.length){
  const companyRewards=read('company-rewards-v75.js');
  ['/api/v1/rewards/business/summary','/api/v1/rewards/business/offers','/api/v1/rewards/business/redeem-code','/api/v1/rewards/business/platform-credit'].forEach(route=>{if(!companyRewards.includes(route))fail.push(`company rewards capability missing ${route}`)});
  if(!read('site-quality-v82.js').includes("t('Next dates', 'Rokovi')"))fail.push('compact responsive buyer navigation is missing');
- if(!read('company-authenticated-loader-v82.js').includes('company-commerce-v92.js'))fail.push('business commerce tools are missing from authenticated workspace');
+ if(!read('company-authenticated-loader-v82.js').includes('company-commerce-network-v138.js'))fail.push('production Company Network tools are missing from authenticated workspace');
+ if(read('company-authenticated-loader-v82.js').includes('company-commerce-v92.js'))fail.push('legacy demo commerce is still active in authenticated CompanyOS');
  if(!commerceWorker.includes("'/api/v1/commerce/offers'"))fail.push('public Passport Offer API is missing');
  if(!commerceWorker.includes("'/api/v1/commerce/requests'"))fail.push('buyer request API is missing');
  if(!commerceWorker.includes("'/api/v1/business/commerce/requests'"))fail.push('verified business request board API is missing');
