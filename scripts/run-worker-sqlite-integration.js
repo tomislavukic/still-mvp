@@ -96,7 +96,12 @@ async function main() {
     }
   };
   const origin = 'http://still.local';
-  global.fetch = async (input, init) => worker.fetch(input instanceof Request ? input : new Request(input, init), env, { waitUntil() {}, passThroughOnException() {} });
+  global.fetch = async (input, init) => {
+    const response = await worker.fetch(input instanceof Request ? input : new Request(input, init), env, { waitUntil() {}, passThroughOnException() {} });
+    if (!response.body || response.bodyUsed) return response;
+    const body = await response.arrayBuffer();
+    return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
+  };
   process.argv[2] = origin;
   if (!process.env.SERVICE_ONLY && !process.env.COMPANY_NETWORK_ONLY) {
     await require('./world-foundation-integration-test.js');
