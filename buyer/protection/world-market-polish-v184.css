@@ -1,0 +1,439 @@
+/* Still World + Market visual hierarchy v184
+   Presentation only. No routing, persistence, API, authorization, or interaction changes. */
+
+/* -----------------------------
+   WORLD: coherent object surfaces
+   ----------------------------- */
+.still-os-document #worldFoundationV131{
+  --wv-bg:var(--sos-bg);
+  --wv-surface:var(--sos-surface);
+  --wv-surface-2:var(--sos-soft);
+  --wv-ink:var(--sos-ink);
+  --wv-muted:var(--sos-muted);
+  --wv-line:var(--sos-line);
+  --wv-accent:var(--sos-accent);
+  background:transparent;
+  box-shadow:none;
+  margin:0;
+  border-radius:0;
+}
+.still-os-document .wv131-shell{padding-inline:0}
+
+/* Give every meaningful World object a visible home without boxing headings. */
+.still-os-document :is(
+  .wv131-attention button,
+  .wv131-things>button,
+  .wv131-list>button,
+  .wv131-situations>button,
+  .wv131-upload,
+  .wv131-form,
+  .wv131-open-loop-summary,
+  .wv131-capture-grid aside,
+  .need134-family,
+  .need134-options article,
+  .need134-quote,
+  .need134-outcome,
+  .need134-provenance
+){
+  border:1px solid var(--sos-line);
+  background:color-mix(in srgb,var(--sos-surface) 97%,var(--sos-accent) 3%);
+  box-shadow:0 16px 42px rgba(36,34,70,.055);
+}
+
+/* World list rows become compact object cards instead of bare strips. */
+.still-os-document .wv131-list,
+.still-os-document .wv131-situations{
+  gap:10px;
+}
+.still-os-document .wv131-list>button,
+.still-os-document .wv131-situations>button{
+  min-height:82px;
+  border-radius:18px;
+  padding:15px 18px;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.still-os-document .wv131-list>button:hover,
+.still-os-document .wv131-situations>button:hover,
+.still-os-document .wv131-list>button:focus-visible,
+.still-os-document .wv131-situations>button:focus-visible{
+  transform:translateY(-1px);
+  border-color:color-mix(in srgb,var(--sos-accent) 28%,var(--sos-line));
+  box-shadow:0 18px 44px color-mix(in srgb,var(--sos-accent) 8%,transparent);
+}
+
+/* History and documents should also read as objects, not loose text. */
+.still-os-document .wv131-history{
+  max-width:none;
+  display:grid;
+  gap:8px;
+}
+.still-os-document .wv131-history li{
+  grid-template-columns:18px minmax(0,1fr);
+  padding:14px 16px;
+  border:1px solid var(--sos-line);
+  border-radius:16px;
+  background:color-mix(in srgb,var(--sos-surface) 96%,var(--sos-accent) 4%);
+}
+.still-os-document .wv131-documents{
+  padding:18px;
+  border:1px solid var(--sos-line);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--sos-surface) 97%,var(--sos-accent) 3%);
+  box-shadow:0 14px 38px rgba(36,34,70,.045);
+}
+.still-os-document .wv131-documents article{
+  padding:14px 12px;
+  border-bottom-color:color-mix(in srgb,var(--sos-line) 75%,transparent);
+  border-radius:12px;
+}
+.still-os-document .wv131-documents article:hover{
+  background:var(--sos-soft);
+}
+.still-os-document .wv131-documents article:last-child{border-bottom-color:transparent}
+
+/* Stronger object hierarchy. */
+.still-os-document .wv131-attention button,
+.still-os-document .wv131-things>button{
+  border-radius:22px;
+  box-shadow:0 18px 46px rgba(36,34,70,.06);
+}
+.still-os-document .wv131-attention button:hover,
+.still-os-document .wv131-things>button:hover{
+  border-color:color-mix(in srgb,var(--sos-accent) 26%,var(--sos-line));
+}
+.still-os-document .wv131-things>button>span,
+.still-os-document .need134-row>span{
+  background:color-mix(in srgb,var(--sos-accent) 10%,var(--sos-surface));
+}
+
+/* Needs becomes a full object group and each Need remains individually legible. */
+.still-os-document .need134-family{
+  padding:20px;
+  border-radius:26px;
+  overflow:hidden;
+}
+.still-os-document .need134-family>header{
+  padding:2px 4px 14px;
+  margin-bottom:8px;
+}
+.still-os-document .need134-family .need134-filters{
+  padding:0 2px 8px;
+  margin-bottom:8px;
+}
+.still-os-document .need134-family .need134-row{
+  min-height:78px;
+  margin:7px 0;
+  padding:13px 14px;
+  border:1px solid var(--sos-line);
+  border-radius:17px;
+  background:var(--sos-bg);
+  box-shadow:none;
+}
+.still-os-document .need134-family .need134-row:hover,
+.still-os-document .need134-family .need134-row:focus-visible{
+  border-color:color-mix(in srgb,var(--sos-accent) 30%,var(--sos-line));
+  background:var(--sos-soft);
+}
+.still-os-document .need134-create-inline{
+  margin-top:14px;
+  background:var(--sos-bg);
+}
+
+/* Detail cards across Need resolution use one coherent hierarchy. */
+.still-os-document .need134-provenance{
+  border-left:0;
+  border-radius:18px;
+  padding:20px 22px;
+}
+.still-os-document .need134-options>div{gap:12px}
+.still-os-document .need134-options article,
+.still-os-document .need134-quote,
+.still-os-document .need134-outcome{
+  border-radius:20px;
+}
+.still-os-document .need134-options article>button,
+.still-os-document .need134-quote button{
+  background:var(--sos-bg);
+}
+
+/* Open loops should feel like actionable cards. */
+.still-os-document .wv131-open-loop-summary{
+  border-radius:24px;
+}
+.still-os-document .wv131-open-loop-summary>button{
+  margin-top:6px;
+  padding:14px 12px;
+  border-radius:13px;
+  border-top-color:transparent;
+}
+.still-os-document .wv131-open-loop-summary>button:hover{
+  background:var(--sos-soft);
+}
+
+/* -----------------------------
+   MARKET: ownership-native workspace
+   ----------------------------- */
+.still-os-document :is(.stm135-market,.stm135-detail,.stm135-deal){
+  --market-ink:var(--sos-ink);
+  --market-muted:var(--sos-muted);
+  --market-line:var(--sos-line);
+  --market-accent:var(--sos-accent);
+  --market-soft:var(--sos-soft);
+  color:var(--sos-ink);
+}
+
+/* Market hero reads as a destination, not just another section heading. */
+.still-os-document .stm135-hero{
+  position:relative;
+  align-items:center;
+  padding:42px 40px;
+  border:1px solid var(--sos-line);
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 90% 15%,color-mix(in srgb,var(--sos-accent) 14%,transparent),transparent 34%),
+    color-mix(in srgb,var(--sos-surface) 96%,var(--sos-accent) 4%);
+  box-shadow:0 22px 60px rgba(36,34,70,.07);
+}
+.still-os-document .stm135-hero h1{
+  font-family:Georgia,"Times New Roman",serif;
+  font-weight:500;
+}
+.still-os-document .stm135-hero>button{
+  min-width:170px;
+  min-height:52px;
+  border-radius:16px;
+  box-shadow:0 12px 28px color-mix(in srgb,var(--sos-accent) 18%,transparent);
+}
+
+/* Search becomes a visually integrated control deck. */
+.still-os-document .stm135-search{
+  margin:18px 0 56px;
+  padding:14px;
+  border:1px solid var(--sos-line);
+  border-radius:22px;
+  background:var(--sos-surface);
+  box-shadow:0 14px 38px rgba(36,34,70,.045);
+}
+.still-os-document .stm135-search input,
+.still-os-document .stm135-search select,
+.still-os-document .stm135-form input,
+.still-os-document .stm135-form select,
+.still-os-document .stm135-form textarea,
+.still-os-document .stm135-deal textarea,
+.still-os-document .stm135-reverse input[type=number]{
+  color:var(--sos-ink);
+  background:var(--sos-bg);
+  border:1px solid var(--sos-line);
+}
+
+/* Listings become product objects with stronger hierarchy and more breathing room. */
+.still-os-document .stm135-listings{
+  gap:16px;
+}
+.still-os-document .stm135-listing{
+  grid-template-columns:82px minmax(0,1fr) auto;
+  gap:18px;
+  min-height:124px;
+  padding:20px;
+  border:1px solid var(--sos-line);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--sos-surface) 97%,var(--sos-accent) 3%);
+  box-shadow:0 14px 38px rgba(36,34,70,.045);
+}
+.still-os-document .stm135-listing:hover{
+  transform:translateY(-3px);
+  border-color:color-mix(in srgb,var(--sos-accent) 34%,var(--sos-line));
+  box-shadow:0 22px 48px color-mix(in srgb,var(--sos-accent) 10%,transparent);
+}
+.still-os-document .stm135-object{
+  width:82px;
+  height:82px;
+  border-radius:21px;
+  color:var(--sos-accent);
+  background:color-mix(in srgb,var(--sos-accent) 10%,var(--sos-surface));
+}
+.still-os-document .stm135-listing h3{
+  margin:5px 0 5px;
+  font-size:1.2rem;
+}
+.still-os-document .stm135-listing>strong{
+  align-self:start;
+  padding:8px 10px;
+  border-radius:11px;
+  background:var(--sos-soft);
+  color:var(--sos-ink);
+  font-size:1.02rem;
+}
+.still-os-document .stm135-listing div>div span{
+  padding:5px 8px;
+  border:1px solid color-mix(in srgb,var(--sos-line) 75%,transparent);
+  border-radius:999px;
+  color:var(--sos-muted);
+  background:var(--sos-bg);
+}
+
+/* Wanted demand gets its own visual identity without inventing new data. */
+.still-os-document .stm135-wanted{
+  gap:16px;
+}
+.still-os-document .stm135-wanted>article{
+  position:relative;
+  padding:24px 24px 24px 28px;
+  border:1px solid var(--sos-line);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--sos-surface) 96%,var(--sos-teal) 4%);
+  box-shadow:0 14px 38px rgba(36,34,70,.04);
+}
+.still-os-document .stm135-wanted>article::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:20px;
+  bottom:20px;
+  width:3px;
+  border-radius:3px;
+  background:var(--sos-teal);
+}
+
+/* Notifications and activity become quiet timeline objects. */
+.still-os-document .stm135-notifications button,
+.still-os-document .stm135-activity>*{
+  border:1px solid var(--sos-line);
+  border-radius:16px;
+  background:var(--sos-surface);
+}
+.still-os-document .stm135-notifications button:hover,
+.still-os-document .stm135-activity>*:hover{
+  background:var(--sos-soft);
+}
+
+/* Trust is elevated as a first-class Market concept. */
+.still-os-document .stm135-trust{
+  padding:24px;
+  border:1px solid var(--sos-line);
+  border-radius:24px;
+  background:color-mix(in srgb,var(--sos-surface) 96%,var(--sos-teal) 4%);
+}
+.still-os-document .stm135-trust>div{gap:10px}
+.still-os-document .stm135-trust article{
+  padding:16px;
+  border:1px solid color-mix(in srgb,var(--sos-teal) 16%,var(--sos-line));
+  border-radius:16px;
+  background:var(--sos-surface);
+}
+
+/* Condition facts, privacy, and deal panels all share one deliberate surface hierarchy. */
+.still-os-document .stm135-condition dl div,
+.still-os-document .stm135-privacy p,
+.still-os-document .stm135-deal-panel,
+.still-os-document .stm135-deal-layout>aside,
+.still-os-document .stm135-thing-listing{
+  border:1px solid var(--sos-line);
+  background:var(--sos-surface);
+}
+.still-os-document .stm135-condition dl div{
+  border-radius:16px;
+  padding:18px;
+}
+.still-os-document .stm135-deal-panel,
+.still-os-document .stm135-deal-layout>aside{
+  border-radius:24px;
+  box-shadow:0 18px 48px rgba(36,34,70,.055);
+}
+.still-os-document .stm135-actions,
+.still-os-document .stm135-reverse{
+  border:1px solid color-mix(in srgb,var(--sos-accent) 14%,var(--sos-line));
+  background:color-mix(in srgb,var(--sos-soft) 80%,var(--sos-surface));
+}
+.still-os-document .stm135-actions{border-radius:22px}
+.still-os-document .stm135-reverse{border-radius:20px}
+
+/* Compare becomes easier to scan. */
+.still-os-document .stm135-compare{
+  padding:24px;
+  border:1px solid var(--sos-line);
+  border-radius:22px;
+  background:var(--sos-surface);
+}
+.still-os-document .stm135-compare-head b{
+  background:var(--sos-soft);
+}
+.still-os-document .stm135-compare dl div{
+  border-bottom-color:var(--sos-line);
+}
+
+/* Empty states feel intentional instead of unfinished. */
+.still-os-document .stm135-empty{
+  min-height:220px;
+  border:1px dashed color-mix(in srgb,var(--sos-accent) 24%,var(--sos-line));
+  border-radius:24px;
+  background:color-mix(in srgb,var(--sos-surface) 90%,var(--sos-accent) 10%);
+}
+
+/* Dark editorial capability strip remains distinct but now belongs to Still. */
+.still-os-document .stm135-capability{
+  border:1px solid color-mix(in srgb,var(--sos-accent) 24%,transparent);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(137,120,255,.18),transparent 35%),
+    #1c1b2d;
+  box-shadow:0 20px 54px rgba(7,8,18,.18);
+}
+
+/* Mobile keeps existing behavior; only surface density changes. */
+@media(max-width:640px){
+  .still-os-document .need134-family{
+    padding:13px 10px 10px;
+    border-radius:22px;
+  }
+  .still-os-document .need134-family .need134-row{
+    margin:6px 0;
+    border-radius:15px;
+  }
+  .still-os-document .wv131-history li,
+  .still-os-document .wv131-documents{
+    border-radius:16px;
+  }
+  .still-os-document .stm135-hero{
+    padding:28px 20px;
+    border-radius:24px;
+  }
+  .still-os-document .stm135-search{
+    padding:12px;
+    border-radius:18px;
+  }
+  .still-os-document .stm135-listing{
+    grid-template-columns:64px minmax(0,1fr);
+    min-height:0;
+    padding:16px;
+    border-radius:18px;
+  }
+  .still-os-document .stm135-listing>strong{
+    grid-column:2;
+    justify-self:start;
+  }
+  .still-os-document .stm135-object{
+    width:64px;
+    height:64px;
+    border-radius:17px;
+  }
+  .still-os-document .stm135-trust,
+  .still-os-document .stm135-compare{
+    padding:18px;
+    border-radius:20px;
+  }
+  .still-os-document .stm135-wanted>article,
+  .still-os-document .stm135-deal-panel,
+  .still-os-document .stm135-deal-layout>aside{
+    border-radius:19px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .still-os-document .stm135-listing,
+  .still-os-document .wv131-list>button,
+  .still-os-document .wv131-situations>button{
+    transition:none!important;
+    transform:none!important;
+  }
+}
