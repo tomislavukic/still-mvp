@@ -2,37 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v143.js",
-  // Phase 8 adds Buyer-private deterministic anticipation APIs and scheduled reconciliation.
-  // Runtime chain remains additive and intentionally lists the full protected path for architecture regression tests:
-  // merchant-backend/worker-v143.js -> merchant-backend/worker-v142.js -> merchant-backend/worker-v141.js -> merchant-backend/worker-v140.js -> merchant-backend/worker-v139.js -> merchant-backend/worker-v138.js -> merchant-backend/worker-v137.js -> merchant-backend/worker-v136.js.
+  "main": "merchant-backend/worker-v144.js",
+  // Phase 9 adds Buyer-private Knowledge, authorized World search, document intelligence and evidence-grounded Ask Still.
+  // Runtime remains additive: worker-v144 -> worker-v143 -> previous protected phases.
   "keep_vars": true,
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.1
-  },
-  "triggers": {
-    "crons": ["17 3 * * *"]
-  },
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "run_worker_first": ["/api/*", "/app", "/app/*", "/admin", "/admin/*", "/service/*"]
-  },
-  "ai": {
-    "binding": "AI"
-  },
-  "r2_buckets": [
-    {
-      "binding": "WORLD_FILES",
-      "bucket_name": "still-private-world"
-    }
-  ],
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "still-production",
-      "database_id": "2fce8b3f-ffb7-4ffe-8e11-b565a65ea655"
-    }
-  ]
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 },
+  "triggers": { "crons": ["17 3 * * *"] },
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*", "/app", "/app/*", "/admin", "/admin/*", "/service/*"] },
+  "ai": { "binding": "AI" },
+  "r2_buckets": [{ "binding": "WORLD_FILES", "bucket_name": "still-private-world" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "still-production", "database_id": "2fce8b3f-ffb7-4ffe-8e11-b565a65ea655" }]
 }
