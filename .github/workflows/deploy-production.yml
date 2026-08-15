@@ -1,0 +1,70 @@
+name: Deploy Still to Cloudflare production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: still-production
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    name: Validate and deploy production Worker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+
+      - name: Verify Cloudflare credentials are configured
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"
+            exit 1
+          fi
+
+      - name: Validate application
+        run: npm run validate:app
+
+      - name: Validate active Worker ancestry
+        run: node scripts/validate-active-worker.js
+
+      - name: Deploy to Cloudflare Workers
+        run: npx --yes wrangler@4.118.0 deploy
+
+      - name: Confirm deployed endpoint responds
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 20 https://still-mvp.tomislav-ukic-tu.workers.dev/ >/dev/null; then
+              echo "Production endpoint is responding."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Production endpoint did not respond after deployment"
+          exit 1
