@@ -1,0 +1,155 @@
+/* Still World + Market visual alignment.
+   CSS-only: no routing, data, interaction, or domain behavior changes. */
+
+/* World Needs: give the family a real Still surface instead of floating transparent rows. */
+.still-os-document .need134-family{
+  padding:18px 18px 10px;
+  border:1px solid var(--sos-line);
+  border-radius:26px;
+  background:color-mix(in srgb,var(--sos-surface) 96%,var(--sos-accent) 4%);
+  box-shadow:var(--sos-shadow);
+  overflow:hidden;
+}
+.still-os-document .need134-family>header{
+  padding:4px 4px 14px;
+  margin-bottom:8px;
+}
+.still-os-document .need134-family .need134-filters{
+  padding:0 2px 4px;
+  margin-bottom:8px;
+}
+.still-os-document .need134-family .need134-row{
+  padding-left:12px;
+  padding-right:12px;
+  border-radius:16px;
+  border-bottom-color:color-mix(in srgb,var(--sos-line) 72%,transparent);
+  background:transparent;
+}
+.still-os-document .need134-family .need134-row:hover,
+.still-os-document .need134-family .need134-row:focus-visible{
+  background:var(--sos-soft);
+}
+.still-os-document .need134-family .need134-create-inline{
+  margin:12px 2px 6px;
+  background:var(--sos-bg);
+}
+
+/* Market uses the same semantic Still tokens as World and Now. */
+.still-os-document .stm135-market,
+.still-os-document .stm135-detail,
+.still-os-document .stm135-deal{
+  --market-ink:var(--sos-ink);
+  --market-muted:var(--sos-muted);
+  --market-line:var(--sos-line);
+  --market-accent:var(--sos-accent);
+  --market-soft:var(--sos-soft);
+  color:var(--sos-ink);
+}
+
+/* Search is a calm utility surface, not a detached white panel. */
+.still-os-document .stm135-search{
+  border-color:var(--sos-line);
+  border-radius:24px;
+  background:color-mix(in srgb,var(--sos-surface) 97%,var(--sos-accent) 3%);
+  box-shadow:var(--sos-shadow);
+}
+.still-os-document .stm135-search input,
+.still-os-document .stm135-search select,
+.still-os-document .stm135-form input,
+.still-os-document .stm135-form select,
+.still-os-document .stm135-form textarea,
+.still-os-document .stm135-deal textarea,
+.still-os-document .stm135-reverse input[type=number]{
+  color:var(--sos-ink);
+  background:var(--sos-bg);
+  border-color:var(--sos-line);
+}
+
+/* Primary Market objects share the same surface language as Still cards. */
+.still-os-document .stm135-listing,
+.still-os-document .stm135-wanted>article,
+.still-os-document .stm135-notifications button,
+.still-os-document .stm135-activity>*,
+.still-os-document .stm135-condition dl div,
+.still-os-document .stm135-trust article,
+.still-os-document .stm135-deal-panel,
+.still-os-document .stm135-privacy p,
+.still-os-document .stm135-deal-layout>aside,
+.still-os-document .stm135-thing-listing{
+  color:var(--sos-ink);
+  border-color:var(--sos-line);
+  background:color-mix(in srgb,var(--sos-surface) 97%,var(--sos-accent) 3%);
+}
+.still-os-document .stm135-listing,
+.still-os-document .stm135-wanted>article,
+.still-os-document .stm135-deal-panel,
+.still-os-document .stm135-deal-layout>aside{
+  border-radius:22px;
+}
+.still-os-document .stm135-listing:hover{
+  border-color:color-mix(in srgb,var(--sos-accent) 34%,var(--sos-line));
+  box-shadow:0 16px 38px color-mix(in srgb,var(--sos-accent) 9%,transparent);
+}
+.still-os-document .stm135-object,
+.still-os-document .stm135-listing div>div span,
+.still-os-document .stm135-compare-head b,
+.still-os-document .stm135-actions,
+.still-os-document .stm135-reverse{
+  color:var(--sos-ink);
+  background:var(--sos-soft);
+}
+.still-os-document .stm135-object{
+  color:var(--sos-accent);
+}
+.still-os-document .stm135-listing div>div span{
+  color:var(--sos-muted);
+}
+.still-os-document .stm135-empty{
+  border-color:color-mix(in srgb,var(--sos-line) 80%,transparent);
+  background:color-mix(in srgb,var(--sos-surface) 78%,transparent);
+}
+.still-os-document .stm135-deal-layout main>ol li>span{
+  color:var(--sos-muted);
+  background:var(--sos-surface);
+  border-color:var(--sos-line);
+}
+.still-os-document .stm135-messages p{
+  color:var(--sos-ink);
+  background:var(--sos-soft);
+}
+.still-os-document .stm135-messages p.you{
+  color:#fff;
+  background:var(--sos-accent);
+}
+
+/* Keep the dark capability statement, but tie it to Still's dark editorial tone. */
+.still-os-document .stm135-capability{
+  color:#f4f3fb;
+  background:color-mix(in srgb,#151b27 84%,var(--sos-accent) 16%);
+  border:1px solid color-mix(in srgb,var(--sos-accent) 24%,transparent);
+  box-shadow:0 18px 50px rgba(3,7,18,.14);
+}
+.still-os-document .stm135-capability p{
+  color:#c9c8d7;
+}
+
+/* Mobile: retain the existing single-column behavior and simply tighten surfaces. */
+@media(max-width:600px){
+  .still-os-document .need134-family{
+    padding:12px 10px 8px;
+    border-radius:22px;
+  }
+  .still-os-document .need134-family .need134-row{
+    border-radius:14px;
+  }
+  .still-os-document .stm135-search{
+    padding:12px;
+    border-radius:20px;
+  }
+  .still-os-document .stm135-listing,
+  .still-os-document .stm135-wanted>article,
+  .still-os-document .stm135-deal-panel,
+  .still-os-document .stm135-deal-layout>aside{
+    border-radius:18px;
+  }
+}
