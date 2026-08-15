@@ -4,7 +4,8 @@
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v142.js",
   // Active Worker adds persistent Service Provider media/public sharing while preserving the full runtime chain.
-  // worker-v142 delegates to worker-v141 and all prior Company Network, Market and Still OS layers.
+  // Runtime chain: merchant-backend/worker-v142.js -> merchant-backend/worker-v141.js -> merchant-backend/worker-v140.js -> merchant-backend/worker-v139.js -> merchant-backend/worker-v138.js -> merchant-backend/worker-v137.js -> merchant-backend/worker-v136.js.
+  // These explicit paths are intentionally retained because legacy architecture tests validate that older protected layers remain reachable through the current entry point.
   "keep_vars": true,
   "observability": {
     "enabled": true,
