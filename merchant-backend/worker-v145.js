@@ -20,6 +20,34 @@ export default {
       return phase8.fetch(request, env, ctx);
     }
 
+    // Phase 9 expanded World search with Ask Still evidence fields. Preserve the
+    // Phase 1 response contract at the same endpoint so existing BuyerOS callers
+    // and integration tests continue to receive publicId/resultType as well.
+    if (path === '/api/v1/world/search' && request.method === 'GET') {
+      const response = await app.fetch(request, env, ctx);
+      if (!response.ok) return response;
+      const payload = await response.json().catch(() => null);
+      if (!payload || !Array.isArray(payload.results)) return response;
+      const resultType = {
+        thing: 'Thing',
+        knowledge: 'Knowledge',
+        situation: 'Situation',
+        open_loop: 'OpenLoop',
+        document: 'Document',
+        history: 'History',
+        decision: 'Decision'
+      };
+      payload.results = payload.results.map(item => ({
+        ...item,
+        publicId: item.publicId || item.id,
+        resultType: item.resultType || resultType[item.type] || item.type
+      }));
+      return new Response(JSON.stringify(payload), {
+        status: response.status,
+        headers: response.headers
+      });
+    }
+
     return app.fetch(request, env, ctx);
   },
 
