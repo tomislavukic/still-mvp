@@ -1,6 +1,7 @@
 const fs=require('fs'),assert=require('assert');
 const engine=fs.readFileSync('merchant-backend/anticipation-engine-v143.js','utf8');
 const worker=fs.readFileSync('merchant-backend/worker-v143.js','utf8');
+const activeWorker=fs.readFileSync('merchant-backend/worker-v144.js','utf8');
 const schema=fs.readFileSync('merchant-backend/schema-v143.sql','utf8');
 const wrangler=fs.readFileSync('wrangler.jsonc','utf8');
 const ui=fs.readFileSync('anticipation-v143.js','utf8');
@@ -27,7 +28,7 @@ assert(worker.includes('linked_need_id'),'candidate provenance link missing');
 assert(worker.includes("world_open_loops SET status='COMPLETED'"),'already-handled waiting flow must close source loop');
 assert(worker.includes("r.method==='DELETE'"),'schedule delete missing');
 assert(worker.includes('/feedback'),'helpful/not-useful feedback API missing');
-assert(wrangler.includes('"crons"')&&wrangler.includes('worker-v143.js'),'real cron/active worker missing');
+assert(wrangler.includes('"crons"')&&wrangler.includes('"main": "merchant-backend/worker-v144.js"')&&activeWorker.includes("import app from './worker-v143.js'"),'real cron/active worker missing');
 assert(!worker.includes('localStorage'),'server anticipation must not use localStorage');
 assert(ui.includes('Why now?')&&ui.includes('Already handled')&&ui.includes('Not needed'),'review language/actions missing');
 assert(ui.includes("Everything's handled."),'quiet-world state missing');
