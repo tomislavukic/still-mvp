@@ -4,7 +4,8 @@
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v144.js",
   // Phase 9 adds Buyer-private Knowledge, authorized World search, document intelligence and evidence-grounded Ask Still.
-  // Runtime remains additive: worker-v144 -> worker-v143 -> previous protected phases.
+  // Runtime remains additive: worker-v144 -> worker-v143 -> worker-v142 -> worker-v141 -> previous protected phases.
+  // Phase 5 Professional Network remains preserved at merchant-backend/worker-v141.js in the active delegation chain.
   "keep_vars": true,
   "observability": { "enabled": true, "head_sampling_rate": 0.1 },
   "triggers": { "crons": ["17 3 * * *"] },
