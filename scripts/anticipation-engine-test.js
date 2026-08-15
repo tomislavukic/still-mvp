@@ -1,0 +1,18 @@
+const fs=require('fs'),assert=require('assert');
+const engine=fs.readFileSync('merchant-backend/anticipation-engine-v143.js','utf8');
+const worker=fs.readFileSync('merchant-backend/worker-v143.js','utf8');
+const schema=fs.readFileSync('merchant-backend/schema-v143.sql','utf8');
+const wrangler=fs.readFileSync('wrangler.jsonc','utf8');
+for(const table of ['world_events','anticipation_signals','anticipation_candidates','anticipation_candidate_signals','attention_items','anticipation_feedback','user_world_schedules','anticipation_preferences']) assert(schema.includes(`CREATE TABLE IF NOT EXISTS ${table}`),`missing ${table}`);
+for(const type of ['WARRANTY_EXPIRING','OPEN_LOOP_OVERDUE','WAITING_EXPECTATION_PASSED','BOOKING_APPROACHING','WANTED_MATCH_AVAILABLE','PRODUCT_NOTICE','REPLACEMENT_INTERVAL_REACHED']) assert(engine.includes(type),`missing rule ${type}`);
+assert(engine.includes("noticeType === 'SAFETY'"),'safety notice policy missing');
+assert(!engine.includes('commission')&&!engine.includes('revenue'),'priority must not use revenue');
+assert(worker.includes("status='DISMISSED'"),'dismiss persistence missing');
+assert(worker.includes("status='SNOOZED'"),'snooze persistence missing');
+assert(worker.includes('ALREADY_HANDLED'),'already handled missing');
+assert(worker.includes('owner_user_id=?'),'owner scoping missing');
+assert(worker.includes('advanceScheduleDate'),'schedule roll-forward missing');
+assert(worker.includes('async scheduled'),'scheduled handler missing');
+assert(wrangler.includes('"crons"')&&wrangler.includes('worker-v143.js'),'real cron/active worker missing');
+assert(!worker.includes('localStorage'),'server anticipation must not use localStorage');
+console.log('Phase 8 anticipation architecture tests passed.');

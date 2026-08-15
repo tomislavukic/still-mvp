@@ -5,7 +5,7 @@
   "scripts": {
     "syntax": "node scripts/check-syntax.js",
     "build": "node build-public.js",
-    "test": "node smoke-test.js && node scripts/world-foundation-test.js && node scripts/still-os-test.js && node scripts/mobile-nav-regression-test.js && node scripts/needs-resolution-test.js && node scripts/still-market-test.js && node scripts/professional-network-test.js && node scripts/service-network-test.js && node scripts/company-network-test.js",
+    "test": "node smoke-test.js && node scripts/world-foundation-test.js && node scripts/still-os-test.js && node scripts/mobile-nav-regression-test.js && node scripts/needs-resolution-test.js && node scripts/still-market-test.js && node scripts/professional-network-test.js && node scripts/service-network-test.js && node scripts/company-network-test.js && node scripts/anticipation-engine-test.js",
     "test:world": "node scripts/world-foundation-test.js",
     "test:os": "node scripts/still-os-test.js && node scripts/mobile-nav-regression-test.js",
     "test:needs": "node scripts/needs-resolution-test.js",
@@ -15,6 +15,7 @@
     "test:services:integration": "SERVICE_ONLY=1 node scripts/run-worker-sqlite-integration.js",
     "test:company-network": "node scripts/company-network-test.js",
     "test:company-network:integration": "COMPANY_NETWORK_ONLY=1 node scripts/run-worker-sqlite-integration.js",
+    "test:anticipation": "node scripts/anticipation-engine-test.js",
     "test:world:integration": "node scripts/run-world-foundation-integration.js",
     "test:world:sqlite": "node scripts/run-worker-sqlite-integration.js",
     "security": "gitleaks git --config .gitleaks.toml --redact --no-banner --exit-code 1",
