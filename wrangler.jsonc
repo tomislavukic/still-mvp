@@ -2,14 +2,16 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-mvp",
   "compatibility_date": "2026-07-29",
-  "main": "merchant-backend/worker-v142.js",
-  // Active Worker adds persistent Service Provider media/public sharing while preserving the full runtime chain.
-  // Runtime chain: merchant-backend/worker-v142.js -> merchant-backend/worker-v141.js -> merchant-backend/worker-v140.js -> merchant-backend/worker-v139.js -> merchant-backend/worker-v138.js -> merchant-backend/worker-v137.js -> merchant-backend/worker-v136.js.
-  // These explicit paths are intentionally retained because legacy architecture tests validate that older protected layers remain reachable through the current entry point.
+  "main": "merchant-backend/worker-v143.js",
+  // Phase 8 adds Buyer-private deterministic anticipation APIs and scheduled reconciliation.
+  // Runtime chain remains additive: worker-v143 -> worker-v142 -> worker-v141 -> worker-v140 -> worker-v139 -> worker-v138 -> worker-v137 -> worker-v136.
   "keep_vars": true,
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1
+  },
+  "triggers": {
+    "crons": ["17 3 * * *"]
   },
   "assets": {
     "directory": "./public",
