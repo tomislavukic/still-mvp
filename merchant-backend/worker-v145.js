@@ -1,11 +1,12 @@
-import phase9 from './worker-v144.js';
+import app from './worker-v144.js';
 import phase8 from './worker-v143.js';
 
-// Compatibility bridge for Phase 9.
-// The Phase 9 worker owns Ask Still, Remember, document intelligence and sharing,
-// while the mature Phase 1 Knowledge create/update handlers remain the source of
-// truth for legacy Thing/Situation/tag relationships. This prevents Phase 9 from
-// shadowing those fields and breaking existing BuyerOS integrations.
+// Phase 9 compatibility bridge.
+// Keep the canonical `import app from` delegation shape because CI's worker-chain
+// validator follows that import to verify every protected capability in ancestry.
+// Phase 9 owns Ask Still, Remember, document intelligence, search and sharing.
+// Mature Phase 1-8 Knowledge create/update remains authoritative for legacy
+// Thing/Situation/tag relationships so existing BuyerOS integrations keep working.
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -19,7 +20,7 @@ export default {
       return phase8.fetch(request, env, ctx);
     }
 
-    return phase9.fetch(request, env, ctx);
+    return app.fetch(request, env, ctx);
   },
 
   async scheduled(controller, env, ctx) {
