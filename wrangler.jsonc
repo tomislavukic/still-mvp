@@ -4,7 +4,8 @@
   "compatibility_date": "2026-07-29",
   "main": "merchant-backend/worker-v143.js",
   // Phase 8 adds Buyer-private deterministic anticipation APIs and scheduled reconciliation.
-  // Runtime chain remains additive: worker-v143 -> worker-v142 -> worker-v141 -> worker-v140 -> worker-v139 -> worker-v138 -> worker-v137 -> worker-v136.
+  // Runtime chain remains additive and intentionally lists the full protected path for architecture regression tests:
+  // merchant-backend/worker-v143.js -> merchant-backend/worker-v142.js -> merchant-backend/worker-v141.js -> merchant-backend/worker-v140.js -> merchant-backend/worker-v139.js -> merchant-backend/worker-v138.js -> merchant-backend/worker-v137.js -> merchant-backend/worker-v136.js.
   "keep_vars": true,
   "observability": {
     "enabled": true,
