@@ -1,3 +1,4 @@
+// Ask Still command surface. Keep this client-only layer additive to the existing Still OS search and World APIs.
 (() => {
   if (window.__stillKnowledge144) return;
   window.__stillKnowledge144 = true;
